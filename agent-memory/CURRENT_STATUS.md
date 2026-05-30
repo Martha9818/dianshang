@@ -3,9 +3,9 @@
 ## Current Progress
 
 - Current stage: V1-Plus has started after V1-Core completion.
-- Current task: EcomPilot V1-Plus Thread 01 global search and filter enhancement is implemented locally and in final closeout verification.
-- Pre-thread dirty state was resolved by committing the prior AI Provider default-selection patch separately as `788bc4c`.
-- Vercel remains preview-only/read-only; this thread did not request a push or deployment refresh.
+- Current task: EcomPilot V1-Plus Thread 01 global search and filter enhancement is implemented, committed, pushed, and refreshed on Vercel.
+- The prior AI Provider default-selection patch was preserved separately as local commit `788bc4c` before the V1-Plus Thread 01 commit.
+- Deployment refresh requested on 2026-05-30 pushed `main` to `origin/main` at `8984a19335c0e9ac382d8f224756066edf75b36c`.
 
 ## Current Product Direction
 
@@ -21,13 +21,14 @@
 - Added product filters for keyword, status, recommendation, platform, score range, missing competitor, missing cost, material coverage, copywriting coverage, rescore, and created/updated sorting.
 - Added material, copywriting, Prompt task, and inspiration filters for the approved Thread 01 dimensions, plus a database-only orphaned-material notice.
 - Updated `docs/current/PROJECT_MAP.md` and `docs/current/CHANGELOG_DEV.md`.
+- Refreshed Vercel preview at `https://ecompilot-mvp.vercel.app` from `origin/main`.
 
 ## Current Blockers Or Risks
 
 - No Prisma schema, migration, dependency, AI prompt, AI call, filesystem write, cleanup, export, backup, or automation behavior changed.
 - Product pool UI was simplified to a table-first list while preserving product detail/edit/delete entry points.
-- Vercel preview was not refreshed because no push was requested; local code keeps write controls disabled/read-only in preview paths.
-- Browser plugin initialization timed out, so local page QA used the available Chrome DevTools browser channel.
+- Vercel preview remains read-only; write entry points should continue to show `预览环境只读，请在 Windows 本地验收。`.
+- Browser verification confirmed refreshed search/filter controls on `/products`, `/materials`, `/copywriting`, and `/prompt-tasks`; `/inspirations` loads preview read-only messaging on Vercel but did not show the full filter panel during the deploy-refresh smoke check.
 
 ## Current Documentation Entry Points
 
@@ -37,4 +38,4 @@
 
 ## Next Recommended Step
 
-- Finish final verification, commit V1-Plus Thread 01 locally, and do not push unless the user asks for a deployment refresh.
+- If continuing Thread 01 acceptance, re-check `/inspirations` preview behavior and decide whether the read-only fallback should still render the search/filter controls when the local SQLite data source is unavailable.

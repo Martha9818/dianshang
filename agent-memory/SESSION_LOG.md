@@ -6,6 +6,36 @@
 
 ### Task
 
+Refreshed deployment from local V1-Plus Thread 01 commits.
+
+### Changed
+
+- Pushed local `main` commits `788bc4c` and `8984a19` to `origin/main`.
+- Updated continuity memory to record the deployment refresh and Vercel smoke-check result.
+- No product code, Prisma schema, migration, dependency, AI behavior, filesystem behavior, export, backup, or runtime configuration changed during this deploy-refresh task.
+
+### Verification
+
+- Confirmed the working tree had no uncommitted source changes before push.
+- Confirmed local `HEAD` and `origin/main` both resolve to `8984a19335c0e9ac382d8f224756066edf75b36c` after push.
+- Browser-checked Vercel `/products`: refreshed Thread 01 product search/filter controls are visible.
+- Browser-checked Vercel `/materials`: keyword/type/status/sort controls and read-only preview notice are visible.
+- Browser-checked Vercel `/copywriting`: platform/version/violation/sort controls and read-only preview notice are visible.
+- Browser-checked Vercel `/prompt-tasks`: product keyword/status/platform/type/sort controls are visible and new-task controls remain disabled in preview.
+- Browser-checked Vercel `/products/new`: write-entry page shows `预览环境只读，请在 Windows 本地验收。`.
+
+### Git / Deploy Status
+
+- `origin/main` refreshed to `8984a19335c0e9ac382d8f224756066edf75b36c`.
+- Vercel preview is available at `https://ecompilot-mvp.vercel.app`.
+- Continuity memory records the deploy-refresh smoke check.
+
+### Handoff
+
+- `/inspirations` Vercel smoke check showed read-only preview messaging but not the full filter panel; if Thread 01 acceptance continues, verify whether that preview fallback should render filters even when SQLite data is unavailable.
+
+### Task
+
 Implemented EcomPilot V1-Plus Thread 01: global search and filter enhancement.
 
 ### Changed
