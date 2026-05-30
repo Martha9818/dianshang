@@ -17,7 +17,7 @@ export async function createManualBackupAction() {
     revalidatePath("/");
     revalidatePath("/backup");
 
-    if (error instanceof BackupReadonlyError) {
+    if (error instanceof BackupReadonlyError || (error instanceof Error && error.name === "BackupReadonlyError")) {
       return { ok: false, message: error.message };
     }
 

@@ -17,7 +17,7 @@ export async function createExcelExportAction(formData: FormData) {
     revalidatePath("/");
     revalidatePath("/export");
 
-    if (error instanceof ExportReadonlyError) {
+    if (error instanceof ExportReadonlyError || (error instanceof Error && error.name === "ExportReadonlyError")) {
       return { ok: false, message: error.message };
     }
 
