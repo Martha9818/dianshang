@@ -137,7 +137,7 @@ export default async function ExportPage() {
           <div className="mt-5 space-y-4">
             {[
               { title: "包含文案正文", detail: "导出 Copywriting Sheet 的完整正文内容", checked: true },
-              { title: "包含图片路径", detail: "导出竞品截图和素材文件的本地路径", checked: true },
+              { title: "包含图片路径", detail: "导出竞品截图和素材文件的应用相对路径", checked: true },
               { title: "按当前筛选导出", detail: "后续版本提供，当前已禁用", checked: false, disabled: true },
               { title: "包含已软删除数据", detail: "后续版本提供，当前已禁用", checked: false, disabled: true },
             ].map((item) => (

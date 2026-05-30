@@ -1,11 +1,11 @@
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
-import { getLocalDirectoryDisplayPath } from "@/lib/services/local-paths/localPathsService";
+import { getLocalDirectoryDisplayPath, getLocalDirectoryPath } from "@/lib/services/local-paths/localPathsService";
 import { sanitizeFileName } from "@/lib/services/local-paths/pathSafetyService";
 import { normalizeProductReadError } from "@/lib/services/product-runtime-service";
 
 export function getBackupRootDirectory() {
-  return path.join(/*turbopackIgnore: true*/ process.cwd(), "backups");
+  return getLocalDirectoryPath("backups");
 }
 
 export function getBackupDisplayPath(backupPath?: string | null) {

@@ -1,13 +1,12 @@
 import ExcelJS from "exceljs";
-import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
 import { computeEstimatedNetProfit, formatDateTime } from "@/lib/modules/products";
+import { ensureLocalDirectory, getLocalDirectoryPath } from "@/lib/services/local-paths";
 import { getRuntimeModeSummary, normalizeProductReadError, normalizeProductWriteError } from "@/lib/services/product-runtime-service";
 import { ExportReadonlyError } from "@/lib/services/thread07-errors";
 import { notifyExportCompleted, notifyExportFailed } from "@/lib/services/notificationService";
 
-const EXPORT_DIR = path.join(/*turbopackIgnore: true*/ process.cwd(), "exports");
 const SHEET_NAMES = ["Products", "Competitors", "Copywriting", "PromptTasks", "Materials", "Scores"] as const;
 
 export type ExportSettings = {
@@ -73,7 +72,7 @@ function addSheet<T extends Record<string, unknown>>(workbook: ExcelJS.Workbook,
 }
 
 export function getExportDirectory() {
-  return EXPORT_DIR;
+  return getLocalDirectoryPath("exports");
 }
 
 export function isSafeExportFileName(fileName: string) {
@@ -109,7 +108,7 @@ export async function createExcelExport(settings: ExportSettings = {}) {
   const includeCopywritingContent = settings.includeCopywritingContent !== false;
   const includeImagePaths = settings.includeImagePaths !== false;
   const fileName = `EcomPilot_Export_${buildTimestamp()}.xlsx`;
-  const filePath = path.join(EXPORT_DIR, fileName);
+  const filePath = path.join(getExportDirectory(), fileName);
   const includedSheets = SHEET_NAMES.join(",");
   let logId: number | null = null;
 
@@ -124,7 +123,7 @@ export async function createExcelExport(settings: ExportSettings = {}) {
     });
     logId = log.id;
 
-    await mkdir(EXPORT_DIR, { recursive: true });
+    await ensureLocalDirectory("exports");
 
     const [products, competitors, copywritings, promptTasks, materials, scores] = await Promise.all([
       prisma.product.findMany({

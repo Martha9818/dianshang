@@ -330,11 +330,15 @@ async function main() {
 
     try {
       await generatePlatformCopywriting({ productId: product.id, platform: "闲鱼", providerId: provider.id });
-      const count = await prisma.copywriting.count({ where: { productId: product.id, platform: "闲鱼" } });
-      assert(count === 3, "重生成不应产生重复记录");
-      pass("重生成覆盖旧记录", `records=${count}`);
+      fail("重复生成保护", "重复生成未被阻止");
     } catch (error) {
-      fail("重生成覆盖旧记录", error instanceof Error ? error.message : String(error));
+      const message = error instanceof Error ? error.message : String(error);
+      const count = await prisma.copywriting.count({ where: { productId: product.id, platform: "闲鱼" } });
+      if (message.includes("短时间内已有相同 AI 任务") && count === 3) {
+        pass("重复生成保护", `records=${count}`);
+      } else {
+        fail("重复生成保护", message);
+      }
     }
 
     const noSchemaProvider = await createAIProvider({
@@ -370,13 +374,16 @@ async function main() {
     cleanup.providerIds.push(nonJsonProvider.id);
 
     try {
-      const saved = await generatePlatformCopywriting({ productId: product.id, platform: "小红书", providerId: nonJsonProvider.id });
-      assert(saved.length === 3, "非 JSON 应保留三条 partial 记录");
-      assert(saved.every((record) => record.generationStatus === "partial"), "非 JSON 应标记 partial");
-      assert(saved.every((record) => record.rawResponseText), "非 JSON 应保留 rawResponseText");
-      pass("非 JSON 返回兜底", `records=${saved.length}`);
+      await generatePlatformCopywriting({ productId: product.id, platform: "小红书", providerId: nonJsonProvider.id });
+      fail("非 JSON 返回阻止保存", "非 JSON 返回未被阻止");
     } catch (error) {
-      fail("非 JSON 返回兜底", error instanceof Error ? error.message : String(error));
+      const message = error instanceof Error ? error.message : String(error);
+      const count = await prisma.copywriting.count({ where: { productId: product.id, platform: "小红书" } });
+      if (message.includes("AI 返回格式不是有效 JSON") && count === 0) {
+        pass("非 JSON 返回阻止保存", `records=${count}`);
+      } else {
+        fail("非 JSON 返回阻止保存", message);
+      }
     }
 
     const missingVersionProvider = await createAIProvider({
@@ -392,12 +399,16 @@ async function main() {
     cleanup.providerIds.push(missingVersionProvider.id);
 
     try {
-      const saved = await generatePlatformCopywriting({ productId: product.id, platform: "抖音", providerId: missingVersionProvider.id });
-      assert(saved.length === 3, "缺版 JSON 应补齐三条记录");
-      assert(saved.some((record) => record.version === "C" && record.generationStatus === "partial"), "缺少的版本应标记 partial");
-      pass("JSON 缺版兜底", `records=${saved.length}`);
+      await generatePlatformCopywriting({ productId: product.id, platform: "抖音", providerId: missingVersionProvider.id });
+      fail("JSON 缺版阻止保存", "缺版 JSON 未被阻止");
     } catch (error) {
-      fail("JSON 缺版兜底", error instanceof Error ? error.message : String(error));
+      const message = error instanceof Error ? error.message : String(error);
+      const count = await prisma.copywriting.count({ where: { productId: product.id, platform: "抖音" } });
+      if (message.includes("AI 输出不符合 copywriting_response 结构要求") && count === 0) {
+        pass("JSON 缺版阻止保存", `records=${count}`);
+      } else {
+        fail("JSON 缺版阻止保存", message);
+      }
     }
 
     try {

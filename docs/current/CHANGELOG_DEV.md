@@ -10,6 +10,7 @@ This file keeps version-level summaries only. Detailed per-task history is in `a
 - Thread 04 added a lightweight in-app notification center with sanitized notification records, unread/read state, type filtering, safe internal action links, manual cleanup, and local-only write guards.
 - Thread 05 added selected-record batch operation safety for products, inspirations, materials, and notifications with centralized rules, per-item execution, result counts, confirmation for dangerous actions, OperationLog reuse, and no batch AI/API image generation/product conversion/permanent file deletion.
 - Thread 06 added manual local file maintenance for `uploads/`, `exports/`, and `backups/`, with cleanup suggestions, app-managed `trash/`, confirmed permanent delete for trash files only, `CleanupLog`, and Vercel read-only guards.
+- Thread 07 completed final integration acceptance, README V1-Plus closeout, path-service consolidation for export/backup/upload read paths, startup script `trash/` checks, and acceptance-script alignment without adding new product scope.
 - V1-Plus closeout shortened active docs and moved detailed history into `agent-memory/archive/` without changing business behavior.
 
 ## V1-Core

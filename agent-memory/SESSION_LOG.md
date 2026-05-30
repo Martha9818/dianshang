@@ -4,6 +4,13 @@ Only the 10 most recent key summaries stay here. Detailed entries and older hist
 
 ## 2026-05-30
 
+### V1-Plus Thread 07 Final Integration Acceptance And README Closeout
+
+- Changed: Updated README to V1-Plus, refreshed Thread 07 scope/status docs, aligned `start.bat` with `trash/`, and routed export/backup/upload path handling through existing local-path services.
+- Fixed: Acceptance scripts now match current V1-Plus behavior for rejected inspirations, strict invalid AI output handling, explicit preview-mode setup, and current Vercel read-only messages.
+- Verified: lint, build, Prisma validate/status, TypeScript, encoding, MVP/V1-Core/V1-Plus acceptance scripts, notification/AI preview guard, batch safety, file cleanup, and leakage scans for CleanupLog/AppNotification/OperationLog.
+- Handoff: No schema, dependency, Electron, OCR, link parsing, API image generation, crawler, publishing, restore, SKU, supplier, inventory, PDF, or multi-agent behavior was added.
+
 ### V1-Plus Thread 06 File Cleanup And Trash
 
 - Changed: Added `/maintenance/files`, `CleanupLog`, app-managed `trash/`, manual scan results for uploads/exports/backups, cleanup recommendations, move-to-trash, confirmed permanent delete, and cleanup notifications.
@@ -24,7 +31,7 @@ Only the 10 most recent key summaries stay here. Detailed entries and older hist
 
 - Changed: Added `AppNotification`, notification service, `/notifications`, top unread entry, read/unread state, type filtering, safe action URLs, delete/cleanup confirmation, and docs/current updates.
 - Hooked: AI job failures, export completion/failure, backup completion/failure, inspiration-to-product conversion, and product create/delete call `notificationService`; cleanup has a reserved service hook only.
-- Safety: Notification text reuses existing log/diagnostic/AI sanitizers; Vercel-mode writes return `预览环境只读，请在 Windows 本地验收。`; no Windows/Electron/browser Push/WebSocket/background notification behavior was added.
+- Safety: Notification text reuses existing log/diagnostic/AI sanitizers; Vercel-mode writes return the shared read-only message; no Windows/Electron/browser Push/WebSocket/background notification behavior was added.
 - Verified: Prisma validate/migrate/status, lint, build, encoding check, local browser checks, Vercel-mode read/write guard simulation, and notification sanitization/action URL checks.
 - Deploy: Thread 04 implementation and documentation closeout were pushed to GitHub; `main` and `origin/main` are aligned. Vercel refresh still needs a separate preview check if required.
 
@@ -70,31 +77,3 @@ Only the 10 most recent key summaries stay here. Detailed entries and older hist
 - Verified: Backup before migration, Prisma validate/generate/migrate/status, TypeScript, lint, build, encoding, diff check, service acceptance, and local browser checks.
 - Deploy: Implementation was local before later push.
 - Handoff: No OCR, crawler, link parsing, auto-collection, auto-product, Electron, supplier, inventory, publish, messaging, comments, or agent feature.
-
-### V1-Plus Thread 01 Acceptance
-
-- Changed: Fixed Vercel inspiration fallback and unified preview read-only messages for export/backup; updated docs/memory.
-- Verified: Lint, build, Prisma validate, encoding, diff check, local and Vercel browser checks, and secret/path scans.
-- Deploy: Source fixes pushed through `cddf825`.
-- Handoff: Semantic search, AI search, and external search agents remain future-version items.
-
-### V1-Plus Thread 01 Deploy Refresh
-
-- Changed: Pushed local Thread 01 commits and recorded Vercel smoke checks.
-- Verified: Clean tree, remote SHA alignment, Vercel checks for products, materials, copywriting, prompt tasks, and product create read-only behavior.
-- Deploy: Pushed through `8984a19`.
-- Handoff: `/inspirations` fallback needed follow-up, later covered by acceptance fix.
-
-### V1-Plus Thread 01 Implementation
-
-- Changed: Added shared query normalization and list search/filter/sort controls across products, materials, copywriting, prompt tasks, and inspirations.
-- Verified: TypeScript, lint, Prisma validate, build, and local browser checks for affected list pages.
-- Deploy: Implementation was local before later push.
-- Handoff: Query dimensions should stay in `query-service.ts`; no semantic/AI/external search added.
-
-### AI Provider Default Selection Patch
-
-- Changed: Improved Provider save response, default switch state, and copywriting default Provider auto-selection without exposing API keys.
-- Verified: Encoding check, TypeScript, lint, build, local settings/copywriting browser checks, and Prisma data checks.
-- Deploy: Local verified commit; no push requested in that pass.
-- Handoff: Default Provider should auto-select on `/copywriting` when available.

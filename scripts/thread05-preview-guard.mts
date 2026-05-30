@@ -1,7 +1,13 @@
 import { prisma } from "../src/lib/prisma";
 import { runBatchOperation } from "../src/lib/services/batchOperationService";
 
+const previousVercel = process.env.VERCEL;
+const previousVercelEnv = process.env.VERCEL_ENV;
+
 async function main() {
+  process.env.VERCEL = "1";
+  process.env.VERCEL_ENV = "preview";
+
   try {
     await runBatchOperation({
       entity: "PRODUCT",
@@ -18,6 +24,18 @@ async function main() {
       process.exitCode = 1;
     }
   } finally {
+    if (previousVercel === undefined) {
+      delete process.env.VERCEL;
+    } else {
+      process.env.VERCEL = previousVercel;
+    }
+
+    if (previousVercelEnv === undefined) {
+      delete process.env.VERCEL_ENV;
+    } else {
+      process.env.VERCEL_ENV = previousVercelEnv;
+    }
+
     await prisma.$disconnect();
   }
 }

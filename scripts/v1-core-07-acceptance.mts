@@ -463,10 +463,10 @@ async function verifyInspirationFlow(baseUrl: string, imageA: Buffer, imageB: Bu
 
   await ignoreInspiration(imported[1].id);
   const ignored = await prisma.inspiration.findUnique({ where: { id: imported[1].id } });
-  assert(ignored?.status === "ignored", "Inspiration ignore flow did not persist");
+  assert(ignored?.status === "rejected", "Inspiration ignore flow did not persist as rejected");
 
   assert(provider.isDefault, "Default AI provider setup for inspiration acceptance failed");
-  pass("V1-Core-06 inspiration scan, AI suggestion, ignore, convert");
+  pass("V1-Core-06 inspiration scan, AI suggestion, reject, convert");
 }
 
 async function verifyDiagnostics() {

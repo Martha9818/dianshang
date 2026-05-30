@@ -100,7 +100,7 @@ async function verifyReadonlyActions() {
           modelName: "preview-model",
           providerType: "openai-compatible",
         }),
-      expected: "预览环境不执行真实 AI 调用",
+      expected: "预览环境只读",
     },
     {
       name: "preview 禁止生成文案",

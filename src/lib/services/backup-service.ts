@@ -2,7 +2,8 @@ import { access, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
 import { formatBytes, getBackupDisplayPath, getBackupRootDirectory, getBackupSummary, getRecentBackupLogs } from "@/lib/services/backup-log-service";
-import { copyFileOrDirectory, ensureDirectory, getScopedPathSizeBytes } from "@/lib/services/file-copy-service";
+import { copyFileOrDirectory, getScopedPathSizeBytes } from "@/lib/services/file-copy-service";
+import { ensureLocalDirectory } from "@/lib/services/local-paths";
 import { getRuntimeModeSummary, normalizeProductWriteError } from "@/lib/services/product-runtime-service";
 import { BackupReadonlyError } from "@/lib/services/thread07-errors";
 import { notifyBackupCompleted, notifyBackupFailed } from "@/lib/services/notificationService";
@@ -31,10 +32,6 @@ function getSqliteDatabasePath() {
   return path.isAbsolute(rawPath)
     ? rawPath
     : path.join(/*turbopackIgnore: true*/ process.cwd(), "prisma", rawPath);
-}
-
-function getUploadsDirectory() {
-  return path.join(/*turbopackIgnore: true*/ process.cwd(), "uploads");
 }
 
 async function pathExists(filePath: string) {
@@ -74,6 +71,7 @@ export async function createManualBackup() {
   let logId: number | null = null;
 
   try {
+    await ensureLocalDirectory("backups");
     const log = await prisma.backupLog.create({
       data: {
         backupPath: targetDir,
@@ -83,8 +81,7 @@ export async function createManualBackup() {
     logId = log.id;
 
     await mkdir(targetDir, { recursive: true });
-    const uploadsDirectory = getUploadsDirectory();
-    await ensureDirectory(uploadsDirectory);
+    const uploadsDirectory = await ensureLocalDirectory("uploads");
 
     const databasePath = getSqliteDatabasePath();
     await copySqliteDatabaseFiles(databasePath, targetDir);

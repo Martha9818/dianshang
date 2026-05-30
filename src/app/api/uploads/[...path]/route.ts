@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { getUploadsAbsolutePath } from "@/lib/services/images";
 
 const MIME_TYPE_BY_EXTENSION: Record<string, string> = {
   ".jpg": "image/jpeg",
@@ -10,14 +11,7 @@ const MIME_TYPE_BY_EXTENSION: Record<string, string> = {
 };
 
 function getSafeAbsolutePath(pathSegments: string[]) {
-  const uploadsRoot = path.resolve(process.cwd(), "uploads");
-  const resolvedPath = path.resolve(uploadsRoot, ...pathSegments);
-
-  if (resolvedPath !== uploadsRoot && !resolvedPath.startsWith(`${uploadsRoot}${path.sep}`)) {
-    throw new Error("Invalid upload path.");
-  }
-
-  return resolvedPath;
+  return getUploadsAbsolutePath(pathSegments.join("/"));
 }
 
 export async function GET(

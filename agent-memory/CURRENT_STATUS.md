@@ -2,9 +2,9 @@
 
 ## Current Progress
 
-- Current stage: V1-Plus Thread 06 file cleanup and trash completed locally.
-- Current task: Thread 06 local commit closeout in progress.
-- Scope completed: manual file maintenance page, `CleanupLog`, app-managed `trash/`, safe scan/move/delete services, Vercel read-only guard, notifications, and acceptance scripts.
+- Current stage: V1-Plus Thread 07 final integration acceptance and README closeout completed locally.
+- Current task: Thread 07 local commit closeout in progress.
+- Scope completed: MVP/V1-Core/V1-Plus regression checks, Vercel read-only simulations, path-service consolidation, README V1-Plus update, startup script directory check update, and acceptance script alignment.
 
 ## Product Direction
 
@@ -14,19 +14,18 @@
 
 ## Latest Completed Work
 
-- Added `/maintenance/files` for manual scans of `uploads/`, `exports/`, and `backups`, with relative-path-only result tables and filters by scope/recommendation.
-- Added app-managed `trash/` through the existing local path service; move-to-trash preserves original and trash relative paths.
-- Added `CleanupLog` with an additive migration and per-operation audit records for scan, move-to-trash, and permanent delete.
-- Permanent delete is limited to files already under app `trash/` and requires a second confirmation.
-- Active product main images, material files, competitor screenshots, and active inspiration images are not directly movable or permanently deletable.
-- Verified service acceptance, local browser scan smoke, and preview-mode read-only behavior.
+- Updated root `README.md` from V1-Core wording to V1-Plus closeout documentation, including Windows startup, Vercel read-only preview, runtime directories, file cleanup risk, AI Key safety, FAQ, acceptance checklist, and V1.5/V2 boundaries.
+- Routed export and backup directory roots through the local-path service; the upload API route now reuses the existing upload path resolver.
+- Updated `start.bat` to describe V1-Plus and check/create `trash/` alongside `uploads/`, `exports/`, `backups/`, and `logs/`.
+- Aligned acceptance scripts with current V1-Plus behavior: rejected inspiration status, stricter AI invalid-output handling, preview-mode setup, and current read-only messages.
 
 ## Blockers Or Risks
 
-- No active product blocker is recorded for Thread 06.
-- Existing local runtime folders contain historical acceptance/test files, so manual scan counts may vary by machine.
-- Vercel live preview was not refreshed; preview behavior was verified by local Vercel-mode simulation and browser smoke.
+- No active product blocker is recorded for Thread 07.
+- Vercel live preview was not refreshed in this thread; preview behavior was verified by local preview-mode scripts.
+- `package.json` has no `typecheck` or `test` script; type checking was run with `npx tsc --noEmit`.
+- Existing local runtime folders contain acceptance-generated exports/backups/log records, so local counts vary by machine.
 
 ## Next Recommended Step
 
-- Commit Thread 06 locally, then push only if the user approves a milestone/deployment refresh.
+- Commit Thread 07 locally, then push only if the user approves a milestone/deployment refresh.

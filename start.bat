@@ -5,9 +5,9 @@ cd /d "%~dp0"
 
 echo.
 echo ========================================
-echo EcomPilot MVP local startup
+echo EcomPilot V1-Plus local startup
 echo ========================================
-echo Runtime: Windows local + SQLite + uploads/exports/backups/logs
+echo Runtime: Windows local + SQLite + uploads/exports/backups/logs/trash
 echo URL: http://localhost:3000
 echo Logs: logs\app.log and logs\error.log
 echo.
@@ -36,7 +36,7 @@ if not exist ".env" (
   echo [SETUP] .env created. Review it if you need to change DATABASE_URL or AI settings.
 )
 
-for %%D in (uploads exports backups logs) do (
+for %%D in (uploads exports backups logs trash) do (
   if not exist "%%D" (
     echo [SETUP] %%D directory not found. Creating %%D...
     mkdir "%%D"
@@ -78,7 +78,7 @@ if not errorlevel 1 (
 echo [START] Opening browser shortly...
 start "" powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Seconds 5; Start-Process 'http://localhost:3000'"
 
-echo [START] Starting EcomPilot MVP at http://localhost:3000
+echo [START] Starting EcomPilot V1-Plus at http://localhost:3000
 echo [START] If startup fails, check logs\app.log, logs\error.log, and the message below.
 echo Press Ctrl+C to stop the local server.
 call npm run dev
