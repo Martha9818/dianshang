@@ -6,7 +6,7 @@ This changelog records high-signal development changes by thread. Detailed chron
 
 - Added `src/lib/services/dashboardTodoService.ts` as the read-only homepage todo summary layer with a unified todo item type.
 - Updated `/` so the pending area shows actionable cards with count, short description, source label, and filtered jump buttons.
-- Todo counts now cover pending inspirations, products missing competitors, products missing cost data, low-score unhandled products, products needing copywriting, products needing materials, recent AI failure records, stale backup reminders, and a diagnostics-only cleanup entry.
+- Todo counts now cover pending inspirations, products missing competitors, products missing cost data, low-score unhandled products, products needing copywriting, products needing materials, recent AI task failures, recent AI request failures, stale backup reminders, and a diagnostics-only cleanup entry.
 - Reused existing product/inspiration/copywriting/material query parameters such as `missingCompetitor=true`, `missingCost=true`, `hasCopywriting=false`, `hasMaterial=false`, `maxScore`, and `status=pending`.
 - Reused existing AIJob / AIRequestLog summaries, backup log service, runtime service, and diagnostics sanitizer; no homepage filesystem path checks, raw local paths, API keys, or unsanitized AI errors are rendered.
 - Added Vercel read-unavailable fallback for the todo service: preview renders an empty actionable todo state plus the diagnostics-only cleanup entry instead of duplicating local SQLite read errors.

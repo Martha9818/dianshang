@@ -36,6 +36,40 @@ Implemented EcomPilot V1-Plus Thread 03: homepage todo and processing queue.
 - Pushed Thread 03 through `0bfc8c3` and browser-checked Vercel `/`: new todo description is visible, preview read-unavailable state falls back to empty actionable todos plus diagnostics-only cleanup entry, only one local SQLite unavailable notice appears, and no Windows absolute path, `.env`, or API-key-like string was found in page text.
 - Browser-checked Vercel `/products/new`: write page remains read-only with `预览环境只读，请在 Windows 本地验收。`.
 
+### Task
+
+Split Thread 03 homepage AI failure todos and reran full acceptance.
+
+### Changed
+
+- Changed the homepage todo service so recent AI failures are shown as separate `AIJob` task-failure and `AIRequestLog` request-failure todo cards.
+- Kept AI failure summaries sanitized through the existing AI and diagnostics sanitizers.
+- Updated Thread 03 documentation and memory notes.
+- No schema, migration, dependency, task table, scheduler, background worker, automatic AI call, automatic processing, file scan, cleanup, Electron, crawler, OCR, Windows notification, or agent system was added.
+
+### Verification
+
+- `npx.cmd tsc --noEmit` passed after the split.
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- `npx.cmd prisma validate`
+- `npm.cmd run encoding:check`
+- `git diff --check`
+- `npm run typecheck` not applicable: no script exists.
+- `npm test` not applicable: no script exists.
+- Service-level count check confirmed local `pending_inspirations=4`, `missing_competitors=1`, `missing_cost=1`, `needs_copywriting=1`, `needs_material=1`, `recent_ai_job_failures=7`, and `recent_ai_request_failures=15`.
+- Vercel-runtime simulation returned empty actionable todos plus diagnostics-only cleanup entry, with no local path or API-key-like text.
+- Browser-checked local `/`: todo area renders; counts, descriptions, source labels, buttons, and separate AIJob / AIRequestLog failure cards render; no Windows absolute path, `.env`, or API-key-like string was found in homepage text.
+- Browser-checked local `/products?missingCompetitor=true`, `/products?hasCopywriting=false`, `/products?hasMaterial=false`, and `/inspirations?status=pending`; filter controls and result counts matched the expected local data.
+
+### Git / Deploy Status
+
+- AI failure split is locally verified and pending commit, push, and Vercel preview refresh.
+
+### Handoff
+
+- The split should remain display-only. `AIJob` and `AIRequestLog` are still existing lightweight status/log records, not a queue.
+
 ### Git / Deploy Status
 
 - Thread 03 source commits were pushed to `origin/main` through `0bfc8c3`.

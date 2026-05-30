@@ -17,7 +17,8 @@ export type DashboardTodoType =
   | "low_score_unhandled"
   | "needs_copywriting"
   | "needs_material"
-  | "recent_ai_failures"
+  | "recent_ai_job_failures"
+  | "recent_ai_request_failures"
   | "stale_backup"
   | "file_cleanup_entry";
 
@@ -101,7 +102,11 @@ async function getLowScoreUnhandledProductCount() {
   return Array.from(latestByProduct.values()).filter((score) => score < LOW_SCORE_THRESHOLD).length;
 }
 
-async function getRecentAiFailureTodoItem(): Promise<DashboardTodoItem | null> {
+function sanitizeFailureSummary(summary: string | null | undefined, fallback: string) {
+  return sanitizeDiagnosticText(sanitizeAIErrorSummary(summary ?? fallback));
+}
+
+async function getRecentAiFailureTodoItems(): Promise<DashboardTodoItem[]> {
   const since = daysAgo(RECENT_AI_FAILURE_DAYS);
   const [failedJobCount, failedRequestCount, latestFailedJob, latestFailedRequest] = await Promise.all([
     prisma.aIJob.count({
@@ -138,24 +143,41 @@ async function getRecentAiFailureTodoItem(): Promise<DashboardTodoItem | null> {
     }),
   ]);
 
-  const count = failedJobCount + failedRequestCount;
-  if (count <= 0) {
-    return null;
+  const items: DashboardTodoItem[] = [];
+
+  if (failedJobCount > 0) {
+    const safeError = sanitizeFailureSummary(latestFailedJob?.errorSummary, "最近有 AI 任务失败。");
+    items.push(
+      buildTodoItem({
+        type: "recent_ai_job_failures",
+        title: "最近 AI 任务失败",
+        count: failedJobCount,
+        description: `最近 ${RECENT_AI_FAILURE_DAYS} 天有 AIJob 失败记录：${safeError}`,
+        href: "/system/diagnostics",
+        actionLabel: "查看诊断",
+        tone: "red",
+        sourceLabel: "AIJob",
+      }),
+    );
   }
 
-  const latestError = latestFailedJob?.errorSummary ?? latestFailedRequest?.errorSummary ?? "最近有 AI 调用失败。";
-  const safeError = sanitizeDiagnosticText(sanitizeAIErrorSummary(latestError));
+  if (failedRequestCount > 0) {
+    const safeError = sanitizeFailureSummary(latestFailedRequest?.errorSummary, "最近有 AI 请求失败。");
+    items.push(
+      buildTodoItem({
+        type: "recent_ai_request_failures",
+        title: "最近 AI 请求失败",
+        count: failedRequestCount,
+        description: `最近 ${RECENT_AI_FAILURE_DAYS} 天有 AIRequestLog 失败记录：${safeError}`,
+        href: "/system/diagnostics",
+        actionLabel: "查看诊断",
+        tone: "red",
+        sourceLabel: "AIRequestLog",
+      }),
+    );
+  }
 
-  return buildTodoItem({
-    type: "recent_ai_failures",
-    title: "最近 AI 失败",
-    count,
-    description: `最近 ${RECENT_AI_FAILURE_DAYS} 天有失败记录：${safeError}`,
-    href: "/system/diagnostics",
-    actionLabel: "查看诊断",
-    tone: "red",
-    sourceLabel: "AIJob / AIRequestLog",
-  });
+  return items;
 }
 
 async function getStaleBackupTodoItem(): Promise<DashboardTodoItem | null> {
@@ -222,7 +244,7 @@ export async function getDashboardTodoSummary(): Promise<DashboardTodoSummary> {
     lowScoreUnhandledCount,
     needsCopywritingCount,
     needsMaterialCount,
-    aiFailureItem,
+    aiFailureItems,
     staleBackupItem,
   ] = await Promise.all([
     prisma.inspiration.count({ where: { status: "pending" } }),
@@ -236,7 +258,7 @@ export async function getDashboardTodoSummary(): Promise<DashboardTodoSummary> {
     getLowScoreUnhandledProductCount(),
     prisma.product.count({ where: { deletedAt: null, copywritings: { none: {} } } }),
     prisma.product.count({ where: { deletedAt: null, materials: { none: {} } } }),
-    getRecentAiFailureTodoItem(),
+    getRecentAiFailureTodoItems(),
     getStaleBackupTodoItem(),
   ]);
 
@@ -301,7 +323,7 @@ export async function getDashboardTodoSummary(): Promise<DashboardTodoSummary> {
       tone: "violet",
       sourceLabel: "Product / Material",
     }),
-    aiFailureItem,
+    ...aiFailureItems,
     staleBackupItem,
   ]);
 
@@ -314,20 +336,20 @@ export async function getDashboardTodoSummary(): Promise<DashboardTodoSummary> {
 }
 
 export async function getDashboardTodoPageData(): Promise<DashboardTodoPageData> {
+  const runtime = getRuntimeModeSummary();
+  if (!runtime.isWritable) {
+    return {
+      kind: "ready",
+      data: buildEmptyDashboardTodoSummary(),
+    };
+  }
+
   try {
     return {
       kind: "ready",
       data: await getDashboardTodoSummary(),
     };
   } catch (error) {
-    const runtime = getRuntimeModeSummary();
-    if (!runtime.isWritable) {
-      return {
-        kind: "ready",
-        data: buildEmptyDashboardTodoSummary(),
-      };
-    }
-
     const businessError = normalizeProductReadError(error);
     return {
       kind: "unavailable",
