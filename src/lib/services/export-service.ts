@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { computeEstimatedNetProfit, formatDateTime } from "@/lib/modules/products";
 import { getRuntimeModeSummary, normalizeProductReadError, normalizeProductWriteError } from "@/lib/services/product-runtime-service";
 import { ExportReadonlyError } from "@/lib/services/thread07-errors";
+import { notifyExportCompleted, notifyExportFailed } from "@/lib/services/notificationService";
 
 const EXPORT_DIR = path.join(/*turbopackIgnore: true*/ process.cwd(), "exports");
 const SHEET_NAMES = ["Products", "Competitors", "Copywriting", "PromptTasks", "Materials", "Scores"] as const;
@@ -388,13 +389,15 @@ export async function createExcelExport(settings: ExportSettings = {}) {
 
     await workbook.xlsx.writeFile(filePath);
 
-    return await prisma.exportLog.update({
+    const completedLog = await prisma.exportLog.update({
       where: { id: logId },
       data: {
         status: "成功",
         errorMessage: null,
       },
     });
+    await notifyExportCompleted({ exportLogId: completedLog.id, fileName: completedLog.fileName });
+    return completedLog;
   } catch (error) {
     const message = getErrorMessage(error);
 
@@ -418,6 +421,7 @@ export async function createExcelExport(settings: ExportSettings = {}) {
       });
     }
 
+    await notifyExportFailed({ fileName, error });
     throw normalizeProductWriteError(error);
   }
 }

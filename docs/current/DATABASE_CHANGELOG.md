@@ -15,6 +15,24 @@ This file records active V1-Core schema changes. Add new entries when `prisma/sc
 - If a migration fails, stop and document the cause plus the safe next step instead of forcing progress with a reset.
 - If old data is incomplete, prefer `nullable`, `legacy`, `unknown`, or an explicit repair script over invented values.
 
+## 2026-05-30 - V1-Plus Thread 04 Notification Center
+
+- Added migration `prisma/migrations/20260530141322_v1_plus_thread_04_notification_center/migration.sql`.
+- Added `AppNotification` for lightweight in-app operation notifications:
+  - `type`
+  - `level`
+  - `title`
+  - `message`
+  - `status`
+  - `relatedType`
+  - `relatedId`
+  - `actionUrl`
+  - `dedupeKey`
+  - `createdAt`
+  - `readAt`
+- Added indexes for type, level, status, created time, related target, and unique optional dedupe key.
+- Migration is additive; old migrations were not edited and no database reset is planned.
+
 ## 2026-05-30 - V1-Plus Thread 02 Inspiration Management
 
 - Added migration `prisma/migrations/20260530033400_v1_plus_thread_02_inspiration_management/migration.sql`.

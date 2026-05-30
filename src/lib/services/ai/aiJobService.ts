@@ -3,6 +3,7 @@ import { BUSINESS_ERROR_CODES, ProductBusinessError } from "@/lib/modules/produc
 import type { AIJobCreateInput, AIJobStatus } from "@/lib/services/ai/aiTypes";
 import { sanitizeAIErrorSummary, summarizePrompt } from "@/lib/services/ai/aiPromptSanitizer";
 import { getRuntimeModeSummary } from "@/lib/services/runtime";
+import { notifyAIJobFailed } from "@/lib/services/notificationService";
 
 const RECENT_DUPLICATE_WINDOW_MS = 60_000;
 const PREVIEW_AI_MESSAGE = "预览环境只读，请在 Windows 本地验收 AI 调用。";
@@ -80,7 +81,7 @@ export async function markAIJobSuccess(jobId: number, resultSummary?: string | n
 export async function markAIJobFailed(jobId: number, error: unknown) {
   ensureLocalAIJobWritesAllowed();
 
-  return prisma.aIJob.update({
+  const updated = await prisma.aIJob.update({
     where: { id: jobId },
     data: {
       status: "failed",
@@ -88,12 +89,22 @@ export async function markAIJobFailed(jobId: number, error: unknown) {
       finishedAt: new Date(),
     },
   });
+
+  await notifyAIJobFailed({
+    jobId: updated.id,
+    jobType: updated.jobType,
+    error,
+    relatedProductId: updated.relatedProductId,
+    relatedInspirationId: updated.relatedInspirationId,
+  });
+
+  return updated;
 }
 
 export async function updateAIJobStatus(jobId: number, status: AIJobStatus, summary?: string | null) {
   ensureLocalAIJobWritesAllowed();
 
-  return prisma.aIJob.update({
+  const updated = await prisma.aIJob.update({
     where: { id: jobId },
     data: {
       status,
@@ -103,6 +114,18 @@ export async function updateAIJobStatus(jobId: number, status: AIJobStatus, summ
       startedAt: status === "running" ? new Date() : undefined,
     },
   });
+
+  if (status === "failed") {
+    await notifyAIJobFailed({
+      jobId: updated.id,
+      jobType: updated.jobType,
+      error: summary ?? updated.errorSummary ?? "AI job failed",
+      relatedProductId: updated.relatedProductId,
+      relatedInspirationId: updated.relatedInspirationId,
+    });
+  }
+
+  return updated;
 }
 
 export async function retryAIJob(sourceJobId: number) {

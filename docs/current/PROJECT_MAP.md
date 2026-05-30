@@ -21,6 +21,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 | `/prompt-tasks`, `/prompt-tasks/[taskCode]/upload` | Prompt task management and material upload. |
 | `/materials` | Material library. |
 | `/inspirations` | Manual inspiration inbox, review states, and confirm-then-convert flow. |
+| `/notifications` | Lightweight in-app notification center for important operation results. |
 | `/settings/ai`, `/settings/banned-words` | Local settings. |
 | `/export`, `/backup` | Local export and manual backup. |
 | `/system/diagnostics` | Sanitized local diagnostics. |
@@ -38,6 +39,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 | Materials | Material records, image metadata, status display. | `src/lib/services/materials/README.md` |
 | Copywriting | Generation, drafts/history, manual edits, usage marking. | `src/lib/services/copywriting/README.md` |
 | Inspirations | Folder setting, manual scan, dedupe, review states, optional AI suggestion, conversion. | `src/lib/services/inspirations/README.md` |
+| Notifications | Sanitized in-app operation notifications, read state, filtering, safe action URLs, and local-only writes. | `src/lib/services/notifications/README.md` |
 | Products/scoring | Product CRUD, formatting, scoring, and status summaries. | Source modules under `src/lib/services/` and `src/lib/modules/` |
 | Prompt tasks | Prompt templates, task persistence, upload linkage. | Source modules under `src/lib/services/` and `src/lib/modules/` |
 | Export/backup | Local Excel export, safe download, manual backup, display-safe paths. | Source services under `src/lib/services/` |
@@ -45,7 +47,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 
 ## Data Models
 
-Main Prisma model groups: products, variants, competitors, scoring, copywriting, prompt tasks, materials, inspirations, scan logs, AI providers/logs/jobs, banned words, operation logs, export logs, backup logs, and app settings. Schema changes require a new migration and `DATABASE_CHANGELOG.md` update.
+Main Prisma model groups: products, variants, competitors, scoring, copywriting, prompt tasks, materials, inspirations, scan logs, AI providers/logs/jobs, app notifications, banned words, operation logs, export logs, backup logs, and app settings. Schema changes require a new migration and `DATABASE_CHANGELOG.md` update.
 
 ## Side-Effect Ownership
 

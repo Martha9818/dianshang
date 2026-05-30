@@ -4,6 +4,14 @@ Only the 10 most recent key summaries stay here. Detailed entries and older hist
 
 ## 2026-05-30
 
+### V1-Plus Thread 04 Notification Center
+
+- Changed: Added `AppNotification`, notification service, `/notifications`, top unread entry, read/unread state, type filtering, safe action URLs, delete/cleanup confirmation, and docs/current updates.
+- Hooked: AI job failures, export completion/failure, backup completion/failure, inspiration-to-product conversion, and product create/delete call `notificationService`; cleanup has a reserved service hook only.
+- Safety: Notification text reuses existing log/diagnostic/AI sanitizers; Vercel-mode writes return `预览环境只读，请在 Windows 本地验收。`; no Windows/Electron/browser Push/WebSocket/background notification behavior was added.
+- Verified: Prisma validate/migrate/status, lint, build, encoding check, local browser checks, Vercel-mode read/write guard simulation, and notification sanitization/action URL checks.
+- Deploy: Local only; no push or Vercel refresh requested.
+
 ### V1-Plus Documentation Closeout
 
 - Changed: Shortened `AGENTS.md`, `CURRENT_STATUS.md`, active `SESSION_LOG.md`, `DOC_INDEX.md`, `PROJECT_MAP.md`, `ARCHITECTURE_RULES.md`, `THREAD_SCOPE_CHECKLIST.md`, `PATCH_LOG.md`, `CHANGELOG_DEV.md`, `KNOWN_ISSUES.md`, `RISK_REGISTER.md`, and related archive index entries.

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { MiniIcon, SearchIcon } from "@/components/dashboard/primitives";
+import { getUnreadNotificationCount } from "@/lib/services/notificationService";
 
 type WorkspacePageProps = {
   eyebrow?: string;
@@ -11,21 +13,45 @@ type WorkspacePageProps = {
 function HeaderIconButton({
   icon,
   badge,
+  href,
 }: {
   icon: "bell" | "gear";
   badge?: string;
+  href?: string;
 }) {
-  return (
-    <button
-      type="button"
-      className="relative flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-[#E6ECF5] bg-white text-slate-500 shadow-[0_10px_24px_rgba(59,130,246,0.08)] transition-all duration-200 hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-slate-700 hover:shadow-[0_14px_28px_rgba(59,130,246,0.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
-    >
+  const className =
+    "relative flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-[#E6ECF5] bg-white text-slate-500 shadow-[0_10px_24px_rgba(59,130,246,0.08)] transition-all duration-200 hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-slate-700 hover:shadow-[0_14px_28px_rgba(59,130,246,0.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100";
+  const content = (
+    <>
       <MiniIcon name={icon} className="h-5 w-5" />
       {badge ? (
         <span className="absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">
           {badge}
         </span>
       ) : null}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        title={icon === "bell" ? "通知中心" : "设置"}
+        aria-label={icon === "bell" ? "通知中心" : "设置"}
+        className={className}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label={icon === "bell" ? "通知中心" : "设置"}
+      className="relative flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-[#E6ECF5] bg-white text-slate-500 shadow-[0_10px_24px_rgba(59,130,246,0.08)] transition-all duration-200 hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-slate-700 hover:shadow-[0_14px_28px_rgba(59,130,246,0.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
+    >
+      {content}
     </button>
   );
 }
@@ -36,6 +62,8 @@ export function WorkspacePage({
   description,
   children,
 }: WorkspacePageProps) {
+  const unreadPromise = getUnreadNotificationCount();
+
   return (
     <div className="flex flex-1 flex-col">
       <header className="border-b border-[#EDF2F8] px-5 py-5 sm:px-8 sm:py-7">
@@ -61,8 +89,8 @@ export function WorkspacePage({
               <span className="truncate">搜索商品、任务、素材...</span>
             </button>
             <div className="flex items-center gap-3">
-              <HeaderIconButton icon="bell" badge="3" />
-              <HeaderIconButton icon="gear" />
+              <HeaderNotificationButton unreadPromise={unreadPromise} />
+              <HeaderIconButton icon="gear" href="/settings/ai" />
               <button
                 type="button"
                 className="flex h-12 cursor-pointer items-center gap-3 rounded-full border border-[#E6ECF5] bg-white px-3 pr-4 shadow-[0_10px_24px_rgba(59,130,246,0.08)] transition-all duration-200 hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:shadow-[0_14px_28px_rgba(59,130,246,0.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
@@ -83,4 +111,11 @@ export function WorkspacePage({
       <div className="flex flex-1 flex-col gap-5 px-5 py-5 sm:px-8 sm:py-6">{children}</div>
     </div>
   );
+}
+
+async function HeaderNotificationButton({ unreadPromise }: { unreadPromise: Promise<number> }) {
+  const unreadCount = await unreadPromise;
+  const badge = unreadCount > 99 ? "99+" : unreadCount > 0 ? String(unreadCount) : undefined;
+
+  return <HeaderIconButton icon="bell" badge={badge} href="/notifications" />;
 }

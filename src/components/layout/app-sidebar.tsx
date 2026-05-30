@@ -118,6 +118,17 @@ function SidebarIcon({ icon }: { icon: NavigationIcon | "bag" }) {
           <path d="M7.5 10.5V19h9v-8.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
+    case "notifications":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+          <path
+            d="M12 4.8a4.4 4.4 0 0 0-4.4 4.4v2.2c0 1.1-.3 2.2-.9 3.1L5.6 16h12.8l-1.1-1.5a5.5 5.5 0 0 1-.9-3.1V9.2A4.4 4.4 0 0 0 12 4.8Z"
+            stroke="currentColor"
+            strokeLinejoin="round"
+          />
+          <path d="M10 18a2.3 2.3 0 0 0 4 0" stroke="currentColor" strokeLinecap="round" />
+        </svg>
+      );
     case "products":
       return (
         <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">

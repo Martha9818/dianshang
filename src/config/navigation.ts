@@ -1,5 +1,6 @@
 export type NavigationIcon =
   | "home"
+  | "notifications"
   | "products"
   | "copywriting"
   | "promptTasks"
@@ -24,6 +25,12 @@ export const primaryNavigation: NavigationItem[] = [
     title: "首页",
     description: "查看仪表盘总览与本地运行基线",
     icon: "home",
+  },
+  {
+    href: "/notifications",
+    title: "通知中心",
+    description: "查看应用内重要操作结果、未读通知与安全跳转",
+    icon: "notifications",
   },
   {
     href: "/products",

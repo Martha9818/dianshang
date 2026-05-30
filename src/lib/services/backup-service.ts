@@ -1,10 +1,11 @@
 import { access, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
-import { formatBytes, getBackupRootDirectory, getBackupSummary, getRecentBackupLogs } from "@/lib/services/backup-log-service";
+import { formatBytes, getBackupDisplayPath, getBackupRootDirectory, getBackupSummary, getRecentBackupLogs } from "@/lib/services/backup-log-service";
 import { copyFileOrDirectory, ensureDirectory, getScopedPathSizeBytes } from "@/lib/services/file-copy-service";
 import { getRuntimeModeSummary, normalizeProductWriteError } from "@/lib/services/product-runtime-service";
 import { BackupReadonlyError } from "@/lib/services/thread07-errors";
+import { notifyBackupCompleted, notifyBackupFailed } from "@/lib/services/notificationService";
 
 function pad(value: number) {
   return String(value).padStart(2, "0");
@@ -91,7 +92,7 @@ export async function createManualBackup() {
 
     const size = await getScopedPathSizeBytes(getBackupRootDirectory(), targetDir);
 
-    return await prisma.backupLog.update({
+    const completedLog = await prisma.backupLog.update({
       where: { id: logId },
       data: {
         status: "成功",
@@ -99,6 +100,11 @@ export async function createManualBackup() {
         errorMessage: null,
       },
     });
+    await notifyBackupCompleted({
+      backupLogId: completedLog.id,
+      displayPath: getBackupDisplayPath(completedLog.backupPath),
+    });
+    return completedLog;
   } catch (error) {
     const message = getErrorMessage(error);
 
@@ -120,6 +126,7 @@ export async function createManualBackup() {
       });
     }
 
+    await notifyBackupFailed({ error });
     throw normalizeProductWriteError(error);
   }
 }

@@ -10,6 +10,7 @@ import {
 import { OPERATION_LOG_ACTIONS } from "@/lib/modules/products/constants";
 import { createOperationLog } from "@/lib/services/operation-log-service";
 import { ensureProductWritesAllowed, normalizeProductWriteError } from "@/lib/services/product-runtime-service";
+import { notifyProductCreated, notifyProductDeleted } from "@/lib/services/notificationService";
 
 const productMutationSelect = {
   id: true,
@@ -163,6 +164,7 @@ export async function createProduct(input: {
       await uploadMainImageAndTrack(product.id, input.mainImage);
     }
 
+    await notifyProductCreated({ productId: product.id, productName: product.name });
     return product;
   } catch (error) {
     throw normalizeProductWriteError(error);
@@ -256,6 +258,7 @@ export async function softDeleteProduct(productId: number) {
       action: OPERATION_LOG_ACTIONS.DELETE_PRODUCT,
       detail: `删除商品 ${existing.name}`,
     });
+    await notifyProductDeleted({ productId, productName: existing.name });
   } catch (error) {
     throw normalizeProductWriteError(error);
   }

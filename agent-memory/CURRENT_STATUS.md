@@ -2,9 +2,9 @@
 
 ## Current Progress
 
-- Current stage: V1-Plus documentation closeout after V1-Plus Thread 03 acceptance.
-- Current task: V1-Plus docs closeout completed locally.
-- Scope completed: documentation only; no business code, UI behavior, schema, migration, dependency, AI behavior, or Vercel runtime change.
+- Current stage: V1-Plus Thread 04 implementation complete locally.
+- Current task: in-app notification center awaiting final local commit.
+- Scope completed: AppNotification model/migration, notification service, notification center UI, unread entry, read/delete/cleanup actions, key module hooks, docs and memory updates.
 
 ## Product Direction
 
@@ -14,19 +14,19 @@
 
 ## Latest Completed Work
 
-- Shortened `AGENTS.md`, active memory files, and selected `docs/current/` files so startup/current docs stay compact.
-- Moved detailed session, changelog, patch, risk, and pre-closeout current-doc history into `agent-memory/archive/` with V1_PLUS archive filenames.
-- Updated `ARCHIVE_INDEX.md` and sanitized archived/current docs for full local paths, database path strings, and API-key-like strings.
-- V1-Plus Thread 03 homepage todo summary is accepted and pushed through commit `265984a`.
-- Vercel preview was verified after Thread 03 for read-only behavior and no frontend secret/path leakage in checked pages.
+- Added V1-Plus Thread 04 notification center and additive migration `20260530141322_v1_plus_thread_04_notification_center`.
+- Added `notificationService` as the only notification creation entry, reusing existing log/diagnostic/AI sanitizers and runtime write guards.
+- Wired notifications for AI job failures, export completion/failure, backup completion/failure, inspiration conversion, and product create/delete.
+- Verified local UI flow for list, unread count, type filtering, single read, mark-all read, delete confirm, cleanup confirm, and safe action links.
+- V1-Plus Thread 03 homepage todo summary remains accepted and pushed through commit `265984a`.
 
 ## Blockers Or Risks
 
-- No active product blocker is recorded for the accepted V1-Plus Thread 03 baseline.
-- File cleanup remains a diagnostics/todo reminder only; no scan or deletion workflow is implemented.
-- Vercel cannot validate real local writes; write acceptance remains local-only.
-- This docs-only closeout has not been pushed to GitHub; push only if the user requests a deployment/history refresh.
+- No active product blocker is recorded for Thread 04.
+- File cleanup remains only a notification type/service hook and diagnostics/todo reminder; no scan or deletion workflow is implemented.
+- Vercel live preview was not refreshed in this local pass; read-only notification behavior was verified by Vercel-mode simulation.
+- Current Thread 04 changes are local until committed; push only if the user requests a deployment/history refresh.
 
 ## Next Recommended Step
 
-- Commit this docs-only closeout locally after final status review, then start the next approved product or patch thread from the shortened startup files.
+- Commit V1-Plus Thread 04 locally after final status review, then push only on explicit request or approved preview refresh.

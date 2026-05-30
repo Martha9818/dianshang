@@ -20,6 +20,7 @@ import {
   normalizeProductReadError,
   normalizeProductWriteError,
 } from "@/lib/services/product-runtime-service";
+import { notifyInspirationConverted } from "@/lib/services/notificationService";
 import {
   getSortDirection,
   normalizeInspirationListQuery,
@@ -569,6 +570,12 @@ export async function convertInspirationToProduct(input: {
       });
 
       return createdProduct;
+    });
+
+    await notifyInspirationConverted({
+      inspirationId: input.inspirationId,
+      productId: product.id,
+      productName: product.name,
     });
 
     return product;

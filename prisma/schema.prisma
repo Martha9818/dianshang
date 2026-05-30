@@ -286,6 +286,27 @@ model AIJob {
   @@index([relatedProductId])
 }
 
+model AppNotification {
+  id          Int       @id @default(autoincrement())
+  type        String
+  level       String
+  title       String
+  message     String?
+  status      String    @default("unread")
+  relatedType String?
+  relatedId   String?
+  actionUrl   String?
+  dedupeKey   String?   @unique
+  createdAt   DateTime  @default(now())
+  readAt      DateTime?
+
+  @@index([type])
+  @@index([level])
+  @@index([status])
+  @@index([createdAt])
+  @@index([relatedType, relatedId])
+}
+
 model Inspiration {
   id                 Int      @id @default(autoincrement())
   title              String?
