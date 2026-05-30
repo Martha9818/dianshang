@@ -2,6 +2,13 @@
 
 This changelog records high-signal development changes by thread. Detailed chronology remains in `agent-memory/SESSION_LOG.md`.
 
+## 2026-05-30 - AI Provider Default Selection Patch
+
+- Updated AI Provider saving so the settings client receives the saved Provider id, enabled state, default state, and API-key existence flag without exposing the key.
+- Improved the `是否默认` switch with switch semantics and clearer selected styling.
+- Updated `/copywriting` so an enabled default Provider is selected automatically on first render and when the current local selection is blank or stale.
+- Kept Prisma schema, migrations, dependencies, API key masking, AI generation behavior, and Vercel read-only behavior unchanged.
+
 ## 2026-05-30 - GitHub History Cleanup And Push Cadence
 
 - Updated repository workflow rules so small tasks preserve work with local commits and push to GitHub only at milestones, deployment refreshes, history cleanup tasks, or explicit user requests.

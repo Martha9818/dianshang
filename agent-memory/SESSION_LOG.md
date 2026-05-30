@@ -6,6 +6,38 @@
 
 ### Task
 
+Implemented the V1-Core Patch for AI Provider default selection.
+
+### Changed
+
+- Updated AI Provider save action to return the saved Provider id, enabled/default state, and API-key existence flag without exposing the key.
+- Updated the AI settings `是否默认` switch with switch semantics and clearer selected styling.
+- Updated `/copywriting` so an enabled default Provider is selected automatically when the local selection is blank or stale.
+- Updated `docs/current/PATCH_LOG.md`, `docs/current/CHANGELOG_DEV.md`, and current continuity memory.
+- No Prisma schema, migration, dependency, filesystem write path, AI prompt, AI generation behavior, or Vercel read-only behavior changed.
+
+### Verification
+
+- `npm.cmd run encoding:check`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- Browser-checked `/settings/ai`: the `是否默认` control exposes switch state, saving `deepseek` keeps the switch on, and the Provider list shows `默认`.
+- Browser-checked disabling the default Provider clears its default state; re-enabled and saved `deepseek` back as the default before finishing.
+- Browser-checked `/copywriting`: AI Provider auto-selects `deepseek（默认）`.
+- Prisma data checks confirmed exactly one enabled default Provider and preserved API-key presence without printing the key.
+
+### Git / Deploy Status
+
+- Local implementation is verified and preserved by the task closeout commit.
+- No push or deployment refresh is planned unless explicitly requested.
+
+### Handoff
+
+- `deepseek` is enabled and default locally after verification. `/copywriting` should now auto-select it.
+
+### Task
+
 Completed GitHub history cleanup and push-cadence reduction.
 
 ### Changed

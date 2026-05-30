@@ -22,6 +22,19 @@ Use this file for future historical bug fixes and regressions. V1-Core-01 only c
 - When a Patch includes a data-repair script, update this file with the repair strategy and result.
 - If the Patch also changes database structure, update `docs/current/DATABASE_CHANGELOG.md`.
 
+### 2026-05-30 - AI Provider Default Selection
+
+- Severity: P2 for copywriting AI workflow friction.
+- User impact: The AI settings default switch could appear unclear after saving, and `/copywriting` stayed on `请选择 Provider` when no Provider was persisted as the enabled default.
+- Root cause: The settings save action did not return the saved Provider state to the client, and the copywriting Provider select did not guard against blank or stale local Provider state with a default fallback.
+- Files changed: `src/app/settings/actions.ts`, `src/components/settings/ai-settings-manager.tsx`, `src/components/copywriting/copywriting-manager.tsx`.
+- Database impact: No schema change or migration. Saving a Provider as default updates `AIProvider.isDefault` through the existing service path and clears other defaults.
+- Filesystem impact: None.
+- Vercel impact: Read-only behavior is unchanged; Provider writes remain blocked outside local writable runtime.
+- Verification: `npm.cmd run encoding:check`, `npx.cmd tsc --noEmit`, `npm.cmd run lint`, `npm.cmd run build`, local browser save/disable/re-enable checks for `/settings/ai`, local browser check for `/copywriting` auto-selecting `deepseek（默认）`, and Prisma data checks confirming exactly one enabled default Provider with API key presence preserved.
+- Rollback notes: Revert the three source files if the older manual Provider selection behavior is needed again.
+- Follow-up: None expected after verification.
+
 ### 2026-05-30 - Diagnostics Compact Layout
 
 - Severity: P3 for diagnostics usability.

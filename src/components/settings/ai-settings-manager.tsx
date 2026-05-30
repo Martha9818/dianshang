@@ -143,6 +143,14 @@ export function AISettingsManager({
         return;
       }
 
+      setForm((current) => ({
+        ...current,
+        id: String(result.data.id),
+        apiKey: "",
+        enabled: result.data.enabled,
+        isDefault: result.data.isDefault,
+        hasApiKey: result.data.hasApiKey,
+      }));
       setConnectionResult({ type: "success", text: "Provider 已保存。" });
       router.refresh();
     });
@@ -436,8 +444,14 @@ function ToggleField({
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="flex items-center justify-between rounded-2xl border border-[#E4EAF3] bg-white px-4 py-3 text-left"
+      className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
+        checked
+          ? "border-blue-200 bg-[#F8FBFF] shadow-[0_12px_28px_rgba(43,115,255,0.10)]"
+          : "border-[#E4EAF3] bg-white"
+      }`}
     >
       <span className="text-sm font-medium text-slate-700">{label}</span>
       <span className={`inline-flex h-7 w-12 items-center rounded-full px-1 ${checked ? "bg-[#2B73FF]" : "bg-slate-200"}`}>

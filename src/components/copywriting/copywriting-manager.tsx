@@ -185,7 +185,11 @@ export function CopywritingManager({
   const [message, setMessage] = useState<string | null>(null);
   const [productId, setProductId] = useState<number | "">(initialProductId ?? "");
   const [platform, setPlatform] = useState<string>(initialPlatform ?? COPYWRITING_PLATFORMS[0]);
-  const [providerId, setProviderId] = useState<number | "">(defaultProviderId ?? "");
+  const initialProviderId =
+    providers.find((provider) => provider.id === defaultProviderId && provider.enabled)?.id ??
+    providers.find((provider) => provider.isDefault && provider.enabled)?.id ??
+    "";
+  const [providerId, setProviderId] = useState<number | "">(initialProviderId);
   const [records, setRecords] = useState<CopywritingView[]>(() => initialCopywritings);
   const [drafts, setDrafts] = useState<Record<string, EditableDraftState>>(() => buildDraftMap(initialCopywritings));
 
@@ -205,6 +209,19 @@ export function CopywritingManager({
 
     return normalized.length > 0 ? normalized : [...COPYWRITING_PLATFORMS];
   }, [selectedProduct]);
+
+  const defaultEnabledProviderId = useMemo(
+    () =>
+      providers.find((provider) => provider.id === defaultProviderId && provider.enabled)?.id ??
+      providers.find((provider) => provider.isDefault && provider.enabled)?.id ??
+      null,
+    [defaultProviderId, providers],
+  );
+
+  const activeProviderId =
+    providerId && providers.some((provider) => provider.id === providerId && provider.enabled)
+      ? providerId
+      : defaultEnabledProviderId ?? "";
 
   const groupedRecords = useMemo(() => {
     if (records.length === 0 && initialGroupedCopywritings) {
@@ -272,7 +289,7 @@ export function CopywritingManager({
       return;
     }
 
-    if (!providerId) {
+    if (!activeProviderId) {
       setMessage("当前没有可用的默认 Provider，请先配置 AI Provider。");
       return;
     }
@@ -280,7 +297,7 @@ export function CopywritingManager({
     startTransition(async () => {
       const result = await generateMultiPlatformCopywritingAction({
         productId: Number(productId),
-        providerId: Number(providerId),
+        providerId: Number(activeProviderId),
       });
 
       if (!result.success) {
@@ -299,7 +316,7 @@ export function CopywritingManager({
       return;
     }
 
-    if (!providerId) {
+    if (!activeProviderId) {
       setMessage("当前没有可用的默认 Provider，请先配置 AI Provider。");
       return;
     }
@@ -308,7 +325,7 @@ export function CopywritingManager({
       const result = await generateCopywritingAction({
         productId: Number(productId),
         platform: platform as (typeof COPYWRITING_PLATFORMS)[number],
-        providerId: Number(providerId),
+        providerId: Number(activeProviderId),
       });
 
       if (!result.success) {
@@ -447,13 +464,13 @@ export function CopywritingManager({
           <p className="mb-2 px-1 text-sm text-slate-500">AI Provider</p>
           <select
             className={inputClassName}
-            value={providerId}
+            value={activeProviderId}
             onChange={(event) => {
               setMessage(null);
               setProviderId(event.target.value ? Number(event.target.value) : "");
             }}
           >
-            <option value="">请选择 Provider</option>
+            {defaultEnabledProviderId ? null : <option value="">请选择 Provider</option>}
             {providers.map((provider) => (
               <option key={provider.id} value={provider.id}>
                 {provider.name}

@@ -23,17 +23,23 @@ export async function saveAIProviderAction(formData: FormData) {
   try {
     const values = extractAIProviderFormValues(formData);
     const providerId = Number(formData.get("providerId") ?? "");
-
-    if (Number.isInteger(providerId) && providerId > 0) {
-      await updateAIProvider(providerId, values);
-    } else {
-      await createAIProvider(values);
-    }
+    const savedProvider =
+      Number.isInteger(providerId) && providerId > 0
+        ? await updateAIProvider(providerId, values)
+        : await createAIProvider(values);
 
     revalidatePath("/settings/ai");
     revalidatePath("/copywriting");
 
-    return { success: true as const };
+    return {
+      success: true as const,
+      data: {
+        id: savedProvider.id,
+        enabled: savedProvider.enabled,
+        isDefault: savedProvider.isDefault,
+        hasApiKey: Boolean(savedProvider.apiKey),
+      },
+    };
   } catch (error) {
     return {
       success: false as const,

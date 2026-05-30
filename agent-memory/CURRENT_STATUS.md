@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1-Core completed and feature-frozen after V1-Core-07 closeout.
-- Current task: GitHub history cleanup and push-cadence change completed on 2026-05-30.
+- Current task: V1-Core Patch for AI Provider default selection completed locally on 2026-05-30.
 - V1-Core-07 final integration acceptance passed locally on 2026-05-30 and was re-verified on 2026-05-30.
 - Pre-cleanup Git rollback reference: `c4d4652a9472903f75b7acea157883cf125937fb`.
 - GitHub `origin/main` was rewritten to a clean EcomPilot V1-Core root baseline; obsolete remote branch `codex/04` was deleted.
@@ -19,21 +19,19 @@
 
 ## Latest Completed Work
 
-- Updated repository workflow docs to reduce GitHub push frequency.
-- Added safety guidance for published-history rewrites and documented the pre-cleanup rollback commit.
-- Force-pushed the clean root baseline to `origin/main` with `--force-with-lease`.
-- Deleted obsolete GitHub branch `codex/04`; local `codex/*` branches remain untouched.
+- Patched AI Provider settings so saving returns the saved Provider id, enabled/default state, and key-existence flag without exposing the API key.
+- Improved the `是否默认` switch semantics and selected visual state.
+- Patched `/copywriting` to automatically select the enabled default Provider when the local selection is blank or stale.
+- Verified `deepseek` can be saved as the single enabled default Provider and `/copywriting` auto-selects `deepseek（默认）`.
+- Updated patch and development documentation for the Provider default-selection fix.
 - Reworked `/system/diagnostics` into an "overview + sanitized summary first" layout so copy/export is visible without long scrolling.
-- Moved low-frequency diagnostics into folded detail sections while preserving existing diagnostic data.
-- Downgraded the controlled test-error action to a secondary diagnostics action and shortened the summary textarea with internal scrolling.
 
 ## Current Blockers Or Risks
 
-- No V1-Core acceptance blocker remains.
+- Provider default-selection patch is source/docs plus the intended local setting update for `deepseek`; no schema, migration, dependency, filesystem-write, or AI batch-generation change was made.
+- External daily AI success still depends on the user configuring a real reachable AI provider.
 - Published GitHub history was intentionally rewritten; the rollback reference above is retained in memory.
 - Local `codex/*` branches still retain older history locally and should only be deleted after explicit user confirmation.
-- Diagnostics page logic, sanitization, database schema, Prisma migrations, runtime service, and Vercel read-only rules are unchanged by this workflow/history task.
-- External daily AI success still depends on the user configuring a real reachable AI provider.
 - Backup restore is still future work; create a local backup before V1-Plus or any schema/bulk-write thread.
 - Historical Vercel recovery-code exposure remains an account-side rotation/revocation risk.
 
@@ -45,4 +43,4 @@
 
 ## Next Recommended Step
 
-- After cleanup, start a separate V1-Plus planning thread only after creating or confirming a fresh local backup.
+- Continue with normal local use; `/copywriting` should auto-select the saved default AI Provider. Push only if a deployment refresh is explicitly requested.
