@@ -772,7 +772,7 @@ Completed Thread 02 closeout checks before entering Thread 03: Prisma file-lock 
 
 ### Verification
 
-- Stopped local `E:\电商` Node / Next processes, then re-ran:
+- Stopped local `[local-path-redacted]` Node / Next processes, then re-ran:
   - `npx prisma generate`
   - `npx prisma migrate dev --skip-seed`
 - Confirmed both Prisma commands passed and the earlier Windows `EPERM` Prisma engine rename issue no longer reproduced.
@@ -1588,7 +1588,7 @@ Implemented Thread 07: Excel export and manual local backup.
 - `npm.cmd run build`
 - `npm.cmd audit --audit-level=moderate` returned 0 vulnerabilities after the `uuid` override.
 - Service-level export acceptance generated `EcomPilot_Export_20260528_2025.xlsx`, opened it with ExcelJS, and verified all 6 Sheet names and exact header order.
-- Service-level backup acceptance created `backups/20260528_202548/` and verified both `dev.db` and `uploads/` exist inside it.
+- Service-level backup acceptance created `backups/20260528_202548/` and verified both `[local-sqlite-file]` and `uploads/` exist inside it.
 - Production-server smoke on `localhost:3107` returned HTTP 200 for `/`, `/export`, `/backup`, and `/api/exports/1`.
 - Existing dev server on `localhost:3000` returned 200 for `/`, `/export`, and `/backup`, but one `/api/exports/1` request hit a stale 500 from the already-running dev process.
 
@@ -1606,4 +1606,3 @@ Implemented Thread 07: Excel export and manual local backup.
 
 - Do not commit generated `exports/` or `backups/`; they are local runtime artifacts.
 - If Prisma generate hits `EPERM rename query_engine-windows.dll.node`, stop the process holding Prisma Client or run install with `--ignore-scripts` after schema/client types are already generated.
-

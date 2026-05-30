@@ -108,8 +108,7 @@ Move these to V1-Plus or V1.5 instead of adding them to V1-Core:
 
 Before the next development thread, create or confirm a recent local backup of:
 
-- `prisma/dev.db`
-- `prisma/dev.db-wal` and `prisma/dev.db-shm` if present
-- `uploads/`
+- the local SQLite database and any active sidecar files
+- managed upload assets
 
 Use `/backup` locally before schema changes, batch writes, data repair scripts, or risky filesystem work.

@@ -1,43 +1,25 @@
 # EcomPilot Risk Register
 
-| Risk | Current Level | Why It Matters | Mitigation |
+Keep only OPEN, MITIGATED, or DEFERRED risks here. Detailed historical risk text is archived.
+
+| Risk | Status | Level | Mitigation |
 | --- | --- | --- | --- |
-| Scope drift | High | Future threads may accidentally add V1-Plus/V2 features such as crawlers, cloud accounts, Electron, scheduled jobs, or agent workflows. | Start each thread with `THREAD_SCOPE_CHECKLIST.md`; include a boundary check in final reports. |
-| Database migration risk | High | SQLite is the local source of truth. Broken migrations can block local users or corrupt workflow state. | Add only new migrations; never edit old migrations; avoid reset unless explicitly test-only. |
-| File/database mismatch | High | Products, materials, exports, and backups can reference local files that no longer exist. | Use service-layer checks, soft/friendly failures, and diagnostics summaries before destructive cleanup. |
-| API key leakage | High | AI provider settings may contain sensitive keys. | Never render full keys; never export `.env`; sanitize diagnostics and logs. |
-| AI prompt or response leakage | High | AI calls and diagnostic logs can accidentally expose API keys, full prompts, local paths, supplier details, or stack traces. | Route calls through `src/lib/services/ai/`; store only sanitized summaries in `AIJob` and `AIRequestLog`; diagnostics shows existence/status only. |
-| AI cost estimate misunderstanding | Medium | Estimated AI cost is approximate and may differ from provider bills. | Label cost as estimate, store unit price snapshot, and avoid V1-Core cost reports. |
-| Vercel write operation risk | High | Vercel has no durable local SQLite/uploads/exports/backups/logs and must remain preview-only. | Runtime checks must block writes and show `预览环境只读，请在 Windows 本地验收。` |
-| AI output instability | Medium | AI content may be malformed, unsafe, or unavailable. | Keep manual fallback; validate structured output before business writes; mark AIJob failed and record sanitized AIRequestLog on failure. |
-| Image file growth | Medium | Local `uploads/` can grow quickly and affect backup size. | Avoid automatic cleanup in V1-Core; expose status through diagnostics; future cleanup must be conservative. |
-| Thumbnail dependency risk | Medium | Thumbnail generation now imports `sharp`, a native image dependency that can be platform-sensitive during install/build. | Keep `sharp` as a direct dependency, verify on Windows local with lint/build, and allow original upload to succeed if thumbnail generation fails. |
-| Image permission misuse | High | Reference-only images could accidentally be treated as publishable product assets. | Store `usagePermission`, show the reference-only warning in material views, and keep future publish/export logic permission-aware. |
-| Backup/restore risk | High | Backup exists, but restore is not implemented. Incomplete backup or restore assumptions can create false confidence. | Keep restore labeled as future work; copy SQLite sidecar files; document latest backup status in diagnostics. |
-| Diagnostic information leakage | High | Diagnostics may accidentally include API keys, full paths, database paths, stack traces, or raw prompts. | Use `diagnosticsSanitizer.ts`; summary must use status and relative labels only. |
-| Encoding inconsistency | Medium | Some older docs or terminal output can display mojibake, making future edits risky. | Prefer clean UTF-8 in current docs and touched source files; use `npm.cmd run encoding:check` and Node/TypeScript/build output rather than PowerShell display when checking actual file content. |
-| Prisma client lock on Windows | Medium | Windows file locks can cause `EPERM rename query_engine-windows.dll.node` during generate. | Stop Node/Next/Prisma processes before install/generate when needed; document in handoffs. |
-| Build trace pulling runtime files | Medium | Backup/export filesystem code can be traced into builds if imported incorrectly. | Keep runtime-only filesystem code behind known patterns and guarded build script. |
-| Startup memory files grow too long | Medium | Long startup files increase startup cost and make every thread slower. | Keep `CURRENT_STATUS.md` short; keep only recent tasks in `SESSION_LOG.md`; archive older logs. |
-| Old archive information misleads current development | Medium | Archived plans may conflict with V1-Core boundaries or newer thread instructions. | Do not read archive by default; when conflicts appear, follow `CURRENT_STATUS.md` and the current thread scope. |
-| Too many current docs create unclear reading order | Medium | Agents may waste context or miss the relevant file if all docs look equally mandatory. | Start with `DOC_INDEX.md`, then read only task-relevant documents. |
-| Module README files are not indexed | Medium | Code-adjacent README files can become invisible if `PROJECT_MAP.md` does not point to them. | Link existing module README files from `PROJECT_MAP.md`; future module threads update both the README and map. |
-| SQLite local lock contention | Medium | Windows local SQLite can return `SQLITE_BUSY` when another process holds the database. | Attempt WAL and `busy_timeout`, normalize busy errors into friendly retry guidance, and avoid complex pooling. |
-| Log leakage | High | Logs can accidentally capture API keys, full paths, database URLs, stack traces, or raw prompts. | Use `src/lib/services/logging/` sanitization; diagnostics reads only sanitized summaries and Vercel does not write local logs. |
-| Legacy absolute paths in older records | Medium | Some existing backup/export records may contain absolute paths from earlier threads. | Diagnostics and backup UI use relative labels; keep masking legacy DB paths without changing historical data. |
-| Copywriting history overwrite | High | Overwriting earlier drafts would erase edited history and block future trial-review analysis. | Preserve one row per draft instance; allow updates only for the explicit row or same-job retry flow. |
-| Historical patch workflow confusion | High | If V1 or V1.5 issues are repaired by editing old migrations, revisiting old version branches, or resetting data, version boundaries and local data safety can break down. | Repair on the current latest mainline through a Patch Thread; add new migrations only; never reset the database; document compatibility strategy and repair steps for historical data. |
-| Historical bad data residue | High | Some defects may already have written wrong data such as `fileHash`, copywriting platform fields, or AI cost/log fields. | Before patching, decide whether historical data is affected; when needed provide a safe repair script, a manual review list, or a `legacy` marker instead of guessing missing values. |
-| No-backup migration or bulk-write damage | High | Running a migration or batch filesystem/database write without evaluating backup needs can permanently damage local data. | Require pre-thread safety review, evaluate backups before risky writes, and stop on migration failure instead of resetting. |
-| Unapproved core dependency upgrade | High | Upgrading core framework or runtime dependencies without scope approval can break Windows local runtime, builds, or Vercel preview unexpectedly. | Block core dependency upgrades unless the thread explicitly requires them and the impact/verification plan is documented first. |
-| Missing cache invalidation after writes | Medium | Server-side writes can succeed while UI routes still show stale data, leading to false acceptance or operator confusion. | Require each write path to document its `revalidatePath` / `revalidateTag` strategy or the accepted stale-data risk. |
-| Inspiration folder path leakage | High | The configured local inspiration folder may expose the operator's Windows directory structure if rendered or logged directly. | Store the real path server-side only; frontend, diagnostics, and scan logs use masked summaries only. |
-| Inspiration duplicate-import drift | Medium | If rename-only duplicates bypass fileHash checks, the review queue can inflate and the same image may be converted twice. | Deduplicate by `fileHash`, store unique hashes, and log duplicate skips in `ScanLog`. |
-| Inspiration AI suggestion overclaim | High | Lightweight vision suggestions can invent category, material, or marketing claims and accidentally be treated as facts. | Validate structured output, label it as reference-only, keep manual confirmation before product creation, and capture uncertainty notes instead of guessing. |
-| Unsafe data repair scripts | High | A repair script without dry-run or rerun safety can damage the same rows twice or hide scope before execution. | Require dry-run, affected-row counts, no automatic deletion, backup-before-run, rerun safety, and a repair summary. |
-| Secret rotated too late after exposure | High | Deleting an exposed file without rotating the underlying secret leaves the real credential still valid. | Stop work, remove exposed values from outputs, tell the user to rotate/revoke at the provider, and add sanitization checks afterward. |
-| Parallel thread scope mixing | Medium | Running multiple active development threads at once can mix changes, commit messages, and acceptance boundaries. | Keep one active thread at a time; when interrupted, record the pause point, name the inserted task, update `SESSION_LOG.md`, and separate commit descriptions. |
-| V1-Core freeze drift | Medium | Without a freeze rule, V1-Core can keep growing past its intended boundary and absorb V1-Plus work. | After V1-Core-07 acceptance, mark V1-Core complete, record a final commit or tag, stop adding new features to V1-Core, and route enhancements to V1-Plus or backlog docs. |
-| Multi-platform used-mark inconsistency | Medium | More than one “actual used” row per product/platform would make listing history ambiguous. | Clear existing used marks before setting the next used row for the same product/platform. |
-| Post V1-Core feature creep | High | After final acceptance, small "cleanup" requests can accidentally become V1-Plus or V1.5 feature work inside V1-Core. | Treat V1-Core as complete after the closeout commit; require a new V1-Plus or Patch thread name before adding product behavior. |
-| GitHub history noise | Medium | Reusing an older repository or pushing every small task can leave confusing old-project history and excessive GitHub commits. | Keep main history clean when explicitly approved, use `--force-with-lease` for history rewrites, delete obsolete remote branches, and push future work at milestones instead of after every small task. |
+| Scope drift into V1.5/V2 features | OPEN | High | Start from `THREAD_SCOPE_CHECKLIST.md`; require explicit thread approval. |
+| Database migration or data repair damage | OPEN | High | Add new migrations only, evaluate backup needs, never reset real data. |
+| File/database mismatch | OPEN | High | Use service-layer checks, friendly failures, diagnostics, and conservative cleanup. |
+| API key, prompt, path, stack, or diagnostic leakage | OPEN | High | Sanitize frontend, logs, diagnostics, exports, backups, and docs. |
+| Vercel write operations | OPEN | High | Keep runtime guards; Vercel remains preview-only/read-only. |
+| AI output instability or overclaiming | OPEN | Medium | Validate structured output, keep manual fallback, label AI suggestions as reference-only. |
+| AI cost estimate misunderstanding | MITIGATED | Medium | Treat costs as estimates and avoid detailed cost-report scope without approval. |
+| Image permission misuse | OPEN | High | Store/show usage permission and keep publish/export permission-aware. |
+| Backup without restore | DEFERRED | High | Keep restore labeled future work; do not imply full disaster recovery. |
+| Encoding inconsistency | MITIGATED | Medium | Run `npm.cmd run encoding:check` after Chinese text/doc edits. |
+| Windows Prisma or SQLite locks | OPEN | Medium | Stop conflicting processes when needed; normalize busy errors. |
+| Build tracing runtime files | MITIGATED | Medium | Keep runtime-only filesystem code behind established patterns and guarded build. |
+| Startup/current docs grow too long | MITIGATED | Medium | Keep active docs short and archive older detail. |
+| Archive history misleading current work | OPEN | Medium | Do not read archives by default; current status and thread scope win conflicts. |
+| Missing cache invalidation after writes | OPEN | Medium | Record path/tag invalidation or accepted stale-data risk for write paths. |
+| Inspiration duplicate/import drift | MITIGATED | Medium | Use file hash dedupe and scan summaries. |
+| Secret rotation after historical exposure | OPEN | High | Remove exposed outputs and rotate/revoke secrets at the provider. |
+| Parallel thread scope mixing | OPEN | Medium | Keep one active thread; document interruptions separately. |
+| GitHub history noise | MITIGATED | Medium | Prefer local commits and push only at approved milestones/refreshes/requests. |

@@ -1,182 +1,25 @@
 # EcomPilot Development Changelog
 
-This changelog records high-signal development changes by thread. Detailed chronology remains in `agent-memory/SESSION_LOG.md`.
+This file keeps version-level summaries only. Detailed per-task history is in `agent-memory/archive/` and recent summaries are in `agent-memory/SESSION_LOG.md`.
 
-## 2026-05-30 - V1-Plus Thread 03 Homepage Todo And Processing Queue
+## V1-Plus
 
-- Added `src/lib/services/dashboardTodoService.ts` as the read-only homepage todo summary layer with a unified todo item type.
-- Updated `/` so the pending area shows actionable cards with count, short description, source label, and filtered jump buttons.
-- Todo counts now cover pending inspirations, products missing competitors, products missing cost data, low-score unhandled products, products needing copywriting, products needing materials, recent AI task failures, recent AI request failures, stale backup reminders, and a diagnostics-only cleanup entry.
-- Reused existing product/inspiration/copywriting/material query parameters such as `missingCompetitor=true`, `missingCost=true`, `hasCopywriting=false`, `hasMaterial=false`, `maxScore`, and `status=pending`.
-- Reused existing AIJob / AIRequestLog summaries, backup log service, runtime service, and diagnostics sanitizer; no homepage filesystem path checks, raw local paths, API keys, or unsanitized AI errors are rendered.
-- Added Vercel read-unavailable fallback for the todo service: preview renders an empty actionable todo state plus the diagnostics-only cleanup entry instead of duplicating local SQLite read errors.
-- Kept scope reminder-only: no task table, scheduler, background worker, automatic AI call, automatic copywriting/material generation, file scan, cleanup, Electron, Windows notification, crawler, OCR, or agent system was added.
-- Trimmed the older homepage product stats service so it no longer computes the old inline todo counters.
+- Thread 01 added global search/filter normalization across product, material, copywriting, prompt-task, and inspiration lists while keeping schema, dependencies, AI search, semantic search, filesystem cleanup, and Vercel writes unchanged.
+- Thread 02 enhanced inspiration management with review/archive/reject/converted states, processing records, repeat-conversion protection, and confirm-then-convert behavior using existing inspiration/runtime/AI/operation-log foundations.
+- Thread 03 added a read-only homepage todo summary for actionable reminders from products, inspirations, materials, copywriting, AI logs, backups, runtime, and diagnostics without creating a task system or background queue.
+- V1-Plus closeout shortened active docs and moved detailed history into `agent-memory/archive/` without changing business behavior.
 
-## 2026-05-30 - V1-Plus Thread 02 Inspiration Management Enhancement
+## V1-Core
 
-- Reused the existing inspiration inbox, image path handling, runtime write guard, AI base, and shared `OperationLog`; no separate path, environment, logging, OCR, crawler, link parsing, auto-collection, or auto-product system was added.
-- Added inspiration states `pending`, `reviewed`, `converted`, `archived`, and `rejected`; historical `pending_review` and `ignored` rows are migrated to `pending` and `rejected`.
-- Added nullable `reviewedAt`, `archivedAt`, and `rejectedReason` fields to `Inspiration`, and added `OperationLog.relatedInspirationId` so inspiration processing records stay in the existing operation-log table.
-- Enhanced `/inspirations` with status filtering, default hiding for archived/rejected items, manual mark-reviewed, archive, reject-with-reason, processing records, and repeat-conversion protection.
-- Kept conversion confirm-first in the UI and service layer; converted inspirations retain their source record and `convertedProductId`.
-- Added homepage pending-inspiration todo compatibility and kept list query normalization in the existing query service.
-- Vercel write attempts continue through the existing runtime guard and return `预览环境只读，请在 Windows 本地验收。`.
+- Established diagnostics, runtime/local-path/logging foundations, AI base services, image safety, multi-platform copywriting, inspiration inbox, and final integration acceptance.
+- Kept the app Windows local-first and Vercel preview read-only.
+- Added module READMEs and current documentation for architecture, risks, database changes, patches, known issues, and handoff.
 
-## 2026-05-30 - V1-Plus Thread 01 Global Search And Filter Enhancement
+## MVP Baseline
 
-- Added `src/lib/services/query-service.ts` as the shared query normalization layer for product, material, copywriting, Prompt task, and inspiration list pages.
-- Enhanced `/products` with keyword, status, recommendation, platform, score range, missing competitor, missing cost, material coverage, copywriting coverage, rescore, and created/updated sort filters.
-- Enhanced `/materials` with keyword, type, status, product, platform, created-time sort, and lightweight database-only orphaned-material notice.
-- Enhanced `/copywriting`, `/prompt-tasks`, and `/inspirations` with service-layer list filtering for the approved keyword/status/platform/version/violation/conversion/image/sort dimensions.
-- Acceptance fix: Vercel `/inspirations` now renders the search/filter form even when local SQLite data is unavailable in preview.
-- Acceptance fix: export and backup write attempts in Vercel now return the unified readonly message `预览环境只读，请在 Windows 本地验收。`.
-- Kept Prisma schema, migrations, dependencies, AI search, semantic search, external search agents, filesystem cleanup, and Vercel write behavior unchanged.
+- Built product pool, product detail/editing, scoring, copywriting fallback, prompt tasks, materials, Excel export, manual backup, Vercel preview, and final MVP acceptance.
 
-## 2026-05-30 - AI Provider Default Selection Patch
+## Patch / Governance Summary
 
-- Updated AI Provider saving so the settings client receives the saved Provider id, enabled state, default state, and API-key existence flag without exposing the key.
-- Improved the `是否默认` switch with switch semantics and clearer selected styling.
-- Updated `/copywriting` so an enabled default Provider is selected automatically on first render and when the current local selection is blank or stale.
-- Kept Prisma schema, migrations, dependencies, API key masking, AI generation behavior, and Vercel read-only behavior unchanged.
-
-## 2026-05-30 - GitHub History Cleanup And Push Cadence
-
-- Updated repository workflow rules so small tasks preserve work with local commits and push to GitHub only at milestones, deployment refreshes, history cleanup tasks, or explicit user requests.
-- Added published-history rewrite safety guidance: record the old commit, confirm a clean tree, state risk, and use `--force-with-lease`.
-- Planned repository history cleanup to replace the old auto-selection project history with a clean EcomPilot V1-Core baseline and delete obsolete remote branches.
-- No product code, database schema, migrations, dependencies, or runtime behavior changed.
-
-## 2026-05-30 - Diagnostics Compact Layout Patch
-
-- Reworked `/system/diagnostics` into a compact "status overview + sanitized summary first" page so users can copy/export the diagnostic summary without scrolling through long detail blocks.
-- Moved database counts, directory table, image/inspiration summaries, AIJob/AIRequestLog details, ScanLog summaries, and recent errors into folded detail sections.
-- Kept diagnostics service behavior, sanitization, database schema, Prisma migrations, runtime write logic, and Vercel read-only rules unchanged.
-- Updated the summary action component so copy/export are primary, the controlled test-error write is secondary, and the markdown preview uses a shorter internally scrollable textarea.
-
-## 2026-05-30 - V1-Core-07 Final Integration Acceptance
-
-- Added `scripts/v1-core-07-acceptance.mts` to verify V1-Core diagnostics, local runtime, AI base, image safety, multi-platform copywriting, inspiration scanning, MVP regression flows, and Vercel read-only simulation.
-- Added `docs/current/V1_CORE_UNDERSTANDING_CHECK.md` as a plain-language V1-Core closeout and handoff guide.
-- Updated README and current docs for V1-Core completed scope, Vercel limits, daily use, acceptance commands, and future-version boundaries.
-- Re-ran MVP `thread08` acceptance, V1-Core-07 acceptance, TypeScript, lint, build, encoding check, Prisma migration status, local browser checks, and Vercel preview checks.
-- No Prisma schema, migration, dependency, or runtime deployment configuration changed.
-
-## 2026-05-29 - Sidebar Layout Patch
-
-- Removed the desktop sidebar bottom `本地运行中 / Windows · SQLite / Thread 00...` status card.
-- Hid the desktop sidebar's internal scrollbar line while preserving wheel scrolling for short screens.
-- No database schema, migration, dependency, runtime-folder, or deployment configuration changed.
-
-## 2026-05-29 - V1-Core-06 Inspiration Inbox
-
-- Added `/inspirations` as the manual-scan inspiration inbox.
-- Added Prisma models and migration for `AppSetting`, `Inspiration`, and `ScanLog`, plus AI/Product relations needed for inspiration review.
-- Added local-only inspiration folder setting with masked frontend display and folder validation.
-- Added manual scan flow for `jpg / jpeg / png / webp`, fileHash dedupe, managed copies under `uploads/inspirations/`, thumbnail generation reuse, and `ScanLog` summaries.
-- Added optional lightweight AI image suggestion through the shared AI base, AIJob, AIRequestLog, schema validation, and reference-only UI wording.
-- Added ignore flow, AI apply-to-draft flow, and confirm-then-convert product creation without auto-filling forbidden factual fields.
-- Extended `/system/diagnostics` with inspiration totals, pending-review counts, recent scan summaries, recent failed scans, and recent failed inspiration vision AI jobs.
-- Added `src/lib/services/inspirations/README.md` and linked it from the current project map.
-
-## 2026-05-29 - Memory / Docs Governance Update
-
-- Added Version Patch Workflow documentation.
-- Added patch severity rules.
-- Added `KNOWN_ISSUES.md` issue template.
-- Added `PATCH_LOG.md` patch template.
-- No business code changed.
-- No database migration added.
-
-## 2026-05-29 - Development Safety Addendum
-
-- Added pre-thread safety check.
-- Added database migration safety rules.
-- Added cache invalidation policy.
-- Added dependency policy.
-- Added data repair script policy.
-- Added secret incident policy.
-- Added single active thread policy.
-- Added V1-Core freeze / release policy.
-- No business code changed.
-- No database migration added.
-
-## 2026-05-29 - V1-Core-05 Multi-Platform Copywriting Package
-
-- Extended copywriting from single-platform generation into one-click multi-platform package generation for 闲鱼、淘宝、小红书、抖音.
-- Reused the shared AI base for AIJob creation, AIRequestLog writing, prompt sanitization, output schema validation, and friendly failure handling.
-- Changed copywriting persistence rules to preserve historical rows across different AI jobs instead of overwriting by product/platform/version.
-- Added usage-mark fields so one row per `productId + platform` can be marked as the actual listing version.
-- Added per-row violation scan result persistence and rescans on manual save, while keeping scan failure non-destructive.
-- Updated `/copywriting`, product copywriting tab, and `/system/diagnostics` to surface grouped drafts, AI summaries, usage markers, and readonly Vercel degradation.
-- Added `src/lib/services/copywriting/README.md`.
-
-## 2026-05-29 - V1-Core-04 Image Safety Base
-
-- Added shared image services under `src/lib/services/images/` for format validation, 10MB limit enforcement, short filenames, SHA-256 file hash, dimension reads, and thumbnail generation.
-- Declared `sharp` as a direct dependency because application code now generates WebP thumbnails.
-- Extended `Material` with image metadata fields for hash, original/thumbnail size, MIME type, thumbnail path, source type, and usage permission.
-- Updated material creation to persist image metadata and default manual uploads to `own_photo / usable`, prompt result uploads to `ai_generated / needs_review`.
-- Updated material library and product material tab to prefer thumbnails, show source/permission labels, and show the reference-only warning text.
-- Extended `/system/diagnostics` with image storage summary: material totals, thumbnail count, missing file count, reference-only count, and safe `uploads/` summary.
-- Added module READMEs for images and materials.
-- Vercel remains preview-only: upload writes are blocked through the runtime service and full local paths are not exposed.
-
-## 2026-05-29 - V1-Core-03 AI Base
-
-- Added shared AI base services under `src/lib/services/ai/`: model registry, client factory, prompt sanitizer, output validator, cost estimator, AIJob service, and AIRequestLog service.
-- Kept `src/lib/services/ai-client.ts` as a compatibility facade for existing settings and copywriting callers.
-- Added Prisma models and migration for `AIRequestLog` and `AIJob`.
-- Updated copywriting generation to create/update AIJob state, record sanitized request logs, and block malformed AI JSON from writing formal Copywriting records.
-- Extended `/system/diagnostics` with AI settings existence, recent AIJob entries, failed AIJob summaries, AIRequestLog summaries, and estimated cost total without exposing keys, full prompts, or full local paths.
-- Rewrote current docs and touched runtime/diagnostics copy into clear UTF-8 where earlier terminal output or historical text was confusing.
-- Added `src/lib/services/ai/README.md`.
-- Vercel remains preview-only: real AI jobs/calls/log writes are blocked or skipped with a Windows local acceptance message.
-
-## 2026-05-29 - Encoding Cleanup Guard
-
-- Rewrote the remaining visible mojibake tab aliases in `src/app/products/[id]/page.tsx` as clear Chinese labels.
-- Added `scripts/check-encoding.mjs` and `npm run encoding:check` to verify tracked text files are valid UTF-8 and do not contain known mojibake markers.
-- Confirmed apparent mojibake in current docs was a PowerShell display issue, not corrupted file content, by reading the files through Node UTF-8 decoding.
-
-## 2026-05-29 - V1-Core-02 Local Runtime Stability
-
-- Added centralized runtime service under `src/lib/services/runtime/` with Vercel always read-only.
-- Added local paths and path safety service under `src/lib/services/local-paths/` for `uploads/`, `exports/`, `backups/`, and `logs/`.
-- Added sanitized logging service under `src/lib/services/logging/` writing local `logs/app.log` and `logs/error.log`, with console fallback on Vercel.
-- Extended `/system/diagnostics` with runtime service status, auto-created local directory checks, sanitized recent log summaries, SQLite connectivity, and WAL / `busy_timeout` attempt status.
-- Added a controlled diagnostics test-error action for local log acceptance; Vercel blocks it as read-only.
-- Enhanced `start.bat` with clearer Node/npm/`.env`/directory/port checks and log location hints.
-- Added module README files for runtime, local paths, logging, and diagnostics.
-- Acceptance fix: `/backup` and homepage backup activity now display safe `backups/.../` labels instead of full local backup paths, without mutating `BackupLog.backupPath`.
-- Did not add schema changes, dependency version changes, or future-version features.
-
-## 2026-05-29 - Memory-Docs-Governance-01
-
-- Compressed memory startup files and archived older session history under `agent-memory/archive/`.
-- Added `agent-memory/MEMORY_POLICY.md` and `agent-memory/ARCHIVE_INDEX.md`.
-- Clarified selective docs/current reading rules and module README placement/index rules.
-- Updated project map, architecture rules, thread checklist, and risk register for documentation governance.
-- Did not modify business code, database schema, migrations, Vercel configuration, or deployment state.
-
-## 2026-05-29 - V1-Core-01 Project Maintenance And Diagnostics Base
-
-- Added `docs/current/` as the active documentation set for future V1-Core threads.
-- Added project map, architecture rules, thread scope checklist, risk register, development changelog, patch log template, and known issues template.
-- Added `/system/diagnostics` diagnostics center.
-- Added read-only diagnostics service under `src/lib/services/diagnostics/`.
-- Added sanitized markdown diagnostic summary with copy and browser-download controls.
-- Kept diagnostics read-only on Vercel and avoided persistent diagnostic file writes.
-
-## Historical Threads
-
-- Thread 00: Project scaffold, local database, route skeletons, Windows startup.
-- Thread 01: Product pool, product create/edit/detail, main image upload, soft delete, SPU generation.
-- Thread 03: Product scoring.
-- Thread 04: Copywriting and AI provider fallback.
-- Thread 05: Prompt tasks.
-- Thread 06: Materials.
-- Thread 07: Excel export and manual local backup.
-- Thread 08: Final MVP integration acceptance and local closeout.
-
-See `docs/superpowers/specs/`, `docs/superpowers/acceptance/`, and `agent-memory/SESSION_LOG.md` for detailed historical records.
+- Added patch-thread rules, startup memory rules, archive indexing, encoding checks, push-cadence rules, and history-cleanup guidance.
+- Recent patch detail remains in `PATCH_LOG.md`; older patch detail is archived.
