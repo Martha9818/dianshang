@@ -11,10 +11,12 @@ import {
   PageNote,
   StatusBadge,
 } from "@/components/dashboard/primitives";
+import { BatchOperationForm } from "@/components/batch/batch-operation-form";
 import { ProductImage } from "@/components/products/product-image";
 import {
   applyInspirationAiSuggestionAction,
   archiveInspirationAction,
+  batchInspirationOperationAction,
   convertInspirationToProductAction,
   generateInspirationAiSuggestionAction,
   markInspirationReviewedAction,
@@ -24,6 +26,28 @@ import {
   saveInspirationFolderAction,
 } from "@/app/inspirations/actions";
 import type { InspirationAISuggestion } from "@/lib/services/inspirations/inspirationTypes";
+
+const inspirationBatchOperations = [
+  {
+    value: "MARK_REVIEWED",
+    label: "批量标记已查看",
+    impact: "只修改已选灵感的查看状态，不会转为商品。",
+  },
+  {
+    value: "ARCHIVE",
+    label: "批量归档",
+    dangerous: true,
+    impact: "已选灵感会从默认列表隐藏，不会删除图片或转为商品。",
+  },
+  {
+    value: "REJECT",
+    label: "批量放弃",
+    dangerous: true,
+    impact: "已选灵感会标记为已放弃，不会删除图片或转为商品。",
+  },
+];
+
+const INSPIRATION_BATCH_FORM_ID = "inspiration-batch-operation";
 
 type InspirationView = {
   id: number;
@@ -303,6 +327,12 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         </form>
       </DashboardCard>
 
+      <BatchOperationForm
+        formId={INSPIRATION_BATCH_FORM_ID}
+        action={batchInspirationOperationAction}
+        operations={inspirationBatchOperations}
+        disabled={!data.runtime.isWritable}
+      >
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <DashboardCard className="px-5 py-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -381,15 +411,25 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           <div className="grid gap-3 px-5 py-5 md:grid-cols-2">
             {visibleInspirations.length > 0 ? (
               visibleInspirations.map((item) => (
-                <button
+                <div
                   key={item.id}
-                  type="button"
-                  onClick={() => setSelectedId(item.id)}
                   className={[
                     "group flex flex-col rounded-[24px] border p-4 text-left transition hover:-translate-y-[1px] hover:shadow-[0_18px_36px_rgba(59,130,246,0.08)]",
                     selectedInspiration?.id === item.id ? "border-blue-200 bg-[#F8FBFF]" : "border-[#EEF2F8] bg-white",
                   ].join(" ")}
                 >
+                  <span className="mb-3 flex items-center gap-2 text-xs text-slate-500">
+                    <input
+                      type="checkbox"
+                      form={INSPIRATION_BATCH_FORM_ID}
+                      name="ids"
+                      value={item.id}
+                      aria-label={`选择 ${item.title ?? item.fileName}`}
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                    />
+                    选择
+                  </span>
+                  <button type="button" onClick={() => setSelectedId(item.id)} className="text-left">
                   <ProductImage src={item.displayPath} alt={item.imagePath} label="IMG" square missing={!item.fileExists} />
                   <div className="mt-4 space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
@@ -400,7 +440,8 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                     <p className="line-clamp-2 text-xs leading-5 text-slate-500">{item.note ?? "AI 建议仅供参考，尚未写入正式商品。"}</p>
                     <p className="text-xs text-slate-400">{item.fileHashShort} · {item.formattedImportedAt}</p>
                   </div>
-                </button>
+                  </button>
+                </div>
               ))
             ) : (
               <PageNote>当前筛选条件下没有灵感记录。</PageNote>
@@ -408,6 +449,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           </div>
         </DashboardCard>
       </section>
+      </BatchOperationForm>
 
       <section className="grid gap-4 xl:grid-cols-[0.86fr_1.14fr]">
         <DashboardCard>

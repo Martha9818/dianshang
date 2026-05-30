@@ -7,7 +7,7 @@ import {
   stringifyJsonStringArray,
   type ProductMutationInput,
 } from "@/lib/modules/products";
-import { OPERATION_LOG_ACTIONS } from "@/lib/modules/products/constants";
+import { OPERATION_LOG_ACTIONS, PRODUCT_STATUS_VALUES, type ProductStatus } from "@/lib/modules/products/constants";
 import { createOperationLog } from "@/lib/services/operation-log-service";
 import { ensureProductWritesAllowed, normalizeProductWriteError } from "@/lib/services/product-runtime-service";
 import { notifyProductCreated, notifyProductDeleted } from "@/lib/services/notificationService";
@@ -49,6 +49,14 @@ function createValidationError(message: string) {
 
 function createNotFoundError() {
   return new ProductBusinessError(BUSINESS_ERROR_CODES.PRODUCT_NOT_FOUND, "商品不存在或已删除。");
+}
+
+function normalizeProductStatus(status: string): ProductStatus {
+  if (!(PRODUCT_STATUS_VALUES as readonly string[]).includes(status)) {
+    throw createValidationError("请选择有效商品状态。");
+  }
+
+  return status as ProductStatus;
 }
 
 async function generateUniqueSpu() {
@@ -259,6 +267,48 @@ export async function softDeleteProduct(productId: number) {
       detail: `删除商品 ${existing.name}`,
     });
     await notifyProductDeleted({ productId, productName: existing.name });
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}
+
+export async function updateProductStatus(input: { productId: number; status: string }) {
+  ensureProductWritesAllowed();
+
+  try {
+    const nextStatus = normalizeProductStatus(input.status);
+    const existing = await prisma.product.findFirst({
+      where: {
+        id: input.productId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!existing) {
+      throw createNotFoundError();
+    }
+
+    if (existing.status === nextStatus) {
+      return existing;
+    }
+
+    const updated = await prisma.product.update({
+      where: { id: input.productId },
+      data: { status: nextStatus },
+      select: productMutationSelect,
+    });
+
+    await createOperationLog({
+      productId: input.productId,
+      action: OPERATION_LOG_ACTIONS.CHANGE_STATUS,
+      detail: `状态由 ${existing.status} 变更为 ${nextStatus}`,
+    });
+
+    return updated;
   } catch (error) {
     throw normalizeProductWriteError(error);
   }

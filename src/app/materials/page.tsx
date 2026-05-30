@@ -15,11 +15,13 @@ import {
   TableActionLink,
   TableScrollArea,
 } from "@/components/dashboard/primitives";
+import { BatchOperationForm } from "@/components/batch/batch-operation-form";
 import { MaterialFilterForm } from "@/components/materials/material-filter-form";
 import { MaterialDiscardButton, MaterialStatusButton } from "@/components/materials/material-status-form";
 import { ProductImage } from "@/components/products/product-image";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { MATERIAL_STATUS } from "@/lib/modules/materials";
+import { batchMaterialOperationAction } from "@/app/materials/actions";
 import {
   buildProductReadUnavailableMessage,
   buildReadonlyRuntimeMessage,
@@ -29,6 +31,23 @@ import { getMaterialLibraryPageData } from "@/lib/services/material-service";
 import { normalizeMaterialLibraryQuery } from "@/lib/services/query-service";
 
 export const dynamic = "force-dynamic";
+
+const materialBatchOperations = [
+  {
+    value: "UPDATE_STATUS",
+    label: "批量修改状态",
+    impact: "只修改已选素材状态，不会删除素材文件。",
+    requiresStatus: true,
+  },
+  {
+    value: "ARCHIVE",
+    label: "批量归档素材",
+    dangerous: true,
+    impact: "已选素材会标记为已弃用，不会永久删除文件。",
+  },
+];
+
+const MATERIAL_BATCH_FORM_ID = "material-batch-operation";
 
 type SearchParams = {
   query?: string;
@@ -142,6 +161,13 @@ export default async function MaterialsPage({
       ) : null}
 
       <section className="grid gap-4 xl:grid-cols-[1.04fr_0.44fr]">
+        <BatchOperationForm
+          formId={MATERIAL_BATCH_FORM_ID}
+          action={batchMaterialOperationAction}
+          operations={materialBatchOperations}
+          statusOptions={(pageData?.statuses ?? []).map((status) => ({ value: status, label: status }))}
+          disabled={Boolean(readonlyNotice)}
+        >
         <DashboardCard className="p-4">
           {(pageData?.materials.length ?? 0) > 0 ? (
             view === "grid" ? (
@@ -155,6 +181,18 @@ export default async function MaterialsPage({
                       selectedMaterial?.id === material.id ? "border-blue-200 bg-[#F8FBFF]" : "border-[#EEF2F8] bg-white",
                     ].join(" ")}
                   >
+                    <span className="mb-3 flex items-center gap-2 text-xs text-slate-500">
+                      <input
+                        type="checkbox"
+                        form={MATERIAL_BATCH_FORM_ID}
+                        name="ids"
+                        value={material.id}
+                        aria-label={`选择素材 ${material.id}`}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                        onClick={(event) => event.stopPropagation()}
+                      />
+                      选择
+                    </span>
                     <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" square missing={!material.fileExists} />
                     <div className="mt-4 flex flex-1 flex-col">
                       <h3 className="line-clamp-2 min-h-[48px] text-sm font-medium leading-6 text-slate-900">{material.product.name}</h3>
@@ -177,9 +215,10 @@ export default async function MaterialsPage({
               </div>
             ) : (
               <TableScrollArea className="px-1 py-1">
-                <DataTable className="min-w-[980px]">
+                <DataTable className="min-w-[1040px]">
                   <DataTableHead>
                     <tr>
+                      <DataTableHeaderCell className="w-[6%]">选择</DataTableHeaderCell>
                       <DataTableHeaderCell className="w-[26%]">素材</DataTableHeaderCell>
                       <DataTableHeaderCell className="w-[20%]">文件路径</DataTableHeaderCell>
                       <DataTableHeaderCell className="w-[10%]">平台</DataTableHeaderCell>
@@ -192,6 +231,16 @@ export default async function MaterialsPage({
                   <DataTableBody>
                     {pageData!.materials.map((material) => (
                       <DataTableRow key={material.id}>
+                        <DataTableCell>
+                          <input
+                            type="checkbox"
+                            form={MATERIAL_BATCH_FORM_ID}
+                            name="ids"
+                            value={material.id}
+                            aria-label={`选择素材 ${material.id}`}
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                          />
+                        </DataTableCell>
                         <DataTableCell>
                           <Link href={buildUrl(params, { view, materialId: String(material.id) })} className="flex items-center gap-3">
                             <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" missing={!material.fileExists} />
@@ -219,6 +268,7 @@ export default async function MaterialsPage({
             <PageNote>当前筛选条件下暂无素材记录。</PageNote>
           )}
         </DashboardCard>
+        </BatchOperationForm>
 
         <DashboardCard>
           <DashboardCardHeader

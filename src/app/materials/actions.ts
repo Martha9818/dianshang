@@ -5,11 +5,19 @@ import { redirect } from "next/navigation";
 import { getProductErrorMessage } from "@/lib/modules/products";
 import { MATERIAL_STATUS } from "@/lib/modules/materials";
 import { updateMaterialStatus } from "@/lib/services/material-service";
+import { type BatchOperationResult } from "@/lib/modules/batch/rules";
+import { runBatchOperation } from "@/lib/services/batchOperationService";
 
 type ActionResult<T = null> = {
   success: boolean;
   data?: T;
   error?: string | null;
+};
+
+type BatchActionState = {
+  ok?: boolean;
+  message?: string;
+  result?: BatchOperationResult;
 };
 
 function normalizeSourceUrl(sourceUrl?: string | null) {
@@ -31,6 +39,13 @@ function revalidateMaterialScopes(productId?: number | null) {
   if (productId) {
     revalidatePath(`/products/${productId}`);
   }
+}
+
+function parseBatchIds(formData: FormData) {
+  return formData
+    .getAll("ids")
+    .map((value) => Number(value))
+    .filter((id) => Number.isInteger(id) && id > 0);
 }
 
 export async function updateMaterialStatusAction(
@@ -80,4 +95,33 @@ export async function discardMaterialAndRedirectAction(formData: FormData) {
   }
 
   redirect(sourceUrl);
+}
+
+export async function batchMaterialOperationAction(
+  _state: BatchActionState,
+  formData: FormData,
+): Promise<BatchActionState> {
+  void _state;
+
+  try {
+    const result = await runBatchOperation({
+      entity: "MATERIAL",
+      action: String(formData.get("action") ?? ""),
+      ids: parseBatchIds(formData),
+      value: String(formData.get("status") ?? ""),
+      confirmText: String(formData.get("confirmText") ?? ""),
+    });
+
+    revalidateMaterialScopes();
+    return {
+      ok: result.failedCount === 0,
+      message: `批量操作完成：成功 ${result.successCount}，失败 ${result.failedCount}，跳过 ${result.skippedCount}。`,
+      result,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: getProductErrorMessage(error, "批量操作失败，请稍后重试。"),
+    };
+  }
 }

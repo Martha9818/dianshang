@@ -4,6 +4,14 @@ Only the 10 most recent key summaries stay here. Detailed entries and older hist
 
 ## 2026-05-30
 
+### V1-Plus Thread 05 Batch Operation Safety
+
+- Changed: Added centralized batch rules/service, batch result structure, selected-record UI/action wiring for products, inspirations, materials, and notifications, plus Thread 05 acceptance and preview-guard scripts.
+- Scope: Products support batch status change and soft delete with confirmation; inspirations support reviewed/archive/reject and still block batch conversion; materials support status/archive-as-discarded without file deletion; notifications support selected mark-read/delete with confirmation.
+- Safety: Batch writes call existing business services, reuse runtime guards and OperationLog, execute per item with success/failure/skip counts, and sanitize returned/logged errors.
+- Verified: `npm run lint`, `npm run build`, `npx prisma validate`, `npm run encoding:check`, Thread 05 service acceptance, Vercel-mode read-only guard, and local browser smoke for `/products`, `/materials`, `/inspirations`, and `/notifications`.
+- Handoff: No schema/dependency changes, no batch AI/API image generation, no batch transfer-to-product, no permanent file deletion, no crawler/OCR/Electron/background queue behavior.
+
 ### V1-Plus Thread 04 Notification Center
 
 - Changed: Added `AppNotification`, notification service, `/notifications`, top unread entry, read/unread state, type filtering, safe action URLs, delete/cleanup confirmation, and docs/current updates.

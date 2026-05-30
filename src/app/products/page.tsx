@@ -16,10 +16,11 @@ import {
   TableActionLink,
   TableScrollArea,
 } from "@/components/dashboard/primitives";
+import { BatchOperationForm } from "@/components/batch/batch-operation-form";
 import { DeleteProductButton } from "@/components/products/delete-product-button";
 import { ProductImage } from "@/components/products/product-image";
 import { WorkspacePage } from "@/components/ui/workspace-page";
-import { deleteProductAction } from "@/app/products/actions";
+import { batchProductOperationAction, deleteProductAction } from "@/app/products/actions";
 import { formatCurrency } from "@/lib/modules/products";
 import { PRODUCT_STATUS_TONE, PRODUCT_STATUS_VALUES, TARGET_PLATFORM_VALUES } from "@/lib/modules/products/constants";
 import { SCORE_RECOMMENDATION_FILTER_VALUES } from "@/lib/modules/scoring";
@@ -45,6 +46,23 @@ type SearchParams = {
 
 const inputClassName =
   "h-12 w-full rounded-2xl border border-[#E4EAF3] bg-white px-4 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] outline-none transition-all duration-200 ease-out hover:border-blue-200 hover:shadow-[0_10px_22px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] focus:border-blue-300 focus:ring-4 focus:ring-blue-50 motion-reduce:transition-none";
+
+const productBatchOperations = [
+  {
+    value: "UPDATE_STATUS",
+    label: "批量修改状态",
+    impact: "只修改已选商品状态，不触发 AI，也不转商品。",
+    requiresStatus: true,
+  },
+  {
+    value: "SOFT_DELETE",
+    label: "批量软删除",
+    dangerous: true,
+    impact: "已选商品会从默认商品池隐藏；不会永久删除商品或素材文件。",
+  },
+];
+
+const PRODUCT_BATCH_FORM_ID = "product-batch-operation";
 
 function FilterLabel({ children }: { children: React.ReactNode }) {
   return <p className="mb-2 px-1 text-sm text-slate-500">{children}</p>;
@@ -208,11 +226,18 @@ export default async function ProductsPage({
             <StatCard label="建议测试" value={String(pageData.data.stats.suggestedCount)} delta="只展示" tone="green" icon={<MiniIcon name="thumb" className="h-7 w-7" />} />
           </section>
 
+          <BatchOperationForm
+            formId={PRODUCT_BATCH_FORM_ID}
+            action={batchProductOperationAction}
+            operations={productBatchOperations}
+            statusOptions={PRODUCT_STATUS_VALUES.map((status) => ({ value: status, label: status }))}
+          >
           <DashboardCard>
             <TableScrollArea className="py-3">
-              <DataTable className="min-w-[1180px]">
+              <DataTable className="min-w-[1240px]">
                 <DataTableHead>
                   <tr>
+                    <DataTableHeaderCell className="w-[5%]">选择</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[28%]">商品信息</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[14%]">类目</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[12%]">平台</DataTableHeaderCell>
@@ -229,6 +254,16 @@ export default async function ProductsPage({
                   {pageData.data.products.length > 0 ? (
                     pageData.data.products.map((product) => (
                       <DataTableRow key={product.id}>
+                        <DataTableCell>
+                          <input
+                            type="checkbox"
+                            form={PRODUCT_BATCH_FORM_ID}
+                            name="ids"
+                            value={product.id}
+                            aria-label={`选择 ${product.name}`}
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                          />
+                        </DataTableCell>
                         <DataTableCell>
                           <EntityCell
                             thumb={<ProductImage src={product.mainImagePath} alt={product.name} label={product.name.slice(0, 3)} />}
@@ -279,7 +314,7 @@ export default async function ProductsPage({
                     ))
                   ) : (
                     <DataTableRow>
-                      <DataTableCell colSpan={10} className="py-12">
+                      <DataTableCell colSpan={11} className="py-12">
                         <div className="text-center">
                           <p className="text-base font-medium text-slate-700">
                             {activeFilters ? "当前筛选条件下没有商品记录" : "商品池还没有数据"}
@@ -307,6 +342,7 @@ export default async function ProductsPage({
               </div>
             </div>
           </DashboardCard>
+          </BatchOperationForm>
         </>
       )}
     </WorkspacePage>

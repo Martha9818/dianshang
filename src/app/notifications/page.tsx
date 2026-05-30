@@ -16,12 +16,14 @@ import {
   TableActionLink,
   TableScrollArea,
 } from "@/components/dashboard/primitives";
+import { BatchOperationForm } from "@/components/batch/batch-operation-form";
 import {
   CleanupOldNotificationsForm,
   DeleteNotificationForm,
   MarkAllNotificationsReadForm,
   MarkNotificationReadForm,
 } from "@/components/notifications/notification-actions";
+import { batchNotificationOperationAction } from "@/app/notifications/actions";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { formatDateTime } from "@/lib/modules/products";
 import {
@@ -33,6 +35,22 @@ import {
 } from "@/lib/services/notificationService";
 
 export const dynamic = "force-dynamic";
+
+const notificationBatchOperations = [
+  {
+    value: "MARK_READ",
+    label: "批量标记已读",
+    impact: "只修改已选通知的已读状态。",
+  },
+  {
+    value: "DELETE",
+    label: "批量删除通知",
+    dangerous: true,
+    impact: "已选通知记录会被删除，业务数据不会被删除。",
+  },
+];
+
+const NOTIFICATION_BATCH_FORM_ID = "notification-batch-operation";
 
 type SearchParams = {
   type?: string;
@@ -168,6 +186,12 @@ export default async function NotificationsPage({
         </div>
       </FilterBar>
 
+      <BatchOperationForm
+        formId={NOTIFICATION_BATCH_FORM_ID}
+        action={batchNotificationOperationAction}
+        operations={notificationBatchOperations}
+        disabled={!isWritable}
+      >
       <DashboardCard>
         <DashboardCardHeader
           title="通知列表"
@@ -182,9 +206,10 @@ export default async function NotificationsPage({
           ))}
         </div>
         <TableScrollArea>
-          <DataTable className="min-w-[1060px]">
+          <DataTable className="min-w-[1120px]">
             <DataTableHead>
               <tr>
+                <DataTableHeaderCell className="w-[6%]">选择</DataTableHeaderCell>
                 <DataTableHeaderCell className="w-[13%]">时间</DataTableHeaderCell>
                 <DataTableHeaderCell className="w-[10%]">类型</DataTableHeaderCell>
                 <DataTableHeaderCell className="w-[10%]">级别</DataTableHeaderCell>
@@ -198,6 +223,16 @@ export default async function NotificationsPage({
               {notifications.length > 0 ? (
                 notifications.map((item) => (
                   <DataTableRow key={item.id} className={item.isUnread ? "bg-blue-50/30" : undefined}>
+                    <DataTableCell>
+                      <input
+                        type="checkbox"
+                        form={NOTIFICATION_BATCH_FORM_ID}
+                        name="ids"
+                        value={item.id}
+                        aria-label={`选择通知 ${item.id}`}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                      />
+                    </DataTableCell>
                     <DataTableCell className="text-slate-500">{formatDateTime(item.createdAt)}</DataTableCell>
                     <DataTableCell>
                       <StatusBadge label={item.typeLabel} tone="slate" />
@@ -235,7 +270,7 @@ export default async function NotificationsPage({
                 ))
               ) : (
                 <DataTableRow>
-                  <DataTableCell colSpan={7} className="py-12 text-center text-sm text-slate-400">
+                  <DataTableCell colSpan={8} className="py-12 text-center text-sm text-slate-400">
                     暂无通知。
                   </DataTableCell>
                 </DataTableRow>
@@ -244,6 +279,7 @@ export default async function NotificationsPage({
           </DataTable>
         </TableScrollArea>
       </DashboardCard>
+      </BatchOperationForm>
     </WorkspacePage>
   );
 }

@@ -16,6 +16,8 @@ import {
   updateCompetitor,
 } from "@/lib/services/competitor-service";
 import { createProduct, softDeleteProduct, updateProduct } from "@/lib/services/product-mutation-service";
+import { type BatchOperationResult } from "@/lib/modules/batch/rules";
+import { runBatchOperation } from "@/lib/services/batchOperationService";
 import { extractProfitFormValues, normalizeProfitMutationInput, updateProductProfit } from "@/lib/services/profit-service";
 import { extractScoreFormValues, normalizeScoreFormValues, saveScoreSnapshot } from "@/lib/services/scoring-service";
 
@@ -26,6 +28,12 @@ type SubmitState = {
 type DeleteActionState = {
   success: boolean;
   error?: string | null;
+};
+
+type BatchActionState = {
+  ok?: boolean;
+  message?: string;
+  result?: BatchOperationResult;
 };
 
 function getOptionalImage(formData: FormData, key = "mainImage") {
@@ -46,6 +54,19 @@ function revalidateProductScopes(productId: number) {
   revalidatePath("/");
   revalidatePath("/products");
   revalidatePath(`/products/${productId}`);
+}
+
+function parseBatchIds(formData: FormData) {
+  return formData
+    .getAll("ids")
+    .map((value) => Number(value))
+    .filter((id) => Number.isInteger(id) && id > 0);
+}
+
+function revalidateProductBatchScopes() {
+  revalidatePath("/");
+  revalidatePath("/products");
+  revalidatePath("/notifications");
 }
 
 export async function createProductAction(_prevState: SubmitState, formData: FormData): Promise<SubmitState> {
@@ -99,6 +120,35 @@ export async function deleteProductAction(productId: number): Promise<DeleteActi
     return {
       success: false,
       error: getProductErrorMessage(error, "删除商品失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function batchProductOperationAction(
+  _state: BatchActionState,
+  formData: FormData,
+): Promise<BatchActionState> {
+  void _state;
+
+  try {
+    const result = await runBatchOperation({
+      entity: "PRODUCT",
+      action: String(formData.get("action") ?? ""),
+      ids: parseBatchIds(formData),
+      value: String(formData.get("status") ?? ""),
+      confirmText: String(formData.get("confirmText") ?? ""),
+    });
+
+    revalidateProductBatchScopes();
+    return {
+      ok: result.failedCount === 0,
+      message: `批量操作完成：成功 ${result.successCount}，失败 ${result.failedCount}，跳过 ${result.skippedCount}。`,
+      result,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: getProductErrorMessage(error, "批量操作失败，请稍后重试。"),
     };
   }
 }
