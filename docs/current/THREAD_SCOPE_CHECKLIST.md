@@ -52,7 +52,7 @@ Use this as a short boundary/status record for development threads. Do not paste
 
 ## Verification
 
-- Commands: `npm run lint`, `npm run build`, `npx prisma validate`, `npx tsc --noEmit`, `npm run encoding:check`, `npx prisma migrate status`.
+- Commands: `npm run lint`, `npm run build`, `npx prisma validate`, `npm run typecheck`, `npm run encoding:check`, `npx prisma migrate status`.
 - Acceptance scripts: `scripts/thread07-final-acceptance.mts`, `scripts/thread08-final-acceptance.mts`, `scripts/v1-core-07-acceptance.mts`, `scripts/thread04-acceptance.mts`, `scripts/thread04-preview-verify.mts`, `scripts/thread05-batch-acceptance.mts`, `scripts/thread05-preview-guard.mts`, `scripts/thread06-file-cleanup-acceptance.mts`, `scripts/thread06-preview-guard.mts`.
 - Security scans: recent `CleanupLog`, `AppNotification`, and `OperationLog` records checked for API-key/full-path leakage; no runtime bad records found.
 - Data setup: acceptance scripts create temporary local records/files and clean test products/files where scripted; export/backup history artifacts may remain as normal acceptance evidence.

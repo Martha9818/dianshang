@@ -7,6 +7,7 @@
     "build": "node scripts/guarded-build.mjs",
     "start": "next start",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "encoding:check": "node scripts/check-encoding.mjs",
     "score:verify": "tsx scripts/score-verify.mts",
     "thread04:verify": "tsx scripts/thread04-acceptance.mts",

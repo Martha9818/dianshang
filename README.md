@@ -137,11 +137,11 @@ V1-Core 已沉淀路径、日志、环境判断、Vercel 只读、本地诊断�
 npm run lint
 npm run build
 npx prisma validate
-npx tsc --noEmit
+npm run typecheck
 npm run encoding:check
 ```
 
-`package.json` 当前没有 `typecheck` 或 `test` 脚本；类型检查使用 `npx tsc --noEmit`。
+`package.json` 当前没有 `test` 脚本；如需测试命令，应在新增真实测试用例时一起补充。
 
 ## 常见问题
 

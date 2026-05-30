@@ -4,6 +4,12 @@ Only the 10 most recent key summaries stay here. Detailed entries and older hist
 
 ## 2026-05-30
 
+### V1-Plus Thread 07 Typecheck Script Patch
+
+- Changed: Added `npm run typecheck` as a first-class script for the existing TypeScript check and updated README/current status references.
+- Verified: Typecheck, lint, build, Prisma validate, and encoding check.
+- Handoff: No test script was added because the project does not currently have a real test suite; no schema, dependency, product, runtime, AI, or Vercel behavior changed.
+
 ### V1-Plus Thread 07 Final Integration Acceptance And README Closeout
 
 - Changed: Updated README to V1-Plus, refreshed Thread 07 scope/status docs, aligned `start.bat` with `trash/`, and routed export/backup/upload path handling through existing local-path services.

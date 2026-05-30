@@ -23,7 +23,7 @@
 
 - No active product blocker is recorded for Thread 07.
 - Vercel live preview was not refreshed in this thread; preview behavior was verified by local preview-mode scripts.
-- `package.json` has no `typecheck` or `test` script; type checking was run with `npx tsc --noEmit`.
+- `package.json` now has `npm run typecheck`; there is still no `test` script because no real test suite is present.
 - Existing local runtime folders contain acceptance-generated exports/backups/log records, so local counts vary by machine.
 
 ## Next Recommended Step
