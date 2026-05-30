@@ -51,6 +51,15 @@ export type DashboardTodoPageData =
       message: string;
     };
 
+function buildEmptyDashboardTodoSummary(): DashboardTodoSummary {
+  return {
+    primaryItems: [],
+    utilityItems: [getFileCleanupEntry()],
+    hasActionableItems: false,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
 function daysAgo(days: number) {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }
@@ -311,6 +320,14 @@ export async function getDashboardTodoPageData(): Promise<DashboardTodoPageData>
       data: await getDashboardTodoSummary(),
     };
   } catch (error) {
+    const runtime = getRuntimeModeSummary();
+    if (!runtime.isWritable) {
+      return {
+        kind: "ready",
+        data: buildEmptyDashboardTodoSummary(),
+      };
+    }
+
     const businessError = normalizeProductReadError(error);
     return {
       kind: "unavailable",

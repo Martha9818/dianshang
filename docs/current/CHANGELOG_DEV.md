@@ -9,6 +9,7 @@ This changelog records high-signal development changes by thread. Detailed chron
 - Todo counts now cover pending inspirations, products missing competitors, products missing cost data, low-score unhandled products, products needing copywriting, products needing materials, recent AI failure records, stale backup reminders, and a diagnostics-only cleanup entry.
 - Reused existing product/inspiration/copywriting/material query parameters such as `missingCompetitor=true`, `missingCost=true`, `hasCopywriting=false`, `hasMaterial=false`, `maxScore`, and `status=pending`.
 - Reused existing AIJob / AIRequestLog summaries, backup log service, runtime service, and diagnostics sanitizer; no homepage filesystem path checks, raw local paths, API keys, or unsanitized AI errors are rendered.
+- Added Vercel read-unavailable fallback for the todo service: preview renders an empty actionable todo state plus the diagnostics-only cleanup entry instead of duplicating local SQLite read errors.
 - Kept scope reminder-only: no task table, scheduler, background worker, automatic AI call, automatic copywriting/material generation, file scan, cleanup, Electron, Windows notification, crawler, OCR, or agent system was added.
 - Trimmed the older homepage product stats service so it no longer computes the old inline todo counters.
 
