@@ -3,9 +3,9 @@
 ## Current Progress
 
 - Current stage: V1-Plus after V1-Core completion.
-- Current task: EcomPilot V1-Plus Thread 02 inspiration management enhancement has been locally implemented, committed, and acceptance-checked.
-- Local implementation commit: `f91c983 Enhance inspiration management workflow`.
-- Latest pushed source commit remains `cddf825` on `origin/main`; Thread 02 has not been pushed, so live Vercel is not refreshed with the five-state management UI.
+- Current task: EcomPilot V1-Plus Thread 02 inspiration management enhancement has been implemented, locally accepted, pushed to GitHub, and refreshed on Vercel preview.
+- Thread 02 implementation commit: `f91c983 Enhance inspiration management workflow`.
+- Latest pushed Thread 02 closeout commit before this memory update: `0335b92abbfecde25d24470d184e057fa107f11f`.
 
 ## Current Product Direction
 
@@ -16,15 +16,15 @@
 
 ## Latest Completed Work
 
-- Full Thread 02 acceptance was rerun locally: lint, build, Prisma validate, service-level state-flow acceptance, cleanup check, and browser smoke check for `/inspirations`.
-- Service-level acceptance verified mark-reviewed, archive, reject reason, conversion link, duplicate-conversion block, default archived/rejected hiding, archived/rejected filters, shared `OperationLog`, Vercel runtime guard code `PREVIEW_READONLY`, and cleanup of temporary acceptance records.
-- Local browser smoke check confirmed the five-state filters, detail panel, processing records, relative image paths, masked ScanLog folders, explicit conversion confirmation area, and repeat-conversion disabled state.
-- Live Vercel `/inspirations` is reachable and read-only, but still serves the old deployment with `待审核 / 已忽略 / 已转商品` filters because Thread 02 was not pushed.
+- Pushed local Thread 02 commits to `origin/main`.
+- Confirmed local `HEAD` and `origin/main` both resolved to `0335b92abbfecde25d24470d184e057fa107f11f` immediately after the push.
+- Live Vercel `/inspirations` refreshed after push and now shows the Thread 02 five-state UI: `待处理 / 已查看 / 已转商品 / 已归档 / 已放弃`, with read-only preview messaging.
+- Full local Thread 02 acceptance had already passed: lint, build, Prisma validate, service-level state-flow acceptance, cleanup check, and browser smoke check for `/inspirations`.
 
 ## Current Blockers Or Risks
 
-- Vercel Thread 02 preview acceptance is blocked until the user approves a push/deployment refresh.
-- Existing historical converted inspiration records may have no `OperationLog.relatedInspirationId` because the relation did not exist before this thread.
+- No known Thread 02 acceptance blocker remains after the GitHub push and Vercel preview refresh.
+- Existing historical converted inspiration records may have no `OperationLog.relatedInspirationId` because the relation did not exist before Thread 02.
 - No OCR, screenshot recognition, link parsing, platform crawler, automatic collection, automatic batch AI recognition, automatic product creation, Electron, supplier, inventory, publish, messaging, comment, or multi-agent feature was added.
 - No dependency changes were made.
 
@@ -36,4 +36,4 @@
 
 ## Next Recommended Step
 
-- If the user wants Vercel preview acceptance to pass for Thread 02, push the local Thread 02 commit(s) to `origin/main`, wait for Vercel refresh, then rerun the Vercel `/inspirations` smoke check.
+- Start the next approved V1-Plus thread only after a fresh startup read and clean working-tree check.
