@@ -2,6 +2,16 @@
 
 This changelog records high-signal development changes by thread. Detailed chronology remains in `agent-memory/SESSION_LOG.md`.
 
+## 2026-05-30 - V1-Plus Thread 03 Homepage Todo And Processing Queue
+
+- Added `src/lib/services/dashboardTodoService.ts` as the read-only homepage todo summary layer with a unified todo item type.
+- Updated `/` so the pending area shows actionable cards with count, short description, source label, and filtered jump buttons.
+- Todo counts now cover pending inspirations, products missing competitors, products missing cost data, low-score unhandled products, products needing copywriting, products needing materials, recent AI failure records, stale backup reminders, and a diagnostics-only cleanup entry.
+- Reused existing product/inspiration/copywriting/material query parameters such as `missingCompetitor=true`, `missingCost=true`, `hasCopywriting=false`, `hasMaterial=false`, `maxScore`, and `status=pending`.
+- Reused existing AIJob / AIRequestLog summaries, backup log service, runtime service, and diagnostics sanitizer; no homepage filesystem path checks, raw local paths, API keys, or unsanitized AI errors are rendered.
+- Kept scope reminder-only: no task table, scheduler, background worker, automatic AI call, automatic copywriting/material generation, file scan, cleanup, Electron, Windows notification, crawler, OCR, or agent system was added.
+- Trimmed the older homepage product stats service so it no longer computes the old inline todo counters.
+
 ## 2026-05-30 - V1-Plus Thread 02 Inspiration Management Enhancement
 
 - Reused the existing inspiration inbox, image path handling, runtime write guard, AI base, and shared `OperationLog`; no separate path, environment, logging, OCR, crawler, link parsing, auto-collection, or auto-product system was added.

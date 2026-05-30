@@ -3,37 +3,36 @@
 ## Current Progress
 
 - Current stage: V1-Plus after V1-Core completion.
-- Current task: EcomPilot V1-Plus Thread 02 inspiration management enhancement has been implemented, locally accepted, pushed to GitHub, and refreshed on Vercel preview.
-- Thread 02 implementation commit: `f91c983 Enhance inspiration management workflow`.
-- Latest pushed Thread 02 closeout commit before this memory update: `0335b92abbfecde25d24470d184e057fa107f11f`.
+- Current task: EcomPilot V1-Plus Thread 03 homepage todo and processing queue has been implemented and locally verified.
+- Working scope: homepage information organization only. The todo area is reminder-only and does not execute work.
 
 ## Current Product Direction
 
 - Keep EcomPilot local-first: Windows local runtime, SQLite, and local `uploads/`, `exports/`, `backups/`, and `logs/`.
 - Treat Vercel as read-only preview only: write attempts must return `预览环境只读，请在 Windows 本地验收。`.
-- Keep inspiration business logic in `src/lib/services/inspirations/`; pages and client components only render, collect form input, call actions, and show messages.
-- Thread 02 is limited to manual inspiration management: status filtering, reviewed/archive/reject, notes, processing records, and confirm-first conversion.
+- V1-Plus Thread 03 uses existing product, inspiration, material, copywriting, AI log, backup, runtime, and diagnostics foundations instead of creating a task system.
 
 ## Latest Completed Work
 
-- Pushed local Thread 02 commits to `origin/main`.
-- Confirmed local `HEAD` and `origin/main` both resolved to `0335b92abbfecde25d24470d184e057fa107f11f` immediately after the push.
-- Live Vercel `/inspirations` refreshed after push and now shows the Thread 02 five-state UI: `待处理 / 已查看 / 已转商品 / 已归档 / 已放弃`, with read-only preview messaging.
-- Full local Thread 02 acceptance had already passed: lint, build, Prisma validate, service-level state-flow acceptance, cleanup check, and browser smoke check for `/inspirations`.
+- Added `src/lib/services/dashboardTodoService.ts` with unified todo item types and lightweight read-only counts.
+- Updated `/` to show actionable todo rows with counts, descriptions, source labels, and filtered jump links.
+- Todo sources include pending inspirations, missing competitors, missing costs, low-score unhandled products, missing copywriting, missing materials, recent AI failures, stale backup reminders, and a diagnostics-only cleanup entry.
+- Trimmed older homepage product stats so old inline todo counts are not computed twice.
+- Updated `docs/current/PROJECT_MAP.md` and `docs/current/CHANGELOG_DEV.md` for Thread 03.
 
 ## Current Blockers Or Risks
 
-- No known Thread 02 acceptance blocker remains after the GitHub push and Vercel preview refresh.
-- Existing historical converted inspiration records may have no `OperationLog.relatedInspirationId` because the relation did not exist before Thread 02.
-- No OCR, screenshot recognition, link parsing, platform crawler, automatic collection, automatic batch AI recognition, automatic product creation, Electron, supplier, inventory, publish, messaging, comment, or multi-agent feature was added.
-- No dependency changes were made.
+- Local verification passed: TypeScript, lint, build, Prisma validate, encoding check, diff check, service-level todo counts, filtered list-count checks, local browser homepage smoke check, and Vercel-runtime simulation for cleanup-entry read-only behavior.
+- Vercel preview has not yet been refreshed with Thread 03 code in this closeout.
+- File cleanup remains an entry only; no real scan, cleanup, or deletion is implemented.
+- No database schema, migration, dependency, AI automation, background task, Electron, crawler, OCR, upload automation, or agent feature was added.
 
 ## Current Documentation Entry Points
 
 - Startup files: `AGENTS.md`, `agent-memory/CURRENT_STATUS.md`, `agent-memory/SESSION_LOG.md`.
 - Then read `docs/current/DOC_INDEX.md`.
-- For follow-up inspiration work, read `PROJECT_MAP.md`, `ARCHITECTURE_RULES.md`, `THREAD_SCOPE_CHECKLIST.md`, `RISK_REGISTER.md`, `DATABASE_CHANGELOG.md`, `CHANGELOG_DEV.md`, and `src/lib/services/inspirations/README.md`.
+- For follow-up homepage todo work, read `PROJECT_MAP.md`, `ARCHITECTURE_RULES.md`, `THREAD_SCOPE_CHECKLIST.md`, `RISK_REGISTER.md`, `CHANGELOG_DEV.md`, and `src/lib/services/dashboardTodoService.ts`.
 
 ## Next Recommended Step
 
-- Start the next approved V1-Plus thread only after a fresh startup read and clean working-tree check.
+- Preserve Thread 03 with a local commit, then refresh Vercel preview only if this thread is treated as a deployment milestone or the user explicitly wants the preview updated.

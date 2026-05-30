@@ -64,6 +64,7 @@ V1-Core-07 final integration acceptance passed locally on 2026-05-30. Future net
 | Backup | `src/lib/services/backup-service.ts`, `src/lib/services/backup-log-service.ts`, `src/lib/services/file-copy-service.ts` | Manual local backup, backup history, and display-safe backup path labels. |
 | Diagnostics | `src/lib/services/diagnostics/` | Runtime, database, directory, log, and AI status summaries. |
 | Query services | `src/lib/services/query-service.ts` | Unified list-query parameter defaults, normalization, boolean filters, numeric ranges, and sort handling for V1-Plus search/filter pages. |
+| Dashboard todos | `src/lib/services/dashboardTodoService.ts` | Read-only homepage todo summary from products, inspirations, materials, copywriting, AI logs, backup records, runtime, and diagnostics entry points. |
 
 ## Module README Index
 
@@ -136,6 +137,7 @@ Schema changes require a new migration. Do not edit old migrations and do not re
 | `getDiagnosticsSnapshot` | `src/lib/services/diagnostics/diagnosticsService.ts` | Reads runtime, database, directory, log, and AI status. |
 | `buildDiagnosticsMarkdown` | `src/lib/services/diagnostics/diagnosticsSanitizer.ts` | Builds sanitized markdown text; no writes. |
 | `normalizeProductPoolQuery` / `normalizeMaterialLibraryQuery` / `normalizeCopywritingListQuery` / `normalizePromptTaskQuery` / `normalizeInspirationListQuery` | `src/lib/services/query-service.ts` | Normalizes read-only list query parameters before service-layer Prisma queries; no writes. |
+| `getDashboardTodoSummary` | `src/lib/services/dashboardTodoService.ts` | Computes homepage todo reminders and filtered jump links from existing records; no writes, no filesystem scan, no AI call. |
 
 ## Side Effect Map
 

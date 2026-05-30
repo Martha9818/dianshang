@@ -6,6 +6,46 @@
 
 ### Task
 
+Implemented EcomPilot V1-Plus Thread 03: homepage todo and processing queue.
+
+### Changed
+
+- Added `src/lib/services/dashboardTodoService.ts` with a unified todo item type and read-only todo summary.
+- Updated `/` to render todo cards with counts, descriptions, source labels, and filtered jump links.
+- Covered pending inspirations, missing competitors, missing cost, low-score unhandled products, missing copywriting, missing materials, recent AI failures, stale backup reminders, and a diagnostics-only cleanup entry.
+- Reused existing query parameters, AIJob / AIRequestLog data, backup log service, runtime service, and diagnostics sanitizer.
+- Trimmed older homepage product stats so the old inline todo counters are not queried separately.
+- Updated `PROJECT_MAP.md`, `CHANGELOG_DEV.md`, and current continuity memory.
+- No schema, migration, dependency, task table, scheduler, background worker, automatic AI call, automatic processing, file scan, cleanup, Electron, crawler, OCR, Windows notification, or agent system was added.
+
+### Verification
+
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- `npx.cmd prisma validate`
+- `npm.cmd run encoding:check`
+- `git diff --check`
+- `npm run typecheck` not applicable: no script exists.
+- `npm test` not applicable: no script exists.
+- Service-level todo summary smoke check returned current local counts and filtered links.
+- Service-level filtered list-count check confirmed missing competitor, missing cost, needs copywriting, and needs material counts match `/products` filters.
+- Browser-checked local `/`: todo area renders, counts/descriptions/source labels/buttons render, filtered hrefs are present, and no API-key-like string, `.env`, or Windows absolute path appears in the homepage text.
+- Browser-checked local `/products?missingCompetitor=true`, `/products?missingCost=true`, and `/inspirations?status=pending`.
+- Simulated Vercel runtime for dashboard todo summary: cleanup entry stays read-only and no file scan, Windows absolute path, or API-key-like string appears.
+
+### Git / Deploy Status
+
+- Thread 03 changes are locally verified and pending local commit.
+- Vercel preview has not yet been refreshed with Thread 03 code in this closeout.
+
+### Handoff
+
+- Keep homepage todo logic in `src/lib/services/dashboardTodoService.ts`; pages should only display the service result.
+- File cleanup remains diagnostics-entry-only until a future approved cleanup thread.
+
+### Task
+
 Pushed EcomPilot V1-Plus Thread 02 to GitHub and confirmed Vercel preview refresh.
 
 ### Changed

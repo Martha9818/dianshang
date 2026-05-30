@@ -19,7 +19,7 @@ import {
 } from "@/lib/services/competitor-service";
 import { getProductCopywritingTabData } from "@/lib/services/copywriting-service";
 import { getProductOperationLogs } from "@/lib/services/operation-log-service";
-import { buildProfitView, getMissingCostDataCount } from "@/lib/services/profit-service";
+import { buildProfitView } from "@/lib/services/profit-service";
 import { getHomeMaterialStats, getProductMaterials } from "@/lib/services/material-service";
 import { getHomePromptTaskStats, getProductPromptTasks } from "@/lib/services/prompt-task-service";
 import {
@@ -35,7 +35,6 @@ import {
 import {
   getLatestScoreMap,
   getLatestScoreSnapshot,
-  getProductsNeedingRescoreCount,
   getScoreHistory,
   getScorePreview,
 } from "@/lib/services/scoring-service";
@@ -361,22 +360,6 @@ export async function getProductOperationLogView(productId: number) {
   }));
 }
 
-async function getMissingCompetitorDataCount() {
-  const products = await prisma.product.findMany({
-    where: { deletedAt: null },
-    select: { id: true },
-  });
-
-  const competitorCounts = await Promise.all(
-    products.map(async (product) => {
-      const competitors = await getCompetitorRecordsByProductIdForStats(product.id);
-      return computeCompetitorStats(competitors).validCount;
-    }),
-  );
-
-  return competitorCounts.filter((count) => count < 3).length;
-}
-
 export async function getHomeProductStats() {
   try {
     const [
@@ -384,13 +367,9 @@ export async function getHomeProductStats() {
       pendingCount,
       suggestedCount,
       recentProducts,
-      missingCompetitorCount,
-      missingCostCount,
-      needsRescoreCount,
       generatedCopywritingCount,
       promptTaskStats,
       materialStats,
-      pendingInspirationCount,
       recentActivities,
       recentExportLogs,
       recentBackupLogs,
@@ -404,15 +383,9 @@ export async function getHomeProductStats() {
         take: 5,
         select: productBaseSelect,
       }),
-      getMissingCompetitorDataCount(),
-      getMissingCostDataCount(),
-      getProductsNeedingRescoreCount(),
       prisma.copywriting.count(),
       getHomePromptTaskStats(),
       getHomeMaterialStats(),
-      prisma.inspiration.count({
-        where: { status: { in: ["pending", "reviewed"] } },
-      }),
       prisma.operationLog.findMany({
         where: {
           action: {
@@ -501,15 +474,9 @@ export async function getHomeProductStats() {
       totalCount,
       pendingCount,
       suggestedCount,
-      missingCompetitorCount,
-      missingCostCount,
-      needsRescoreCount,
       generatedCopywritingCount,
       promptTaskCount: promptTaskStats.totalCount,
-      pendingPromptReturnCount: promptTaskStats.pendingReturnCount,
       materialCount: materialStats.activeCount,
-      pendingMaterialReviewCount: materialStats.pendingReviewCount,
-      pendingInspirationCount,
       recentPromptTasks: promptTaskStats.recentTasks,
       recentProducts: await mapProductsWithLatestScores(recentProducts),
       recentActivities: [...operationActivities, ...exportActivities, ...backupActivities]

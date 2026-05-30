@@ -19,13 +19,59 @@ import {
 import { ProductImage } from "@/components/products/product-image";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { PRODUCT_STATUS_TONE } from "@/lib/modules/products/constants";
+import { getDashboardTodoPageData, type DashboardTodoItem } from "@/lib/services/dashboardTodoService";
 import { getHomeProductStatsPageData } from "@/lib/services/product-service";
 import { getPromptTaskStatusTone } from "@/lib/services/prompt-task-service";
 
 export const dynamic = "force-dynamic";
 
-function countToneClass(tone: "amber" | "green") {
-  return tone === "green" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600";
+function countToneClass(tone: DashboardTodoItem["tone"]) {
+  if (tone === "green") return "bg-emerald-50 text-emerald-600";
+  if (tone === "blue") return "bg-blue-50 text-blue-600";
+  if (tone === "red") return "bg-rose-50 text-rose-600";
+  if (tone === "violet") return "bg-violet-50 text-violet-600";
+  if (tone === "slate") return "bg-slate-100 text-slate-500";
+  return "bg-amber-50 text-amber-600";
+}
+
+function todoBorderClass(tone: DashboardTodoItem["tone"]) {
+  if (tone === "red") return "border-l-rose-300";
+  if (tone === "blue") return "border-l-blue-300";
+  if (tone === "violet") return "border-l-violet-300";
+  if (tone === "green") return "border-l-emerald-300";
+  if (tone === "slate") return "border-l-slate-300";
+  return "border-l-amber-300";
+}
+
+function TodoItemRow({ item, isLast }: { item: DashboardTodoItem; isLast: boolean }) {
+  return (
+    <Link
+      href={item.href}
+      className={[
+        "grid gap-3 border-l-4 px-4 py-4 transition hover:bg-blue-50/50 sm:grid-cols-[1fr_auto] sm:items-center",
+        todoBorderClass(item.tone),
+        !isLast && "border-b border-b-[#EEF2F8]",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-[15px] font-semibold text-slate-800">{item.title}</p>
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500">{item.sourceLabel}</span>
+        </div>
+        <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-500">{item.description}</p>
+      </div>
+      <div className="flex items-center justify-between gap-3 sm:justify-end">
+        <span className={`inline-flex min-w-11 justify-center rounded-full px-3 py-1 text-sm font-semibold ${countToneClass(item.tone)}`}>
+          {item.count}
+        </span>
+        <span className="inline-flex h-9 items-center rounded-xl border border-[#DCE5F2] bg-white px-3 text-sm font-medium text-[#2563EB]">
+          {item.actionLabel}
+        </span>
+      </div>
+    </Link>
+  );
 }
 
 function badgeToneClass(action: string) {
@@ -54,30 +100,19 @@ function activityLabel(action: string) {
 }
 
 export default async function Home() {
-  const pageData = await getHomeProductStatsPageData();
+  const [pageData, todoPageData] = await Promise.all([getHomeProductStatsPageData(), getDashboardTodoPageData()]);
   const data = pageData.kind === "ready" ? pageData.data : null;
+  const todoSummary = todoPageData.kind === "ready" ? todoPageData.data : null;
 
   const totalCount = data?.totalCount ?? 0;
   const pendingCount = data?.pendingCount ?? 0;
   const suggestedCount = data?.suggestedCount ?? 0;
   const generatedCopywritingCount = data?.generatedCopywritingCount ?? 0;
   const promptTaskCount = data?.promptTaskCount ?? 0;
-  const pendingPromptReturnCount = data?.pendingPromptReturnCount ?? 0;
   const materialCount = data?.materialCount ?? 0;
-  const pendingMaterialReviewCount = data?.pendingMaterialReviewCount ?? 0;
-  const pendingInspirationCount = data?.pendingInspirationCount ?? 0;
   const recentProducts = data?.recentProducts ?? [];
   const recentPromptTasks = data?.recentPromptTasks ?? [];
   const recentActivities = data?.recentActivities ?? [];
-
-  const todoItems = [
-    { title: "缺少竞品数据", count: data?.missingCompetitorCount ?? 0, tone: "amber" as const, href: "/products" },
-    { title: "缺少成本数据", count: data?.missingCostCount ?? 0, tone: "amber" as const, href: "/products" },
-    { title: "需要重新评分", count: data?.needsRescoreCount ?? 0, tone: "green" as const, href: "/products?needsRescore=true" },
-    { title: "待回传图片", count: pendingPromptReturnCount, tone: "amber" as const, href: "/prompt-tasks" },
-    { title: "待审核素材", count: pendingMaterialReviewCount, tone: "amber" as const, href: "/materials?status=%E5%BE%85%E5%AE%A1%E6%A0%B8" },
-    { title: "待处理灵感", count: pendingInspirationCount, tone: "amber" as const, href: "/inspirations?status=pending" },
-  ];
 
   const statCards = [
     { label: "商品总数", value: String(totalCount), delta: "实时", tone: "blue" as const, icon: "bag" as const },
@@ -95,6 +130,7 @@ export default async function Home() {
       description="本地运行的电商选品评估、文案协作、Prompt 生图任务与素材回传工作台。"
     >
       {pageData.kind === "unavailable" ? <PageNote>{pageData.message}</PageNote> : null}
+      {todoPageData.kind === "unavailable" ? <PageNote>{todoPageData.message}</PageNote> : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
         {statCards.map((item) => (
@@ -198,25 +234,21 @@ export default async function Home() {
 
       <section className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
         <DashboardCard>
-          <DashboardCardHeader title="待处理事项" />
+          <DashboardCardHeader
+            title="待处理事项"
+            description="从商品、灵感、素材、文案、AI 日志和备份记录计算，只提醒，不自动处理。"
+          />
           <div className="px-5 pb-5">
             <div className="overflow-hidden rounded-[24px] border border-[#EEF2F8] bg-white">
-              {todoItems.map((item, index) => (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className={[
-                    "flex items-center justify-between gap-4 px-4 py-4 transition hover:bg-blue-50/50",
-                    index !== todoItems.length - 1 && "border-b border-[#EEF2F8]",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                >
-                  <p className="truncate text-[15px] font-medium text-slate-800">{item.title}</p>
-                  <span className={`inline-flex min-w-11 justify-center rounded-full px-3 py-1 text-sm font-semibold ${countToneClass(item.tone)}`}>
-                    {item.count}
-                  </span>
-                </Link>
+              {todoSummary?.hasActionableItems ? (
+                todoSummary.primaryItems.map((item, index) => (
+                  <TodoItemRow key={item.type} item={item} isLast={index === todoSummary.primaryItems.length - 1 && todoSummary.utilityItems.length === 0} />
+                ))
+              ) : (
+                <div className="px-4 py-6 text-sm text-slate-500">当前没有明显待处理事项。</div>
+              )}
+              {todoSummary?.utilityItems.map((item, index) => (
+                <TodoItemRow key={item.type} item={item} isLast={index === todoSummary.utilityItems.length - 1} />
               ))}
             </div>
           </div>
