@@ -61,10 +61,14 @@ Split Thread 03 homepage AI failure todos and reran full acceptance.
 - Vercel-runtime simulation returned empty actionable todos plus diagnostics-only cleanup entry, with no local path or API-key-like text.
 - Browser-checked local `/`: todo area renders; counts, descriptions, source labels, buttons, and separate AIJob / AIRequestLog failure cards render; no Windows absolute path, `.env`, or API-key-like string was found in homepage text.
 - Browser-checked local `/products?missingCompetitor=true`, `/products?hasCopywriting=false`, `/products?hasMaterial=false`, and `/inspirations?status=pending`; filter controls and result counts matched the expected local data.
+- Pushed the split through `265984a` and browser-checked Vercel `/`: new todo description, friendly empty state, and diagnostics-only cleanup entry are visible; the old combined AI failure card is not present; only one local SQLite unavailable notice appears; no Windows absolute path, `.env`, or API-key-like string was found in page text.
+- Browser-checked Vercel `/products/new`: write page remains read-only with `预览环境只读，请在 Windows 本地验收。`.
 
 ### Git / Deploy Status
 
-- AI failure split is locally verified and pending commit, push, and Vercel preview refresh.
+- AI failure split was pushed to `origin/main` through `265984a`.
+- Vercel preview refreshed at `https://ecompilot-mvp.vercel.app/`.
+- Final memory closeout update is pending commit and push.
 
 ### Handoff
 

@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1-Plus after V1-Core completion.
-- Current task: EcomPilot V1-Plus Thread 03 homepage todo and processing queue final acceptance is complete locally after splitting AI failures into separate task-failure and request-failure todo cards.
+- Current task: EcomPilot V1-Plus Thread 03 homepage todo and processing queue final acceptance is complete after splitting AI failures into separate task-failure and request-failure todo cards.
 - Working scope: homepage information organization only. The todo area is reminder-only and does not execute work.
 
 ## Current Product Direction
@@ -26,6 +26,7 @@
 - `npm run typecheck` and `npm test` remain not applicable because those scripts do not exist.
 - Pushed Thread 03 commits through `0bfc8c3` and verified Vercel preview at `https://ecompilot-mvp.vercel.app/`.
 - Vercel preview now shows the new todo section, empty actionable state, diagnostics-only cleanup entry, no duplicate local SQLite notice, and no frontend API-key/path leakage detected in the checked pages.
+- Pushed the AI failure split commit `265984a` and verified Vercel `/` still shows the new todo section, empty state, diagnostics-only cleanup entry, no old combined AI failure card, and no Windows path / `.env` / API-key-like leakage; `/products/new` still shows the read-only preview warning.
 - File cleanup remains an entry only; no real scan, cleanup, or deletion is implemented.
 - No database schema, migration, dependency, AI automation, background task, Electron, crawler, OCR, upload automation, or agent feature was added.
 
@@ -37,4 +38,4 @@
 
 ## Next Recommended Step
 
-- Commit and push the AI failure split, refresh Vercel preview, then record the final deployment verification.
+- Start the next approved thread from this verified V1-Plus Thread 03 baseline after a fresh startup read and clean working-tree check.
