@@ -17,6 +17,7 @@ import { getProductErrorMessage } from "@/lib/modules/products";
 import { PROMPT_IMAGE_TYPES, PROMPT_TASK_PLATFORMS } from "@/lib/modules/prompt-task";
 import { getPromptTaskPageData, getPromptTaskStatusTone, PROMPT_TASK_STATUS } from "@/lib/services/prompt-task-service";
 import { buildReadonlyRuntimeMessage, getRuntimeModeSummary } from "@/lib/services/product-runtime-service";
+import { normalizePromptTaskQuery } from "@/lib/services/query-service";
 
 export const dynamic = "force-dynamic";
 
@@ -28,22 +29,19 @@ export default async function PromptTasksPage({
 }: {
   searchParams: Promise<{
     productId?: string;
+    q?: string;
     platform?: string;
     imageType?: string;
     recommendedSize?: string;
     status?: string;
+    sort?: string;
     taskCode?: string;
   }>;
 }) {
   const params = await searchParams;
   const runtime = getRuntimeModeSummary();
-  const pageData = await getPromptTaskPageData({
-    productId: params.productId ? Number(params.productId) : null,
-    platform: params.platform ?? null,
-    imageType: params.imageType ?? null,
-    recommendedSize: params.recommendedSize ?? null,
-    status: params.status ?? null,
-  }).catch((error) => ({
+  const query = normalizePromptTaskQuery(params);
+  const pageData = await getPromptTaskPageData(query).catch((error) => ({
     products: [],
     tasks: [],
     recommendedSizes: [],
@@ -63,7 +61,11 @@ export default async function PromptTasksPage({
       description="为商品生成可复制到网页版 ChatGPT 的生图 Prompt，并管理生成图回传状态。"
     >
       <FilterBar className="py-3">
-        <form className="grid w-full gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_140px_140px_140px_140px_auto] xl:items-end">
+        <form className="grid w-full gap-3 md:grid-cols-2 xl:grid-cols-[minmax(180px,1fr)_minmax(180px,1fr)_140px_140px_140px_140px_150px_auto] xl:items-end">
+          <label className="min-w-0">
+            <span className="mb-1.5 block px-1 text-sm text-slate-500">商品关键词</span>
+            <input name="q" defaultValue={query.keyword ?? ""} placeholder="搜索商品 / Task ID" className={selectClassName} />
+          </label>
           <FilterSelect label="商品" name="productId" defaultValue={params.productId ?? ""}>
             <option value="">全部商品</option>
             {pageData.products.map((product) => (
@@ -103,6 +105,10 @@ export default async function PromptTasksPage({
                 {status}
               </option>
             ))}
+          </FilterSelect>
+          <FilterSelect label="创建时间" name="sort" defaultValue={query.sort}>
+            <option value="createdAt_desc">从新到旧</option>
+            <option value="createdAt_asc">从旧到新</option>
           </FilterSelect>
           <div className="flex gap-2">
             <button

@@ -25,6 +25,7 @@ export function MaterialFilterForm({
     platform?: string | null;
     materialType?: string | null;
     status?: string | null;
+    sort?: string | null;
     view?: string | null;
     materialId?: string | null;
   };
@@ -36,18 +37,11 @@ export function MaterialFilterForm({
   hiddenFields?: Record<string, string>;
 }) {
   return (
-    <form action={basePath} className="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_180px_150px_170px_150px_auto] xl:items-end">
-      <label className="block">
-        <span className="mb-2 block px-1 text-sm text-slate-500">搜索</span>
-        <input
-          name="query"
-          defaultValue={values.query ?? ""}
-          placeholder="搜索商品 / 素材 / Task ID"
-          className={inputClassName}
-        />
-      </label>
-      <label className="block">
-        <span className="mb-2 block px-1 text-sm text-slate-500">商品</span>
+    <form action={basePath} className="grid gap-3 xl:grid-cols-[minmax(240px,1fr)_180px_150px_160px_150px_170px_auto] xl:items-end">
+      <FilterField label="关键词">
+        <input name="query" defaultValue={values.query ?? ""} placeholder="搜索文件名 / 商品 / Task ID" className={inputClassName} />
+      </FilterField>
+      <FilterField label="关联商品">
         <select name="productId" defaultValue={values.productId ?? ""} className={inputClassName}>
           <option value="">全部</option>
           {products.map((product) => (
@@ -56,9 +50,8 @@ export function MaterialFilterForm({
             </option>
           ))}
         </select>
-      </label>
-      <label className="block">
-        <span className="mb-2 block px-1 text-sm text-slate-500">平台</span>
+      </FilterField>
+      <FilterField label="平台">
         <select name="platform" defaultValue={values.platform ?? ""} className={inputClassName}>
           <option value="">全部</option>
           {platforms.map((item) => (
@@ -67,9 +60,8 @@ export function MaterialFilterForm({
             </option>
           ))}
         </select>
-      </label>
-      <label className="block">
-        <span className="mb-2 block px-1 text-sm text-slate-500">素材类型</span>
+      </FilterField>
+      <FilterField label="素材类型">
         <select name="materialType" defaultValue={values.materialType ?? ""} className={inputClassName}>
           <option value="">全部</option>
           {materialTypes.map((item) => (
@@ -78,9 +70,8 @@ export function MaterialFilterForm({
             </option>
           ))}
         </select>
-      </label>
-      <label className="block">
-        <span className="mb-2 block px-1 text-sm text-slate-500">状态</span>
+      </FilterField>
+      <FilterField label="素材状态">
         <select name="status" defaultValue={values.status ?? ""} className={inputClassName}>
           <option value="">默认</option>
           {statuses.map((status) => (
@@ -89,7 +80,13 @@ export function MaterialFilterForm({
             </option>
           ))}
         </select>
-      </label>
+      </FilterField>
+      <FilterField label="创建时间">
+        <select name="sort" defaultValue={values.sort ?? "createdAt_desc"} className={inputClassName}>
+          <option value="createdAt_desc">从新到旧</option>
+          <option value="createdAt_asc">从旧到新</option>
+        </select>
+      </FilterField>
       {includeView ? <input type="hidden" name="view" value={values.view ?? "grid"} /> : null}
       {values.materialId ? <input type="hidden" name="materialId" value={values.materialId} /> : null}
       {hiddenFields
@@ -102,5 +99,14 @@ export function MaterialFilterForm({
         筛选
       </button>
     </form>
+  );
+}
+
+function FilterField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block px-1 text-sm text-slate-500">{label}</span>
+      {children}
+    </label>
   );
 }

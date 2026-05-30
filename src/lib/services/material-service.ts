@@ -28,15 +28,13 @@ import {
   normalizeProductReadError,
   normalizeProductWriteError,
 } from "@/lib/services/product-runtime-service";
+import {
+  getSortDirection,
+  normalizeMaterialLibraryQuery,
+  type MaterialLibraryQuery,
+} from "@/lib/services/query-service";
 
-export type MaterialListFilters = {
-  query?: string | null;
-  productId?: number | null;
-  platform?: string | null;
-  materialType?: string | null;
-  status?: string | null;
-  materialId?: number | null;
-};
+export type MaterialListFilters = MaterialLibraryQuery;
 
 const materialSelect = {
   id: true,
@@ -121,7 +119,7 @@ function getMaterialTypeFromPromptImageType(imageType: string | null | undefined
 function buildMaterialWhere(filters?: MaterialListFilters): Prisma.MaterialWhereInput {
   const andConditions: Prisma.MaterialWhereInput[] = [{ product: { deletedAt: null } }];
   const status = filters?.status?.trim();
-  const query = filters?.query?.trim();
+  const query = filters?.keyword?.trim();
 
   if (status) {
     andConditions.push({ status });
@@ -224,11 +222,12 @@ export async function getMaterialById(materialId: number) {
   }
 }
 
-export async function getProductMaterials(productId: number, filters?: Omit<MaterialListFilters, "productId">) {
+export async function getProductMaterials(productId: number, filters?: Partial<Omit<MaterialListFilters, "productId">>) {
   try {
+    const query = normalizeMaterialLibraryQuery({ ...filters, productId });
     const materials = await prisma.material.findMany({
-      where: buildMaterialWhere({ ...filters, productId }),
-      orderBy: { createdAt: "desc" },
+      where: buildMaterialWhere(query),
+      orderBy: { createdAt: getSortDirection(query.sort) },
       select: materialSelect,
     });
 
@@ -240,8 +239,9 @@ export async function getProductMaterials(productId: number, filters?: Omit<Mate
 
 export async function getMaterialLibraryPageData(filters?: MaterialListFilters) {
   try {
-    const where = buildMaterialWhere(filters);
-    const [products, materials, groupedStats, selectedMaterial] = await Promise.all([
+    const query = normalizeMaterialLibraryQuery(filters);
+    const where = buildMaterialWhere(query);
+    const [products, materials, groupedStats, orphanedCount, selectedMaterial] = await Promise.all([
       prisma.product.findMany({
         where: { deletedAt: null },
         orderBy: { updatedAt: "desc" },
@@ -249,7 +249,7 @@ export async function getMaterialLibraryPageData(filters?: MaterialListFilters) 
       }),
       prisma.material.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: getSortDirection(query.sort) },
         select: materialSelect,
         take: 200,
       }),
@@ -258,7 +258,10 @@ export async function getMaterialLibraryPageData(filters?: MaterialListFilters) 
         where: { product: { deletedAt: null } },
         _count: { _all: true },
       }),
-      filters?.materialId ? getMaterialById(filters.materialId) : Promise.resolve(null),
+      prisma.material.count({
+        where: { product: { deletedAt: { not: null } } },
+      }),
+      query.materialId ? getMaterialById(query.materialId) : Promise.resolve(null),
     ]);
 
     const activeTotal = groupedStats
@@ -278,6 +281,7 @@ export async function getMaterialLibraryPageData(filters?: MaterialListFilters) 
         pendingReview: groupedStats.find((item) => item.status === MATERIAL_STATUS.PENDING_REVIEW)?._count._all ?? 0,
         adopted: groupedStats.find((item) => item.status === MATERIAL_STATUS.ADOPTED)?._count._all ?? 0,
         needsEdit: groupedStats.find((item) => item.status === MATERIAL_STATUS.NEEDS_EDIT)?._count._all ?? 0,
+        orphanedCount,
       },
       runtime: getRuntimeModeSummary(),
     };

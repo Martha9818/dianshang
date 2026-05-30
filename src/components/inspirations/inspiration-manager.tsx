@@ -91,6 +91,16 @@ type InspirationsPageData = {
     ignored: number;
     converted: number;
   };
+  filters: {
+    keyword: string | null;
+    sourceType: string | null;
+    status: string | null;
+    converted: "true" | "false" | null;
+    hasImage: "true" | "false" | null;
+    sort: string;
+  };
+  sourceTypes: Array<{ value: string; label: string }>;
+  statuses: Array<{ value: string; label: string }>;
 };
 
 const inputClassName =
@@ -217,6 +227,57 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         <StatCard label="已忽略" value={String(data.stats.ignored)} delta="可随时保留" tone="slate" />
         <StatCard label="已转商品" value={String(data.stats.converted)} delta="需确认后创建" tone="green" />
       </section>
+
+      <DashboardCard className="px-5 py-5">
+        <form action="/inspirations" method="get" className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_170px_160px_160px_150px_160px_auto] xl:items-end">
+          <FilterField label="标题关键词">
+            <input name="q" defaultValue={data.filters.keyword ?? ""} placeholder="搜索标题 / 备注 / 文件名" className={inputClassName} />
+          </FilterField>
+          <FilterField label="来源平台">
+            <select name="sourceType" defaultValue={data.filters.sourceType ?? ""} className={inputClassName}>
+              <option value="">全部来源</option>
+              {data.sourceTypes.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </FilterField>
+          <FilterField label="处理状态">
+            <select name="status" defaultValue={data.filters.status ?? ""} className={inputClassName}>
+              <option value="">全部状态</option>
+              {data.statuses.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </FilterField>
+          <FilterField label="转商品">
+            <select name="converted" defaultValue={data.filters.converted ?? ""} className={inputClassName}>
+              <option value="">全部</option>
+              <option value="true">已转商品</option>
+              <option value="false">未转商品</option>
+            </select>
+          </FilterField>
+          <FilterField label="图片">
+            <select name="hasImage" defaultValue={data.filters.hasImage ?? ""} className={inputClassName}>
+              <option value="">全部</option>
+              <option value="true">图片可用</option>
+              <option value="false">图片缺失</option>
+            </select>
+          </FilterField>
+          <FilterField label="创建时间">
+            <select name="sort" defaultValue={data.filters.sort} className={inputClassName}>
+              <option value="createdAt_desc">从新到旧</option>
+              <option value="createdAt_asc">从旧到新</option>
+            </select>
+          </FilterField>
+          <button type="submit" className="inline-flex h-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-5 text-sm font-medium text-white">
+            筛选
+          </button>
+        </form>
+      </DashboardCard>
 
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <DashboardCard className="px-5 py-5">
@@ -513,6 +574,15 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
       <div className="mb-2 text-sm font-medium text-slate-700">{label}</div>
+      {children}
+    </label>
+  );
+}
+
+function FilterField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="block">
+      <div className="mb-2 px-1 text-sm text-slate-500">{label}</div>
       {children}
     </label>
   );

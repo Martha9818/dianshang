@@ -63,6 +63,7 @@ V1-Core-07 final integration acceptance passed locally on 2026-05-30. Future net
 | Export | `src/lib/services/export-service.ts`, `src/app/api/exports/[id]/route.ts` | Local Excel export and safe download. |
 | Backup | `src/lib/services/backup-service.ts`, `src/lib/services/backup-log-service.ts`, `src/lib/services/file-copy-service.ts` | Manual local backup, backup history, and display-safe backup path labels. |
 | Diagnostics | `src/lib/services/diagnostics/` | Runtime, database, directory, log, and AI status summaries. |
+| Query services | `src/lib/services/query-service.ts` | Unified list-query parameter defaults, normalization, boolean filters, numeric ranges, and sort handling for V1-Plus search/filter pages. |
 
 ## Module README Index
 
@@ -133,6 +134,7 @@ Schema changes require a new migration. Do not edit old migrations and do not re
 | `getBackupDisplayPath` | `src/lib/services/backup-log-service.ts` | Converts real or historical backup paths into safe `backups/.../` display labels; no writes. |
 | `getDiagnosticsSnapshot` | `src/lib/services/diagnostics/diagnosticsService.ts` | Reads runtime, database, directory, log, and AI status. |
 | `buildDiagnosticsMarkdown` | `src/lib/services/diagnostics/diagnosticsSanitizer.ts` | Builds sanitized markdown text; no writes. |
+| `normalizeProductPoolQuery` / `normalizeMaterialLibraryQuery` / `normalizeCopywritingListQuery` / `normalizePromptTaskQuery` / `normalizeInspirationListQuery` | `src/lib/services/query-service.ts` | Normalizes read-only list query parameters before service-layer Prisma queries; no writes. |
 
 ## Side Effect Map
 

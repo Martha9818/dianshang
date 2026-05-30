@@ -26,6 +26,7 @@ import {
   getRuntimeModeSummary,
 } from "@/lib/services/product-runtime-service";
 import { getMaterialLibraryPageData } from "@/lib/services/material-service";
+import { normalizeMaterialLibraryQuery } from "@/lib/services/query-service";
 
 export const dynamic = "force-dynamic";
 
@@ -35,16 +36,11 @@ type SearchParams = {
   platform?: string;
   materialType?: string;
   status?: string;
+  sort?: string;
   view?: string;
   materialId?: string;
   materialError?: string;
 };
-
-function parseNumber(value?: string) {
-  if (!value) return null;
-  const parsed = Number(value);
-  return Number.isInteger(parsed) ? parsed : null;
-}
 
 function buildSourceUrl(params: SearchParams) {
   const searchParams = new URLSearchParams();
@@ -75,20 +71,10 @@ export default async function MaterialsPage({
 }) {
   const params = await searchParams;
   const view = params.view === "list" ? "list" : "grid";
-  const materialId = parseNumber(params.materialId);
   const runtime = getRuntimeModeSummary();
+  const query = normalizeMaterialLibraryQuery(params);
   const sourceUrl = buildSourceUrl({ ...params, view });
-  const pageData =
-    !runtime.isWritable
-      ? null
-      : await getMaterialLibraryPageData({
-          query: params.query ?? null,
-          productId: parseNumber(params.productId),
-          platform: params.platform ?? null,
-          materialType: params.materialType ?? null,
-          status: params.status ?? null,
-          materialId,
-        });
+  const pageData = await getMaterialLibraryPageData(query).catch(() => null);
 
   const selectedMaterial = pageData?.selectedMaterial ?? null;
   const readonlyNotice = runtime.isWritable ? null : buildReadonlyRuntimeMessage(runtime.mode);
@@ -112,7 +98,7 @@ export default async function MaterialsPage({
       <DashboardCard className="px-4 py-4">
         <MaterialFilterForm
           basePath="/materials"
-          values={{ ...params, view }}
+          values={{ ...params, sort: query.sort, view }}
           products={pageData?.products ?? []}
           platforms={(pageData?.platforms ?? []).map((item) => ({ value: item.code, label: item.label }))}
           materialTypes={(pageData?.materialTypes ?? []).map((item) => ({ value: item.code, label: item.label }))}
@@ -148,6 +134,12 @@ export default async function MaterialsPage({
         <StatCard label="已采用" value={String(pageData?.stats.adopted ?? 0)} delta="真实统计" tone="green" icon={<MiniIcon name="shield" className="h-7 w-7" />} />
         <StatCard label="待修改" value={String(pageData?.stats.needsEdit ?? 0)} delta="真实统计" tone="amber" icon={<MiniIcon name="spark" className="h-7 w-7" />} />
       </section>
+
+      {pageData?.stats.orphanedCount ? (
+        <PageNote>
+          检测到 {pageData.stats.orphanedCount} 条素材关联到已删除商品。本线程只做数据库关联提示，不做真实文件扫描、移动或删除。
+        </PageNote>
+      ) : null}
 
       <section className="grid gap-4 xl:grid-cols-[1.04fr_0.44fr]">
         <DashboardCard className="p-4">

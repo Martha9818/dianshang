@@ -91,6 +91,11 @@ type CopywritingView = {
     riskNotes: string[];
     copyText: string;
   };
+  product?: {
+    id: number;
+    name: string;
+    spu: string;
+  } | null;
 };
 
 type GroupedCopywritingView = {
@@ -184,7 +189,7 @@ export function CopywritingManager({
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [productId, setProductId] = useState<number | "">(initialProductId ?? "");
-  const [platform, setPlatform] = useState<string>(initialPlatform ?? COPYWRITING_PLATFORMS[0]);
+  const [platform, setPlatform] = useState<string>(initialPlatform ?? "");
   const initialProviderId =
     providers.find((provider) => provider.id === defaultProviderId && provider.enabled)?.id ??
     providers.find((provider) => provider.isDefault && provider.enabled)?.id ??
@@ -322,9 +327,10 @@ export function CopywritingManager({
     }
 
     startTransition(async () => {
+      const targetPlatform = (platform || platformOptions[0] || COPYWRITING_PLATFORMS[0]) as (typeof COPYWRITING_PLATFORMS)[number];
       const result = await generateCopywritingAction({
         productId: Number(productId),
-        platform: platform as (typeof COPYWRITING_PLATFORMS)[number],
+        platform: targetPlatform,
         providerId: Number(activeProviderId),
       });
 
@@ -363,7 +369,7 @@ export function CopywritingManager({
         copywritingId: record.id,
         productId: record.productId,
         providerId: record.providerId,
-        platform: (record.platform ?? platform) as (typeof COPYWRITING_PLATFORMS)[number],
+        platform: (record.platform || platform || COPYWRITING_PLATFORMS[0]) as (typeof COPYWRITING_PLATFORMS)[number],
         version: (record.versionLabel ?? record.version ?? "A") as "A" | "B" | "C",
         style: record.style ?? COPYWRITING_VERSION_STYLES[(record.versionLabel ?? record.version ?? "A") as "A" | "B" | "C"],
         title: draft.title,
@@ -389,7 +395,7 @@ export function CopywritingManager({
       const result = await markCopywritingUsedAction({
         copywritingId: record.id,
         productId: record.productId,
-        platform: (record.platform ?? platform) as (typeof COPYWRITING_PLATFORMS)[number],
+        platform: (record.platform || platform || COPYWRITING_PLATFORMS[0]) as (typeof COPYWRITING_PLATFORMS)[number],
         usageNote: draft.usageNote,
       });
 
@@ -453,6 +459,7 @@ export function CopywritingManager({
         <div className="xl:min-w-[180px]">
           <p className="mb-2 px-1 text-sm text-slate-500">平台筛选</p>
           <select className={inputClassName} value={platform} onChange={(event) => handlePlatformChange(event.target.value)}>
+            <option value="">全部平台</option>
             {platformOptions.map((item) => (
               <option key={item} value={item}>
                 {item}

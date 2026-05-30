@@ -23,6 +23,11 @@ import {
   normalizeProductReadError,
   normalizeProductWriteError,
 } from "@/lib/services/product-runtime-service";
+import {
+  getSortDirection,
+  normalizePromptTaskQuery,
+  type PromptTaskQuery,
+} from "@/lib/services/query-service";
 
 export const PROMPT_TASK_STATUS = {
   PENDING: "待生成",
@@ -66,13 +71,7 @@ const promptTaskSelect = {
   },
 } satisfies Prisma.PromptTaskSelect;
 
-export type PromptTaskListFilters = {
-  productId?: number | null;
-  platform?: string | null;
-  imageType?: string | null;
-  recommendedSize?: string | null;
-  status?: string | null;
-};
+export type PromptTaskListFilters = PromptTaskQuery;
 
 type PromptTaskRecord = Prisma.PromptTaskGetPayload<{ select: typeof promptTaskSelect }>;
 
@@ -107,17 +106,26 @@ function normalizeImageType(imageType: string): PromptImageTypeCode {
 }
 
 function buildPromptTaskWhere(filters?: PromptTaskListFilters): Prisma.PromptTaskWhereInput {
-  const where: Prisma.PromptTaskWhereInput = {
-    product: { deletedAt: null },
-  };
+  const andConditions: Prisma.PromptTaskWhereInput[] = [{ product: { deletedAt: null } }];
 
-  if (filters?.productId) where.productId = filters.productId;
-  if (filters?.platform) where.platform = filters.platform;
-  if (filters?.imageType) where.imageType = filters.imageType;
-  if (filters?.recommendedSize) where.recommendedSize = filters.recommendedSize;
-  if (filters?.status) where.status = filters.status;
+  if (filters?.productId) andConditions.push({ productId: filters.productId });
+  if (filters?.platform) andConditions.push({ platform: filters.platform });
+  if (filters?.imageType) andConditions.push({ imageType: filters.imageType });
+  if (filters?.recommendedSize) andConditions.push({ recommendedSize: filters.recommendedSize });
+  if (filters?.status) andConditions.push({ status: filters.status });
+  if (filters?.keyword) {
+    andConditions.push({
+      OR: [
+        { taskCode: { contains: filters.keyword } },
+        { platform: { contains: filters.keyword } },
+        { imageType: { contains: filters.keyword } },
+        { product: { name: { contains: filters.keyword } } },
+        { product: { spu: { contains: filters.keyword } } },
+      ],
+    });
+  }
 
-  return where;
+  return { AND: andConditions };
 }
 
 async function buildUniqueTaskCode(input: {
@@ -184,11 +192,12 @@ export async function getPromptTaskProductOptions() {
 
 export async function getPromptTaskPageData(filters?: PromptTaskListFilters) {
   try {
+    const query = normalizePromptTaskQuery(filters);
     const [products, tasks] = await Promise.all([
       getPromptTaskProductOptions(),
       prisma.promptTask.findMany({
-        where: buildPromptTaskWhere(filters),
-        orderBy: { updatedAt: "desc" },
+        where: buildPromptTaskWhere(query),
+        orderBy: { createdAt: getSortDirection(query.sort) },
         select: promptTaskSelect,
         take: 100,
       }),

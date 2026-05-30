@@ -2,6 +2,14 @@
 
 This changelog records high-signal development changes by thread. Detailed chronology remains in `agent-memory/SESSION_LOG.md`.
 
+## 2026-05-30 - V1-Plus Thread 01 Global Search And Filter Enhancement
+
+- Added `src/lib/services/query-service.ts` as the shared query normalization layer for product, material, copywriting, Prompt task, and inspiration list pages.
+- Enhanced `/products` with keyword, status, recommendation, platform, score range, missing competitor, missing cost, material coverage, copywriting coverage, rescore, and created/updated sort filters.
+- Enhanced `/materials` with keyword, type, status, product, platform, created-time sort, and lightweight database-only orphaned-material notice.
+- Enhanced `/copywriting`, `/prompt-tasks`, and `/inspirations` with service-layer list filtering for the approved keyword/status/platform/version/violation/conversion/image/sort dimensions.
+- Kept Prisma schema, migrations, dependencies, AI search, semantic search, external search agents, filesystem cleanup, and Vercel write behavior unchanged.
+
 ## 2026-05-30 - AI Provider Default Selection Patch
 
 - Updated AI Provider saving so the settings client receives the saved Provider id, enabled state, default state, and API-key existence flag without exposing the key.

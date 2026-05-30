@@ -9,6 +9,7 @@ import { getInspirationFolderSettingView } from "@/lib/services/inspirations/ins
 import { getRecentScanLogs } from "@/lib/services/inspirations/scanLogService";
 import {
   INSPIRATION_STATUSES,
+  INSPIRATION_SOURCE_TYPES,
   normalizeInspirationSuggestion,
   type InspirationAISuggestion,
 } from "@/lib/services/inspirations/inspirationTypes";
@@ -19,6 +20,11 @@ import {
   normalizeProductReadError,
   normalizeProductWriteError,
 } from "@/lib/services/product-runtime-service";
+import {
+  getSortDirection,
+  normalizeInspirationListQuery,
+  type InspirationListQuery,
+} from "@/lib/services/query-service";
 
 const inspirationSelect = {
   id: true,
@@ -123,6 +129,36 @@ function parseSuggestion(value: string | null | undefined) {
   }
 }
 
+function buildInspirationWhere(filters: InspirationListQuery): Prisma.InspirationWhereInput {
+  const andConditions: Prisma.InspirationWhereInput[] = [];
+
+  if (filters.status) {
+    andConditions.push({ status: filters.status });
+  }
+
+  if (filters.sourceType) {
+    andConditions.push({ sourceType: filters.sourceType });
+  }
+
+  if (filters.converted === "true") {
+    andConditions.push({ convertedProductId: { not: null } });
+  } else if (filters.converted === "false") {
+    andConditions.push({ convertedProductId: null });
+  }
+
+  if (filters.keyword) {
+    andConditions.push({
+      OR: [
+        { title: { contains: filters.keyword } },
+        { note: { contains: filters.keyword } },
+        { imagePath: { contains: filters.keyword } },
+      ],
+    });
+  }
+
+  return andConditions.length > 0 ? { AND: andConditions } : {};
+}
+
 async function mapInspiration(record: InspirationRecord) {
   const fileExists = await checkFileExists(record.imagePath);
   const thumbnailExists = await checkFileExists(record.thumbnailPath);
@@ -163,13 +199,16 @@ async function mapInspiration(record: InspirationRecord) {
   };
 }
 
-export async function getInspirationPageData() {
+export async function getInspirationPageData(filters?: Partial<InspirationListQuery>) {
   try {
     const runtime = getRuntimeModeSummary();
+    const query = normalizeInspirationListQuery(filters);
+    const where = buildInspirationWhere(query);
     const [settingView, records, groupedStats, recentScanLogs] = await Promise.all([
       getInspirationFolderSettingView(),
       prisma.inspiration.findMany({
-        orderBy: [{ importedAt: "desc" }, { id: "desc" }],
+        where,
+        orderBy: [{ createdAt: getSortDirection(query.sort) }, { id: "desc" }],
         select: inspirationSelect,
         take: 200,
       }),
@@ -180,13 +219,35 @@ export async function getInspirationPageData() {
       getRecentScanLogs(8),
     ]);
 
-    const inspirations = await Promise.all(records.map(mapInspiration));
+    const mappedInspirations = await Promise.all(records.map(mapInspiration));
+    const inspirations = mappedInspirations.filter((item) => {
+      if (query.hasImage === "true") {
+        return item.fileExists;
+      }
+
+      if (query.hasImage === "false") {
+        return !item.fileExists;
+      }
+
+      return true;
+    });
 
     return {
       runtime,
       settingView,
       inspirations,
       recentScanLogs,
+      filters: query,
+      sourceTypes: [
+        {
+          value: INSPIRATION_SOURCE_TYPES.FOLDER_MANUAL_SCAN,
+          label: mapSourceTypeLabel(INSPIRATION_SOURCE_TYPES.FOLDER_MANUAL_SCAN),
+        },
+      ],
+      statuses: Object.values(INSPIRATION_STATUSES).map((status) => ({
+        value: status,
+        label: mapStatusLabel(status),
+      })),
       stats: {
         total: inspirations.length,
         pendingReview: groupedStats.find((item) => item.status === INSPIRATION_STATUSES.PENDING_REVIEW)?._count._all ?? 0,

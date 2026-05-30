@@ -42,6 +42,11 @@ import {
   normalizeProductReadError,
   normalizeProductWriteError,
 } from "@/lib/services/product-runtime-service";
+import {
+  getSortDirection,
+  normalizeCopywritingListQuery,
+  type CopywritingListQuery,
+} from "@/lib/services/query-service";
 
 const PRODUCT_COPYWRITING_SELECT = {
   id: true,
@@ -101,6 +106,14 @@ const COPYWRITING_SELECT = {
   rawResponseText: true,
   createdAt: true,
   updatedAt: true,
+  product: {
+    select: {
+      id: true,
+      name: true,
+      spu: true,
+      deletedAt: true,
+    },
+  },
   aiJob: {
     select: {
       id: true,
@@ -472,6 +485,14 @@ function mapCopywritingRecord(record: CopywritingRecord) {
     usedAt: record.usedAt ? record.usedAt.toISOString() : null,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
+    product:
+      record.product && !record.product.deletedAt
+        ? {
+            id: record.product.id,
+            name: record.product.name,
+            spu: record.product.spu,
+          }
+        : null,
     display,
     aiJobSummary: record.aiJob
       ? {
@@ -641,10 +662,15 @@ function groupCopywritingsByPlatform(records: ReturnType<typeof mapCopywritingRe
 
 export async function getCopywritingPageData(filters?: {
   productId?: number | null;
+  keyword?: string | null;
   platform?: string | null;
+  version?: string | null;
+  hasViolation?: "true" | "false" | null;
+  sort?: "createdAt_desc" | "createdAt_asc";
   providerId?: number | null;
 }) {
   const runtime = getRuntimeModeSummary();
+  const query = normalizeCopywritingListQuery(filters as CopywritingListQuery | undefined);
 
   async function loadProducts() {
     return prisma.product.findMany({
@@ -677,17 +703,46 @@ export async function getCopywritingPageData(filters?: {
   }
 
   async function loadCopywritings() {
-    if (!filters?.productId) {
-      return [] as CopywritingRecord[];
+    const andConditions: Prisma.CopywritingWhereInput[] = [{ product: { deletedAt: null } }];
+
+    if (query.productId) {
+      andConditions.push({ productId: query.productId });
+    }
+
+    if (query.platform) {
+      andConditions.push({ platform: query.platform });
+    }
+
+    if (query.version) {
+      andConditions.push({
+        OR: [{ versionLabel: query.version }, { version: query.version }],
+      });
+    }
+
+    if (query.keyword) {
+      andConditions.push({
+        OR: [
+          { title: { contains: query.keyword } },
+          { body: { contains: query.keyword } },
+          { mainCopy: { contains: query.keyword } },
+          { content: { contains: query.keyword } },
+          { product: { name: { contains: query.keyword } } },
+          { product: { spu: { contains: query.keyword } } },
+        ],
+      });
+    }
+
+    if (query.hasViolation === "true") {
+      andConditions.push({ riskWords: { not: null } });
+    } else if (query.hasViolation === "false") {
+      andConditions.push({ riskWords: null });
     }
 
     return prisma.copywriting.findMany({
-      where: {
-        productId: filters.productId,
-        ...(filters.platform ? { platform: filters.platform } : {}),
-      },
-      orderBy: [{ createdAt: "desc" }],
+      where: { AND: andConditions },
+      orderBy: [{ createdAt: getSortDirection(query.sort) }],
       select: COPYWRITING_SELECT,
+      take: 200,
     });
   }
 
@@ -695,8 +750,8 @@ export async function getCopywritingPageData(filters?: {
     const [products, providers, existingCopywritings] = await Promise.all([loadProducts(), loadProviders(), loadCopywritings()]);
 
     const defaultProvider = providers.find((provider) => provider.isDefault) ?? null;
-    const selectedProductId = filters?.productId ?? null;
-    const selectedPlatform = filters?.platform?.trim() ?? null;
+    const selectedProductId = query.productId;
+    const selectedPlatform = query.platform;
     const mappedCopywritings = existingCopywritings.map(mapCopywritingRecord);
 
     return {
@@ -721,8 +776,8 @@ export async function getCopywritingPageData(filters?: {
       const existingCopywritings = copywritingsResult.status === "fulfilled" ? copywritingsResult.value : [];
       const defaultProvider = providers.find((provider) => provider.isDefault) ?? null;
       const selectedProductId =
-        filters?.productId && products.some((product) => product.id === filters.productId) ? filters.productId : null;
-      const selectedPlatform = filters?.platform?.trim() ?? null;
+        query.productId && products.some((product) => product.id === query.productId) ? query.productId : null;
+      const selectedPlatform = query.platform;
       const mappedCopywritings = existingCopywritings.map(mapCopywritingRecord);
 
       return {

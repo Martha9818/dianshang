@@ -6,6 +6,42 @@
 
 ### Task
 
+Implemented EcomPilot V1-Plus Thread 01: global search and filter enhancement.
+
+### Changed
+
+- Preserved the prior AI Provider default-selection patch first as local commit `788bc4c` so this thread stayed single-scope.
+- Added `src/lib/services/query-service.ts` for shared query defaults, boolean filters, numeric ranges, and sort normalization.
+- Enhanced product, material, copywriting, Prompt task, and inspiration list services so complex Prisma query construction stays in service code.
+- Updated `/products`, `/materials`, `/copywriting`, `/prompt-tasks`, and `/inspirations` with the approved search/filter/sort controls and friendly empty states.
+- Added a lightweight material orphan notice based only on database associations; no real file scan or cleanup was added.
+- Updated `docs/current/PROJECT_MAP.md`, `docs/current/CHANGELOG_DEV.md`, and continuity memory.
+- No Prisma schema, migration, dependency, AI search, semantic search, external search agent, filesystem cleanup, collection, OCR, generation, automation, export, backup, or Vercel write behavior changed.
+
+### Verification
+
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint`
+- `npx.cmd prisma validate`
+- `npm.cmd run build`
+- Browser-checked local `/products` with missing-cost and missing-competitor filters.
+- Browser-checked local `/materials` with keyword/type/status/sort filters and empty-result state.
+- Browser-checked local `/copywriting` with platform and violation filters.
+- Browser-checked local `/prompt-tasks` with product keyword, status, and created-time sort filters.
+- Browser-checked local `/inspirations` with status, converted, image, and created-time sort filters.
+
+### Git / Deploy Status
+
+- V1-Plus Thread 01 implementation is pending final commit after closeout verification.
+- No push or deployment refresh was requested.
+
+### Handoff
+
+- Continue to keep new query dimensions in `src/lib/services/query-service.ts` and affected service files.
+- Treat semantic search, AI search, and external search agents as not applicable until a later approved version.
+
+### Task
+
 Implemented the V1-Core Patch for AI Provider default selection.
 
 ### Changed

@@ -28,6 +28,11 @@ import {
   normalizeProductReadError,
 } from "@/lib/services/product-runtime-service";
 import {
+  getSortDirection,
+  normalizeProductPoolQuery,
+  type ProductPoolQuery,
+} from "@/lib/services/query-service";
+import {
   getLatestScoreMap,
   getLatestScoreSnapshot,
   getProductsNeedingRescoreCount,
@@ -35,15 +40,7 @@ import {
   getScorePreview,
 } from "@/lib/services/scoring-service";
 
-export type ProductListFilters = {
-  query?: string;
-  status?: string;
-  targetPlatform?: string;
-  category?: string;
-  recommendation?: string;
-  needsRescore?: string;
-  sort?: "updatedAt" | "createdAt";
-};
+export type ProductListFilters = ProductPoolQuery;
 
 const productBaseSelect = {
   id: true,
@@ -98,10 +95,9 @@ export type ProductPageState<T> =
     };
 
 function buildProductWhere(filters?: ProductListFilters) {
-  const query = filters?.query?.trim();
+  const query = filters?.keyword?.trim();
   const status = filters?.status?.trim();
-  const targetPlatform = filters?.targetPlatform?.trim();
-  const category = filters?.category?.trim();
+  const targetPlatform = filters?.platform?.trim();
   const andConditions = [{ deletedAt: null }] as Array<Record<string, unknown>>;
 
   if (query) {
@@ -109,8 +105,6 @@ function buildProductWhere(filters?: ProductListFilters) {
       OR: [
         { name: { contains: query } },
         { spu: { contains: query } },
-        { categoryLevel1: { contains: query } },
-        { categoryLevel2: { contains: query } },
       ],
     });
   }
@@ -123,10 +117,34 @@ function buildProductWhere(filters?: ProductListFilters) {
     andConditions.push({ targetPlatforms: { contains: `"${targetPlatform}"` } });
   }
 
-  if (category) {
+  if (filters?.missingCompetitor === "true") {
+    andConditions.push({ competitors: { none: {} } });
+  } else if (filters?.missingCompetitor === "false") {
+    andConditions.push({ competitors: { some: {} } });
+  }
+
+  if (filters?.missingCost === "true") {
     andConditions.push({
-      OR: [{ categoryLevel1: { equals: category } }, { categoryLevel2: { equals: category } }],
+      OR: [{ estimatedPrice: null }, { estimatedCost: null }, { estimatedShipping: null }],
     });
+  } else if (filters?.missingCost === "false") {
+    andConditions.push({
+      estimatedPrice: { not: null },
+      estimatedCost: { not: null },
+      estimatedShipping: { not: null },
+    });
+  }
+
+  if (filters?.hasMaterial === "true") {
+    andConditions.push({ materials: { some: {} } });
+  } else if (filters?.hasMaterial === "false") {
+    andConditions.push({ materials: { none: {} } });
+  }
+
+  if (filters?.hasCopywriting === "true") {
+    andConditions.push({ copywritings: { some: {} } });
+  } else if (filters?.hasCopywriting === "false") {
+    andConditions.push({ copywritings: { none: {} } });
   }
 
   return { AND: andConditions };
@@ -183,9 +201,11 @@ function buildReadUnavailableState(runtimeMode: RuntimeMode): ProductPageState<n
 
 export async function getProductList(filters?: ProductListFilters) {
   try {
+    const query = normalizeProductPoolQuery(filters);
+    const orderField = query.sort.startsWith("createdAt") ? "createdAt" : "updatedAt";
     const products = await prisma.product.findMany({
-      where: buildProductWhere(filters),
-      orderBy: { [filters?.sort === "createdAt" ? "createdAt" : "updatedAt"]: "desc" },
+      where: buildProductWhere(query),
+      orderBy: { [orderField]: getSortDirection(query.sort) },
       select: {
         ...productBaseSelect,
         competitors: {
@@ -212,11 +232,23 @@ export async function getProductList(filters?: ProductListFilters) {
     });
 
     return mappedProducts.filter((product) => {
-      if (filters?.recommendation?.trim() && product.recommendationFilterValue !== filters.recommendation.trim()) {
+      if (query.recommendation?.trim() && product.recommendationFilterValue !== query.recommendation.trim()) {
         return false;
       }
 
-      if (filters?.needsRescore === "true" && !product.needsRescore) {
+      if (query.needsRescore === "true" && !product.needsRescore) {
+        return false;
+      }
+
+      if (query.needsRescore === "false" && product.needsRescore) {
+        return false;
+      }
+
+      if (query.minScore !== null && (product.latestScore === null || product.latestScore < query.minScore)) {
+        return false;
+      }
+
+      if (query.maxScore !== null && (product.latestScore === null || product.latestScore > query.maxScore)) {
         return false;
       }
 
@@ -492,6 +524,7 @@ export async function getProductPoolPageData(filters?: ProductListFilters): Prom
   }>
 > {
   const { mode } = getRuntimeModeSummary();
+  const query = normalizeProductPoolQuery(filters);
 
   if (mode === "cloud") {
     return buildReadUnavailableState(mode);
@@ -501,7 +534,7 @@ export async function getProductPoolPageData(filters?: ProductListFilters): Prom
     const [stats, filterOptions, products] = await Promise.all([
       getProductPoolStats(),
       getProductFilterOptions(),
-      getProductList(filters),
+      getProductList(query),
     ]);
 
     return {
