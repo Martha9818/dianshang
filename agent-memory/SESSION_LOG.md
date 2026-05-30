@@ -10,7 +10,7 @@ Only the 10 most recent key summaries stay here. Detailed entries and older hist
 - Hooked: AI job failures, export completion/failure, backup completion/failure, inspiration-to-product conversion, and product create/delete call `notificationService`; cleanup has a reserved service hook only.
 - Safety: Notification text reuses existing log/diagnostic/AI sanitizers; Vercel-mode writes return `预览环境只读，请在 Windows 本地验收。`; no Windows/Electron/browser Push/WebSocket/background notification behavior was added.
 - Verified: Prisma validate/migrate/status, lint, build, encoding check, local browser checks, Vercel-mode read/write guard simulation, and notification sanitization/action URL checks.
-- Deploy: Local only; no push or Vercel refresh requested.
+- Deploy: Confirmed `main` and `origin/main` both point to `2633873`; `git push origin main` returned up-to-date. Vercel refresh still needs a separate preview check if required.
 
 ### V1-Plus Documentation Closeout
 
