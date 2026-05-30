@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1-Plus after V1-Core completion.
-- Current task: EcomPilot V1-Plus Thread 03 homepage todo and processing queue has been implemented and locally verified.
+- Current task: EcomPilot V1-Plus Thread 03 homepage todo and processing queue has been implemented, locally verified, pushed to GitHub, and refreshed on Vercel preview.
 - Working scope: homepage information organization only. The todo area is reminder-only and does not execute work.
 
 ## Current Product Direction
@@ -23,7 +23,8 @@
 ## Current Blockers Or Risks
 
 - Local verification passed: TypeScript, lint, build, Prisma validate, encoding check, diff check, service-level todo counts, filtered list-count checks, local browser homepage smoke check, and Vercel-runtime simulation for cleanup-entry read-only behavior.
-- Vercel preview has not yet been refreshed with Thread 03 code in this closeout.
+- Pushed Thread 03 commits through `0bfc8c3` and verified Vercel preview at `https://ecompilot-mvp.vercel.app/`.
+- Vercel preview now shows the new todo section, empty actionable state, diagnostics-only cleanup entry, no duplicate local SQLite notice, and no frontend API-key/path leakage detected in the checked pages.
 - File cleanup remains an entry only; no real scan, cleanup, or deletion is implemented.
 - No database schema, migration, dependency, AI automation, background task, Electron, crawler, OCR, upload automation, or agent feature was added.
 
@@ -35,4 +36,4 @@
 
 ## Next Recommended Step
 
-- Preserve Thread 03 with a local commit, then refresh Vercel preview only if this thread is treated as a deployment milestone or the user explicitly wants the preview updated.
+- Start the next approved thread from this verified V1-Plus Thread 03 baseline after a fresh startup read and clean working-tree check.

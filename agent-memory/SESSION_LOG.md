@@ -33,11 +33,13 @@ Implemented EcomPilot V1-Plus Thread 03: homepage todo and processing queue.
 - Browser-checked local `/`: todo area renders, counts/descriptions/source labels/buttons render, filtered hrefs are present, and no API-key-like string, `.env`, or Windows absolute path appears in the homepage text.
 - Browser-checked local `/products?missingCompetitor=true`, `/products?missingCost=true`, and `/inspirations?status=pending`.
 - Simulated Vercel runtime for dashboard todo summary: cleanup entry stays read-only and no file scan, Windows absolute path, or API-key-like string appears.
+- Pushed Thread 03 through `0bfc8c3` and browser-checked Vercel `/`: new todo description is visible, preview read-unavailable state falls back to empty actionable todos plus diagnostics-only cleanup entry, only one local SQLite unavailable notice appears, and no Windows absolute path, `.env`, or API-key-like string was found in page text.
+- Browser-checked Vercel `/products/new`: write page remains read-only with `预览环境只读，请在 Windows 本地验收。`.
 
 ### Git / Deploy Status
 
-- Thread 03 changes are locally verified and pending local commit.
-- Vercel preview has not yet been refreshed with Thread 03 code in this closeout.
+- Thread 03 source commits were pushed to `origin/main` through `0bfc8c3`.
+- Final memory closeout update is pending commit and push.
 
 ### Handoff
 
