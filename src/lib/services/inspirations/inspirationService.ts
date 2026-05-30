@@ -9,11 +9,11 @@ import { getInspirationFolderSettingView } from "@/lib/services/inspirations/ins
 import { getRecentScanLogs } from "@/lib/services/inspirations/scanLogService";
 import {
   INSPIRATION_STATUSES,
+  LEGACY_INSPIRATION_STATUSES,
   INSPIRATION_SOURCE_TYPES,
   normalizeInspirationSuggestion,
   type InspirationAISuggestion,
 } from "@/lib/services/inspirations/inspirationTypes";
-import { createOperationLog } from "@/lib/services/operation-log-service";
 import {
   ensureProductWritesAllowed,
   getRuntimeModeSummary,
@@ -39,6 +39,9 @@ const inspirationSelect = {
   aiSuggestionJson: true,
   aiJobId: true,
   convertedProductId: true,
+  reviewedAt: true,
+  archivedAt: true,
+  rejectedReason: true,
   importedAt: true,
   createdAt: true,
   updatedAt: true,
@@ -61,6 +64,16 @@ const inspirationSelect = {
       deletedAt: true,
     },
   },
+  operationLogs: {
+    orderBy: { createdAt: "desc" },
+    take: 20,
+    select: {
+      id: true,
+      action: true,
+      detail: true,
+      createdAt: true,
+    },
+  },
 } satisfies Prisma.InspirationSelect;
 
 type InspirationRecord = Prisma.InspirationGetPayload<{ select: typeof inspirationSelect }>;
@@ -74,9 +87,11 @@ function createNotFoundError() {
 }
 
 function getStatusTone(status: string) {
-  if (status === INSPIRATION_STATUSES.PENDING_REVIEW) return "amber" as const;
+  if (status === INSPIRATION_STATUSES.PENDING || status === LEGACY_INSPIRATION_STATUSES.PENDING_REVIEW) return "amber" as const;
+  if (status === INSPIRATION_STATUSES.REVIEWED) return "blue" as const;
   if (status === INSPIRATION_STATUSES.CONVERTED) return "green" as const;
-  if (status === INSPIRATION_STATUSES.IGNORED) return "slate" as const;
+  if (status === INSPIRATION_STATUSES.ARCHIVED) return "slate" as const;
+  if (status === INSPIRATION_STATUSES.REJECTED || status === LEGACY_INSPIRATION_STATUSES.IGNORED) return "red" as const;
   return "slate" as const;
 }
 
@@ -87,9 +102,11 @@ function getUsagePermissionTone(permission: string) {
 }
 
 function mapStatusLabel(status: string) {
-  if (status === INSPIRATION_STATUSES.PENDING_REVIEW) return "待审核";
+  if (status === INSPIRATION_STATUSES.PENDING || status === LEGACY_INSPIRATION_STATUSES.PENDING_REVIEW) return "待处理";
+  if (status === INSPIRATION_STATUSES.REVIEWED) return "已查看";
   if (status === INSPIRATION_STATUSES.CONVERTED) return "已转商品";
-  if (status === INSPIRATION_STATUSES.IGNORED) return "已忽略";
+  if (status === INSPIRATION_STATUSES.ARCHIVED) return "已归档";
+  if (status === INSPIRATION_STATUSES.REJECTED || status === LEGACY_INSPIRATION_STATUSES.IGNORED) return "已放弃";
   return status;
 }
 
@@ -134,6 +151,12 @@ function buildInspirationWhere(filters: InspirationListQuery): Prisma.Inspiratio
 
   if (filters.status) {
     andConditions.push({ status: filters.status });
+  } else {
+    andConditions.push({
+      status: {
+        notIn: [INSPIRATION_STATUSES.ARCHIVED, INSPIRATION_STATUSES.REJECTED, LEGACY_INSPIRATION_STATUSES.IGNORED],
+      },
+    });
   }
 
   if (filters.sourceType) {
@@ -176,7 +199,13 @@ async function mapInspiration(record: InspirationRecord) {
     sourceTypeLabel: mapSourceTypeLabel(record.sourceType),
     formattedImportedAt: formatDateTime(record.importedAt),
     formattedUpdatedAt: formatDateTime(record.updatedAt),
+    formattedReviewedAt: record.reviewedAt ? formatDateTime(record.reviewedAt) : null,
+    formattedArchivedAt: record.archivedAt ? formatDateTime(record.archivedAt) : null,
     aiSuggestion: parseSuggestion(record.aiSuggestionJson),
+    operationLogs: record.operationLogs.map((log) => ({
+      ...log,
+      formattedCreatedAt: formatDateTime(log.createdAt),
+    })),
     aiJobSummary: record.aiJob
       ? {
           id: record.aiJob.id,
@@ -250,9 +279,11 @@ export async function getInspirationPageData(filters?: Partial<InspirationListQu
       })),
       stats: {
         total: inspirations.length,
-        pendingReview: groupedStats.find((item) => item.status === INSPIRATION_STATUSES.PENDING_REVIEW)?._count._all ?? 0,
-        ignored: groupedStats.find((item) => item.status === INSPIRATION_STATUSES.IGNORED)?._count._all ?? 0,
+        pending: groupedStats.find((item) => item.status === INSPIRATION_STATUSES.PENDING)?._count._all ?? 0,
+        reviewed: groupedStats.find((item) => item.status === INSPIRATION_STATUSES.REVIEWED)?._count._all ?? 0,
         converted: groupedStats.find((item) => item.status === INSPIRATION_STATUSES.CONVERTED)?._count._all ?? 0,
+        archived: groupedStats.find((item) => item.status === INSPIRATION_STATUSES.ARCHIVED)?._count._all ?? 0,
+        rejected: groupedStats.find((item) => item.status === INSPIRATION_STATUSES.REJECTED)?._count._all ?? 0,
       },
     };
   } catch (error) {
@@ -268,13 +299,151 @@ export async function saveInspirationDraft(input: {
   ensureProductWritesAllowed();
 
   try {
-    return await prisma.inspiration.update({
-      where: { id: input.inspirationId },
-      data: {
-        title: input.title?.trim() || null,
-        note: input.note?.trim() || null,
-      },
-      select: inspirationSelect,
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.inspiration.update({
+        where: { id: input.inspirationId },
+        data: {
+          title: input.title?.trim() || null,
+          note: input.note?.trim() || null,
+        },
+        select: inspirationSelect,
+      });
+
+      await tx.operationLog.create({
+        data: {
+          relatedInspirationId: updated.id,
+          action: "UPDATE_INSPIRATION_NOTE",
+          detail: "更新灵感标题或备注。",
+        },
+      });
+
+      return updated;
+    });
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}
+
+async function getInspirationForStatusChange(inspirationId: number) {
+  const inspiration = await prisma.inspiration.findUnique({
+    where: { id: inspirationId },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      convertedProductId: true,
+    },
+  });
+
+  if (!inspiration) {
+    throw createNotFoundError();
+  }
+
+  return inspiration;
+}
+
+function assertNotConvertedForStatusChange(status: string, convertedProductId: number | null) {
+  if (status === INSPIRATION_STATUSES.CONVERTED || convertedProductId) {
+    throw createValidationError("已转商品的灵感不能再改为查看、归档或放弃。");
+  }
+}
+
+export async function markReviewed(inspirationId: number) {
+  ensureProductWritesAllowed();
+
+  try {
+    const inspiration = await getInspirationForStatusChange(inspirationId);
+    assertNotConvertedForStatusChange(inspiration.status, inspiration.convertedProductId);
+
+    if (inspiration.status === INSPIRATION_STATUSES.ARCHIVED || inspiration.status === INSPIRATION_STATUSES.REJECTED) {
+      throw createValidationError("已归档或已放弃的灵感不能直接标记为已查看。");
+    }
+
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.inspiration.update({
+        where: { id: inspirationId },
+        data: {
+          status: INSPIRATION_STATUSES.REVIEWED,
+          reviewedAt: new Date(),
+        },
+        select: inspirationSelect,
+      });
+
+      await tx.operationLog.create({
+        data: {
+          relatedInspirationId: inspirationId,
+          action: "MARK_INSPIRATION_REVIEWED",
+          detail: `标记灵感为已查看：${inspiration.title ?? `#${inspirationId}`}`,
+        },
+      });
+
+      return updated;
+    });
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}
+
+export async function archiveInspiration(inspirationId: number) {
+  ensureProductWritesAllowed();
+
+  try {
+    const inspiration = await getInspirationForStatusChange(inspirationId);
+    assertNotConvertedForStatusChange(inspiration.status, inspiration.convertedProductId);
+
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.inspiration.update({
+        where: { id: inspirationId },
+        data: {
+          status: INSPIRATION_STATUSES.ARCHIVED,
+          archivedAt: new Date(),
+        },
+        select: inspirationSelect,
+      });
+
+      await tx.operationLog.create({
+        data: {
+          relatedInspirationId: inspirationId,
+          action: "ARCHIVE_INSPIRATION",
+          detail: `归档灵感：${inspiration.title ?? `#${inspirationId}`}`,
+        },
+      });
+
+      return updated;
+    });
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}
+
+export async function rejectInspiration(input: { inspirationId: number; reason?: string | null }) {
+  ensureProductWritesAllowed();
+
+  const reason = input.reason?.trim().slice(0, 160) || null;
+
+  try {
+    const inspiration = await getInspirationForStatusChange(input.inspirationId);
+    assertNotConvertedForStatusChange(inspiration.status, inspiration.convertedProductId);
+
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.inspiration.update({
+        where: { id: input.inspirationId },
+        data: {
+          status: INSPIRATION_STATUSES.REJECTED,
+          rejectedReason: reason,
+        },
+        select: inspirationSelect,
+      });
+
+      await tx.operationLog.create({
+        data: {
+          relatedInspirationId: input.inspirationId,
+          action: "REJECT_INSPIRATION",
+          detail: reason ? `放弃灵感：${reason}` : `放弃灵感：${inspiration.title ?? `#${input.inspirationId}`}`,
+        },
+      });
+
+      return updated;
     });
   } catch (error) {
     throw normalizeProductWriteError(error);
@@ -282,19 +451,7 @@ export async function saveInspirationDraft(input: {
 }
 
 export async function ignoreInspiration(inspirationId: number) {
-  ensureProductWritesAllowed();
-
-  try {
-    return await prisma.inspiration.update({
-      where: { id: inspirationId },
-      data: {
-        status: INSPIRATION_STATUSES.IGNORED,
-      },
-      select: inspirationSelect,
-    });
-  } catch (error) {
-    throw normalizeProductWriteError(error);
-  }
+  return rejectInspiration({ inspirationId, reason: "用户手动忽略" });
 }
 
 async function generateUniqueSpu() {
@@ -353,6 +510,7 @@ export async function convertInspirationToProduct(input: {
         note: true,
         imagePath: true,
         status: true,
+        convertedProductId: true,
       },
     });
 
@@ -360,8 +518,12 @@ export async function convertInspirationToProduct(input: {
       throw createNotFoundError();
     }
 
-    if (inspiration.status === INSPIRATION_STATUSES.CONVERTED) {
+    if (inspiration.status === INSPIRATION_STATUSES.CONVERTED || inspiration.convertedProductId) {
       throw createValidationError("当前灵感已经转为正式商品。");
+    }
+
+    if (inspiration.status === INSPIRATION_STATUSES.ARCHIVED || inspiration.status === INSPIRATION_STATUSES.REJECTED) {
+      throw createValidationError("已归档或已放弃的灵感不能直接转为商品。");
     }
 
     const spu = await generateUniqueSpu();
@@ -393,16 +555,20 @@ export async function convertInspirationToProduct(input: {
         data: {
           status: INSPIRATION_STATUSES.CONVERTED,
           convertedProductId: createdProduct.id,
+          reviewedAt: new Date(),
+        },
+      });
+
+      await tx.operationLog.create({
+        data: {
+          productId: createdProduct.id,
+          relatedInspirationId: inspiration.id,
+          action: "CONVERT_INSPIRATION_TO_PRODUCT",
+          detail: `从灵感箱转商品：inspirationId=${input.inspirationId} / title=${inspiration.title ?? productName}`,
         },
       });
 
       return createdProduct;
-    });
-
-    await createOperationLog({
-      productId: product.id,
-      action: "CONVERT_INSPIRATION_TO_PRODUCT",
-      detail: `从灵感箱转商品：inspirationId=${input.inspirationId} / title=${inspiration.title ?? productName}`,
     });
 
     return product;
@@ -410,6 +576,8 @@ export async function convertInspirationToProduct(input: {
     throw normalizeProductWriteError(error);
   }
 }
+
+export const convertToProduct = convertInspirationToProduct;
 
 export function buildConversionDefaults(input: {
   title: string | null;

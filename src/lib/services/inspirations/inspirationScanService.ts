@@ -158,7 +158,7 @@ export async function runManualInspirationScan() {
             fileHash,
             sourceType: INSPIRATION_SOURCE_TYPES.FOLDER_MANUAL_SCAN,
             usagePermission: INSPIRATION_USAGE_PERMISSIONS.REFERENCE_ONLY,
-            status: INSPIRATION_STATUSES.PENDING_REVIEW,
+            status: INSPIRATION_STATUSES.PENDING,
             importedAt: new Date(),
           },
         });

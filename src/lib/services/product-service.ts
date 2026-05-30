@@ -390,6 +390,7 @@ export async function getHomeProductStats() {
       generatedCopywritingCount,
       promptTaskStats,
       materialStats,
+      pendingInspirationCount,
       recentActivities,
       recentExportLogs,
       recentBackupLogs,
@@ -409,6 +410,9 @@ export async function getHomeProductStats() {
       prisma.copywriting.count(),
       getHomePromptTaskStats(),
       getHomeMaterialStats(),
+      prisma.inspiration.count({
+        where: { status: { in: ["pending", "reviewed"] } },
+      }),
       prisma.operationLog.findMany({
         where: {
           action: {
@@ -428,6 +432,11 @@ export async function getHomeProductStats() {
               OPERATION_LOG_ACTIONS.UPLOAD_PROMPT_RESULT,
               OPERATION_LOG_ACTIONS.MANUAL_UPLOAD_MATERIAL,
               OPERATION_LOG_ACTIONS.UPDATE_MATERIAL_STATUS,
+              "UPDATE_INSPIRATION_NOTE",
+              "MARK_INSPIRATION_REVIEWED",
+              "ARCHIVE_INSPIRATION",
+              "REJECT_INSPIRATION",
+              "CONVERT_INSPIRATION_TO_PRODUCT",
             ],
           },
         },
@@ -442,6 +451,11 @@ export async function getHomeProductStats() {
           product: {
             select: {
               name: true,
+            },
+          },
+          relatedInspiration: {
+            select: {
+              title: true,
             },
           },
         },
@@ -461,7 +475,7 @@ export async function getHomeProductStats() {
       productId: item.productId,
       action: item.action,
       detail: item.detail,
-      productName: item.product.name,
+      productName: item.product?.name ?? item.relatedInspiration?.title ?? "灵感箱",
       createdAt: item.createdAt,
     }));
 
@@ -495,6 +509,7 @@ export async function getHomeProductStats() {
       pendingPromptReturnCount: promptTaskStats.pendingReturnCount,
       materialCount: materialStats.activeCount,
       pendingMaterialReviewCount: materialStats.pendingReviewCount,
+      pendingInspirationCount,
       recentPromptTasks: promptTaskStats.recentTasks,
       recentProducts: await mapProductsWithLatestScores(recentProducts),
       recentActivities: [...operationActivities, ...exportActivities, ...backupActivities]

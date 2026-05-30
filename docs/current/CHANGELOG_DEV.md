@@ -2,6 +2,16 @@
 
 This changelog records high-signal development changes by thread. Detailed chronology remains in `agent-memory/SESSION_LOG.md`.
 
+## 2026-05-30 - V1-Plus Thread 02 Inspiration Management Enhancement
+
+- Reused the existing inspiration inbox, image path handling, runtime write guard, AI base, and shared `OperationLog`; no separate path, environment, logging, OCR, crawler, link parsing, auto-collection, or auto-product system was added.
+- Added inspiration states `pending`, `reviewed`, `converted`, `archived`, and `rejected`; historical `pending_review` and `ignored` rows are migrated to `pending` and `rejected`.
+- Added nullable `reviewedAt`, `archivedAt`, and `rejectedReason` fields to `Inspiration`, and added `OperationLog.relatedInspirationId` so inspiration processing records stay in the existing operation-log table.
+- Enhanced `/inspirations` with status filtering, default hiding for archived/rejected items, manual mark-reviewed, archive, reject-with-reason, processing records, and repeat-conversion protection.
+- Kept conversion confirm-first in the UI and service layer; converted inspirations retain their source record and `convertedProductId`.
+- Added homepage pending-inspiration todo compatibility and kept list query normalization in the existing query service.
+- Vercel write attempts continue through the existing runtime guard and return `预览环境只读，请在 Windows 本地验收。`.
+
 ## 2026-05-30 - V1-Plus Thread 01 Global Search And Filter Enhancement
 
 - Added `src/lib/services/query-service.ts` as the shared query normalization layer for product, material, copywriting, Prompt task, and inspiration list pages.

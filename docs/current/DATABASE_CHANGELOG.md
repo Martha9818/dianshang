@@ -15,6 +15,22 @@ This file records active V1-Core schema changes. Add new entries when `prisma/sc
 - If a migration fails, stop and document the cause plus the safe next step instead of forcing progress with a reset.
 - If old data is incomplete, prefer `nullable`, `legacy`, `unknown`, or an explicit repair script over invented values.
 
+## 2026-05-30 - V1-Plus Thread 02 Inspiration Management
+
+- Added migration `prisma/migrations/20260530033400_v1_plus_thread_02_inspiration_management/migration.sql`.
+- Reused the existing `Inspiration` table and status field; no duplicate inspiration table was added.
+- Changed the default inspiration status for new rows from `pending_review` to `pending`.
+- Added nullable `Inspiration` fields for management workflow:
+  - `reviewedAt`
+  - `archivedAt`
+  - `rejectedReason`
+- Migration maps historical `pending_review` rows to `pending`.
+- Migration maps historical `ignored` rows to `rejected` with `rejectedReason='历史忽略记录'`.
+- Extended `OperationLog` with nullable `relatedInspirationId` and nullable `productId` so inspiration state changes can use the shared operation log without creating a separate logging system.
+- Added `OperationLog.relatedInspirationId` index.
+- Applied the migration locally with `npx.cmd prisma migrate dev` after a manual local backup.
+- Did not edit old migrations and did not reset the local SQLite database.
+
 ## 2026-05-29 - V1-Core-06 Inspiration Inbox
 
 - Added migration `prisma/migrations/20260529103936_v1_core_06_inspiration_inbox/migration.sql`.

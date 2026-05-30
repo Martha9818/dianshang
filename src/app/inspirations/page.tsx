@@ -22,9 +22,11 @@ const PREVIEW_SOURCE_TYPE_OPTIONS = [
 ];
 
 const PREVIEW_STATUS_OPTIONS = [
-  { value: INSPIRATION_STATUSES.PENDING_REVIEW, label: "待审核" },
-  { value: INSPIRATION_STATUSES.IGNORED, label: "已忽略" },
+  { value: INSPIRATION_STATUSES.PENDING, label: "待处理" },
+  { value: INSPIRATION_STATUSES.REVIEWED, label: "已查看" },
   { value: INSPIRATION_STATUSES.CONVERTED, label: "已转商品" },
+  { value: INSPIRATION_STATUSES.ARCHIVED, label: "已归档" },
+  { value: INSPIRATION_STATUSES.REJECTED, label: "已放弃" },
 ];
 
 export default async function InspirationsPage({
@@ -44,7 +46,7 @@ export default async function InspirationsPage({
     filters: query,
     sourceTypes: PREVIEW_SOURCE_TYPE_OPTIONS,
     statuses: PREVIEW_STATUS_OPTIONS,
-    stats: { total: 0, pendingReview: 0, ignored: 0, converted: 0 },
+    stats: { total: 0, pending: 0, reviewed: 0, converted: 0, archived: 0, rejected: 0 },
     readError: getProductErrorMessage(error, "当前灵感页面无法读取本地数据，请在 Windows 本地重试。"),
   }));
   const pageData = pageResult;

@@ -4,9 +4,12 @@ import { revalidatePath } from "next/cache";
 import { getProductErrorMessage } from "@/lib/modules/products";
 import {
   applyInspirationAiSuggestion,
+  archiveInspiration,
   convertInspirationToProduct,
   generateInspirationAiSuggestion,
   ignoreInspiration,
+  markReviewed,
+  rejectInspiration,
   runManualInspirationScan,
   saveInspirationDraft,
   saveInspirationFolderPath,
@@ -15,6 +18,16 @@ import {
 function revalidateInspirations() {
   revalidatePath("/inspirations");
   revalidatePath("/system/diagnostics");
+  revalidatePath("/");
+}
+
+function parsePositiveId(value: FormDataEntryValue | null, label: string) {
+  const id = Number(value ?? "");
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error(`${label} 无效。`);
+  }
+
+  return id;
 }
 
 export async function saveInspirationFolderAction(_prevState: unknown, formData: FormData) {
@@ -51,7 +64,7 @@ export async function runInspirationScanAction(_prevState: unknown, _formData: F
 export async function saveInspirationDraftAction(_prevState: unknown, formData: FormData) {
   void _prevState;
   try {
-    const inspirationId = Number(formData.get("inspirationId") ?? "");
+    const inspirationId = parsePositiveId(formData.get("inspirationId"), "灵感记录");
     const title = String(formData.get("title") ?? "");
     const note = String(formData.get("note") ?? "");
 
@@ -74,7 +87,7 @@ export async function saveInspirationDraftAction(_prevState: unknown, formData: 
 export async function generateInspirationAiSuggestionAction(_prevState: unknown, formData: FormData) {
   void _prevState;
   try {
-    const inspirationId = Number(formData.get("inspirationId") ?? "");
+    const inspirationId = parsePositiveId(formData.get("inspirationId"), "灵感记录");
     const result = await generateInspirationAiSuggestion(inspirationId);
     revalidateInspirations();
     return { success: true as const, data: result };
@@ -89,7 +102,7 @@ export async function generateInspirationAiSuggestionAction(_prevState: unknown,
 export async function applyInspirationAiSuggestionAction(_prevState: unknown, formData: FormData) {
   void _prevState;
   try {
-    const inspirationId = Number(formData.get("inspirationId") ?? "");
+    const inspirationId = parsePositiveId(formData.get("inspirationId"), "灵感记录");
     const result = await applyInspirationAiSuggestion(inspirationId);
     revalidateInspirations();
     return { success: true as const, data: result };
@@ -104,7 +117,7 @@ export async function applyInspirationAiSuggestionAction(_prevState: unknown, fo
 export async function ignoreInspirationAction(_prevState: unknown, formData: FormData) {
   void _prevState;
   try {
-    const inspirationId = Number(formData.get("inspirationId") ?? "");
+    const inspirationId = parsePositiveId(formData.get("inspirationId"), "灵感记录");
     const result = await ignoreInspiration(inspirationId);
     revalidateInspirations();
     return { success: true as const, data: result };
@@ -116,10 +129,56 @@ export async function ignoreInspirationAction(_prevState: unknown, formData: For
   }
 }
 
+export async function markInspirationReviewedAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const inspirationId = parsePositiveId(formData.get("inspirationId"), "灵感记录");
+    const result = await markReviewed(inspirationId);
+    revalidateInspirations();
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "标记已查看失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function archiveInspirationAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const inspirationId = parsePositiveId(formData.get("inspirationId"), "灵感记录");
+    const result = await archiveInspiration(inspirationId);
+    revalidateInspirations();
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "归档灵感失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function rejectInspirationAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const inspirationId = parsePositiveId(formData.get("inspirationId"), "灵感记录");
+    const reason = String(formData.get("rejectedReason") ?? "");
+    const result = await rejectInspiration({ inspirationId, reason });
+    revalidateInspirations();
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "放弃灵感失败，请稍后重试。"),
+    };
+  }
+}
+
 export async function convertInspirationToProductAction(_prevState: unknown, formData: FormData) {
   void _prevState;
   try {
-    const inspirationId = Number(formData.get("inspirationId") ?? "");
+    const inspirationId = parsePositiveId(formData.get("inspirationId"), "灵感记录");
     const result = await convertInspirationToProduct({
       inspirationId,
       name: String(formData.get("name") ?? ""),

@@ -14,9 +14,11 @@ import {
 import { ProductImage } from "@/components/products/product-image";
 import {
   applyInspirationAiSuggestionAction,
+  archiveInspirationAction,
   convertInspirationToProductAction,
   generateInspirationAiSuggestionAction,
-  ignoreInspirationAction,
+  markInspirationReviewedAction,
+  rejectInspirationAction,
   runInspirationScanAction,
   saveInspirationDraftAction,
   saveInspirationFolderAction,
@@ -43,7 +45,16 @@ type InspirationView = {
   thumbnailExists: boolean;
   formattedImportedAt: string;
   formattedUpdatedAt: string;
+  formattedReviewedAt: string | null;
+  formattedArchivedAt: string | null;
+  rejectedReason: string | null;
   aiSuggestion: InspirationAISuggestion | null;
+  operationLogs: Array<{
+    id: number;
+    action: string;
+    detail: string | null;
+    formattedCreatedAt: string;
+  }>;
   aiJobSummary: {
     id: number;
     jobType: string;
@@ -87,9 +98,11 @@ type InspirationsPageData = {
   recentScanLogs: ScanLogView[];
   stats: {
     total: number;
-    pendingReview: number;
-    ignored: number;
+    pending: number;
+    reviewed: number;
     converted: number;
+    archived: number;
+    rejected: number;
   };
   filters: {
     keyword: string | null;
@@ -158,7 +171,7 @@ function getConversionDefaults(selected: InspirationView | null) {
 export function InspirationManager({ data, readonlyNotice }: { data: InspirationsPageData; readonlyNotice: string | null }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<number | null>(data.inspirations[0]?.id ?? null);
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending_review" | "ignored" | "converted">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "reviewed" | "converted" | "archived" | "rejected">("all");
 
   const [folderState, folderAction, folderPending] = useActionState(saveInspirationFolderAction, {
     success: false,
@@ -180,7 +193,15 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
     success: false,
     error: "",
   });
-  const [ignoreState, ignoreAction, ignorePending] = useActionState(ignoreInspirationAction, {
+  const [reviewState, reviewAction, reviewPending] = useActionState(markInspirationReviewedAction, {
+    success: false,
+    error: "",
+  });
+  const [archiveState, archiveAction, archivePending] = useActionState(archiveInspirationAction, {
+    success: false,
+    error: "",
+  });
+  const [rejectState, rejectAction, rejectPending] = useActionState(rejectInspirationAction, {
     success: false,
     error: "",
   });
@@ -208,6 +229,8 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
 
   const selectedInspiration = getSelectedInspiration(data.inspirations, effectiveSelectedId);
   const conversionDefaults = useMemo(() => getConversionDefaults(selectedInspiration), [selectedInspiration]);
+  const selectedIsConverted = selectedInspiration?.status === "converted" || Boolean(selectedInspiration?.convertedProduct);
+  const selectedIsClosed = selectedInspiration?.status === "archived" || selectedInspiration?.status === "rejected";
 
   useEffect(() => {
     if (convertState.success && convertState.data?.id) {
@@ -221,11 +244,12 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
     <div className="space-y-5">
       {readonlyNotice ? <PageNote>{readonlyNotice}</PageNote> : null}
 
-      <section className="grid gap-4 xl:grid-cols-4">
-        <StatCard label="灵感总数" value={String(data.stats.total)} delta="待审核优先" tone="blue" />
-        <StatCard label="待审核" value={String(data.stats.pendingReview)} delta="手动扫描结果" tone="amber" />
-        <StatCard label="已忽略" value={String(data.stats.ignored)} delta="可随时保留" tone="slate" />
+      <section className="grid gap-4 xl:grid-cols-5">
+        <StatCard label="灵感总数" value={String(data.stats.total)} delta="默认隐藏归档/放弃" tone="blue" />
+        <StatCard label="待处理" value={String(data.stats.pending)} delta="手动扫描结果" tone="amber" />
+        <StatCard label="已查看" value={String(data.stats.reviewed)} delta="待决定下一步" tone="blue" />
         <StatCard label="已转商品" value={String(data.stats.converted)} delta="需确认后创建" tone="green" />
+        <StatCard label="已放弃" value={String(data.stats.rejected)} delta={`归档 ${data.stats.archived}`} tone="slate" />
       </section>
 
       <DashboardCard className="px-5 py-5">
@@ -328,14 +352,16 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         <DashboardCard>
           <DashboardCardHeader
             title="灵感列表"
-            description="缩略图、状态、去重摘要和 AI 建议都只作为待审核参考。"
+            description="缩略图、状态、去重摘要和 AI 建议都只作为待处理参考。"
             action={
               <div className="flex flex-wrap gap-2">
                 {[
                   ["all", "全部"],
-                  ["pending_review", "待审核"],
-                  ["ignored", "已忽略"],
+                  ["pending", "待处理"],
+                  ["reviewed", "已查看"],
                   ["converted", "已转商品"],
+                  ["archived", "已归档"],
+                  ["rejected", "已放弃"],
                 ].map(([value, label]) => (
                   <button
                     key={value}
@@ -387,7 +413,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         <DashboardCard>
           <DashboardCardHeader
             title="灵感详情"
-            description={selectedInspiration ? "这里可以保存草稿、发起 AI 识图、应用建议、忽略或转为商品。" : "请选择左侧一条灵感记录。"}
+            description={selectedInspiration ? "这里可以保存备注、标记查看、归档、放弃或确认转为商品。" : "请选择左侧一条灵感记录。"}
           />
           {selectedInspiration ? (
             <div className="space-y-4 px-5 py-5">
@@ -401,6 +427,9 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                   <DetailRow label="hash" value={selectedInspiration.fileHashShort} />
                   <DetailRow label="导入时间" value={selectedInspiration.formattedImportedAt} />
                   <DetailRow label="更新时间" value={selectedInspiration.formattedUpdatedAt} />
+                  <DetailRow label="查看时间" value={selectedInspiration.formattedReviewedAt ?? "--"} />
+                  <DetailRow label="归档时间" value={selectedInspiration.formattedArchivedAt ?? "--"} />
+                  <DetailRow label="放弃原因" value={selectedInspiration.rejectedReason ?? "--"} />
                   <DetailRow label="AIJob" value={selectedInspiration.aiJobSummary ? `#${selectedInspiration.aiJobSummary.id} · ${selectedInspiration.aiJobSummary.status}` : "--"} />
                   <DetailRow label="转商品" value={selectedInspiration.convertedProduct ? `${selectedInspiration.convertedProduct.name} (#${selectedInspiration.convertedProduct.id})` : "--"} />
                 </div>
@@ -422,7 +451,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                     formAction={aiAction}
                     type="submit"
                     className="inline-flex h-12 items-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-5 text-sm font-medium text-white disabled:opacity-70"
-                    disabled={aiPending || !data.runtime.isWritable}
+                    disabled={aiPending || selectedIsConverted || selectedIsClosed}
                   >
                     <MiniIcon name="spark" className="h-4 w-4" />
                     {aiPending ? "识图中..." : "AI 识图建议"}
@@ -431,23 +460,51 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                     formAction={applyAction}
                     type="submit"
                     className="inline-flex h-12 items-center rounded-2xl border border-[#DCE5F2] px-5 text-sm font-medium text-[#2563EB] disabled:opacity-70"
-                    disabled={applyPending || !data.runtime.isWritable || !selectedInspiration.aiSuggestion}
+                    disabled={applyPending || !selectedInspiration.aiSuggestion || selectedIsConverted || selectedIsClosed}
                   >
                     应用到草稿
                   </button>
                   <button
-                    formAction={ignoreAction}
+                    formAction={reviewAction}
                     type="submit"
                     className="inline-flex h-12 items-center rounded-2xl border border-[#DCE5F2] px-5 text-sm font-medium text-slate-600 disabled:opacity-70"
-                    disabled={ignorePending || !data.runtime.isWritable}
+                    disabled={reviewPending || selectedIsConverted || selectedIsClosed}
                   >
-                    忽略
+                    标记已查看
+                  </button>
+                  <button
+                    formAction={archiveAction}
+                    type="submit"
+                    className="inline-flex h-12 items-center rounded-2xl border border-[#DCE5F2] px-5 text-sm font-medium text-slate-600 disabled:opacity-70"
+                    disabled={archivePending || selectedIsConverted || selectedIsClosed}
+                  >
+                    归档
+                  </button>
+                </div>
+                <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+                  <Field label="放弃原因">
+                    <input
+                      name="rejectedReason"
+                      className={inputClassName}
+                      placeholder="简短记录为什么不继续处理"
+                      disabled={selectedIsConverted || selectedIsClosed}
+                    />
+                  </Field>
+                  <button
+                    formAction={rejectAction}
+                    type="submit"
+                    className="inline-flex h-12 items-center justify-center rounded-2xl border border-rose-200 px-5 text-sm font-medium text-rose-600 disabled:opacity-70"
+                    disabled={rejectPending || selectedIsConverted || selectedIsClosed}
+                  >
+                    放弃
                   </button>
                 </div>
                 {draftState.error ? <p className="text-sm text-rose-600">{draftState.error}</p> : null}
                 {aiState.error ? <p className="text-sm text-rose-600">{aiState.error}</p> : null}
                 {applyState.error ? <p className="text-sm text-rose-600">{applyState.error}</p> : null}
-                {ignoreState.error ? <p className="text-sm text-rose-600">{ignoreState.error}</p> : null}
+                {reviewState.error ? <p className="text-sm text-rose-600">{reviewState.error}</p> : null}
+                {archiveState.error ? <p className="text-sm text-rose-600">{archiveState.error}</p> : null}
+                {rejectState.error ? <p className="text-sm text-rose-600">{rejectState.error}</p> : null}
                 {selectedInspiration.aiSuggestion ? (
                   <div className="rounded-2xl border border-[#EEF2F8] bg-white px-4 py-4 text-sm leading-7 text-slate-600">
                     <p className="font-medium text-slate-900">AI 建议，仅供参考</p>
@@ -463,6 +520,24 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
               </form>
 
               {convertState.error ? <p className="text-sm text-rose-600">{convertState.error}</p> : null}
+              <div className="rounded-[24px] border border-[#EEF2F8] bg-white px-4 py-4">
+                <h3 className="text-sm font-semibold text-slate-900">处理记录</h3>
+                <div className="mt-3 space-y-3">
+                  {selectedInspiration.operationLogs.length > 0 ? (
+                    selectedInspiration.operationLogs.map((log) => (
+                      <div key={log.id} className="rounded-2xl bg-[#F8FAFD] px-3 py-3 text-sm text-slate-600">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium text-slate-800">{log.action}</span>
+                          <span className="text-xs text-slate-400">{log.formattedCreatedAt}</span>
+                        </div>
+                        <p className="mt-1 leading-6">{log.detail ?? "--"}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-400">暂无处理记录。</p>
+                  )}
+                </div>
+              </div>
             </div>
           ) : (
             <div className="px-5 py-5">
@@ -474,8 +549,27 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         <DashboardCard>
           <DashboardCardHeader title="转为商品确认" description="只有用户确认提交后，才会创建正式 Product。" />
           {selectedInspiration ? (
-            <form action={convertAction} key={`${formKey}-convert`} className="space-y-3 px-5 py-5">
+            <form
+              action={convertAction}
+              key={`${formKey}-convert`}
+              className="space-y-3 px-5 py-5"
+              onSubmit={(event) => {
+                if (selectedIsConverted || selectedIsClosed) {
+                  event.preventDefault();
+                  return;
+                }
+
+                if (!window.confirm("确认把这条灵感转为正式商品？转商品后不能重复转换。")) {
+                  event.preventDefault();
+                }
+              }}
+            >
               <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
+              {selectedIsConverted ? (
+                <PageNote>这条灵感已转为商品，不能重复转商品。</PageNote>
+              ) : selectedIsClosed ? (
+                <PageNote>已归档或已放弃的灵感不再进入转商品流程。</PageNote>
+              ) : null}
               <Field label="商品名称">
                 <input name="name" className={inputClassName} defaultValue={conversionDefaults.name} disabled={!data.runtime.isWritable} />
               </Field>
@@ -500,7 +594,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
               <button
                 type="submit"
                 className="inline-flex h-12 items-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-5 text-sm font-medium text-white disabled:opacity-70"
-                disabled={convertPending || !data.runtime.isWritable}
+                disabled={convertPending || selectedIsConverted || selectedIsClosed}
               >
                 {convertPending ? "创建中..." : "确认转为商品"}
               </button>

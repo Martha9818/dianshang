@@ -24,7 +24,7 @@ V1-Core-07 final integration acceptance passed locally on 2026-05-30. Future net
 | `/prompt-tasks` | `src/app/prompt-tasks/page.tsx` | Prompt task list and creation. |
 | `/prompt-tasks/[taskCode]/upload` | `src/app/prompt-tasks/[taskCode]/upload/page.tsx` | Upload generated or manual material for a Prompt task. |
 | `/materials` | `src/app/materials/page.tsx` | Material library. |
-| `/inspirations` | `src/app/inspirations/page.tsx` | Manual-scan inspiration inbox with review-only drafts, optional AI suggestion, and confirm-then-convert flow. |
+| `/inspirations` | `src/app/inspirations/page.tsx` | Manual-scan inspiration inbox with status filtering, notes, processing records, archive/reject, optional AI suggestion, and confirm-then-convert flow. |
 | `/settings/ai` | `src/app/settings/ai/page.tsx` | AI provider settings. |
 | `/settings/banned-words` | `src/app/settings/banned-words/page.tsx` | Banned-word settings. |
 | `/export` | `src/app/export/page.tsx` | Excel export. |
@@ -39,7 +39,7 @@ V1-Core-07 final integration acceptance passed locally on 2026-05-30. Future net
 | Copywriting | `src/app/copywriting/actions.ts` | AI failures must not block manual editing or non-AI data work. |
 | Prompt tasks | `src/app/prompt-tasks/actions.ts` | Must preserve task status rules and Vercel read-only fallback. |
 | Materials | `src/app/materials/actions.ts` | Must avoid unsafe file deletion. |
-| Inspirations | `src/app/inspirations/actions.ts` | Must keep scans manual, preserve review-only flow, and block Vercel writes/AI calls. |
+| Inspirations | `src/app/inspirations/actions.ts` | Thin validation wrappers for folder, scan, note, review/archive/reject, AI suggestion, and confirm-convert actions; Vercel writes/AI calls stay blocked by runtime services. |
 | Settings | `src/app/settings/actions.ts` | Must never leak full API keys to the frontend. |
 | Export | `src/app/export/actions.ts` | Writes only in local writable runtime. |
 | Backup | `src/app/backup/actions.ts` | Keeps backup filesystem traversal runtime-only. |
@@ -59,7 +59,7 @@ V1-Core-07 final integration acceptance passed locally on 2026-05-30. Future net
 | Copywriting | `src/lib/services/copywriting-service.ts`, `src/lib/services/copywriting/README.md`, `src/lib/modules/copywriting/` | Multi-platform package generation, history-preserving drafts, manual editing, banned-word scan reuse, usage marking, and AI base reuse. |
 | Prompt tasks | `src/lib/services/prompt-task-service.ts`, `src/lib/modules/prompt-task/` | Prompt generation templates and task persistence. |
 | Materials | `src/lib/services/material-service.ts`, `src/lib/services/materials/README.md`, `src/lib/modules/materials.ts` | Material records, image metadata persistence, thumbnail-first display data, and status updates. |
-| Inspirations | `src/lib/services/inspirations/`, `src/lib/services/inspirations/README.md` | Local inspiration-folder setting, manual scan, fileHash dedupe, review-only drafts, optional AI suggestion, ScanLog, and confirm-then-convert product flow. |
+| Inspirations | `src/lib/services/inspirations/`, `src/lib/services/inspirations/README.md` | Local inspiration-folder setting, manual scan, fileHash dedupe, review-only drafts, status management, processing records, optional AI suggestion, ScanLog, and confirm-then-convert product flow. |
 | Export | `src/lib/services/export-service.ts`, `src/app/api/exports/[id]/route.ts` | Local Excel export and safe download. |
 | Backup | `src/lib/services/backup-service.ts`, `src/lib/services/backup-log-service.ts`, `src/lib/services/file-copy-service.ts` | Manual local backup, backup history, and display-safe backup path labels. |
 | Diagnostics | `src/lib/services/diagnostics/` | Runtime, database, directory, log, and AI status summaries. |
@@ -128,7 +128,8 @@ Schema changes require a new migration. Do not edit old migrations and do not re
 | `saveInspirationFolderPath` | `src/lib/services/inspirations/inspirationSettingsService.ts` | Writes the local-only inspiration folder setting after folder validation. |
 | `runManualInspirationScan` | `src/lib/services/inspirations/inspirationScanService.ts` | Reads the configured local folder, copies new images into `uploads/inspirations/`, creates review drafts, and records `ScanLog`. |
 | `generateInspirationAiSuggestion` | `src/lib/services/inspirations/inspirationAiService.ts` | Performs local-only lightweight image suggestion through AIJob plus schema validation. |
-| `convertInspirationToProduct` | `src/lib/services/inspirations/inspirationService.ts` | Creates a formal `Product` only after explicit confirmation and marks the inspiration as converted. |
+| `markReviewed` / `archiveInspiration` / `rejectInspiration` | `src/lib/services/inspirations/inspirationService.ts` | Update inspiration processing state and write shared `OperationLog` records in local writable runtime only. |
+| `convertInspirationToProduct` / `convertToProduct` | `src/lib/services/inspirations/inspirationService.ts` | Creates a formal `Product` only after explicit confirmation, preserves the source inspiration, links `convertedProductId`, and blocks repeat conversion. |
 | `createExcelExport` | `src/lib/services/export-service.ts` | Writes `exports/` and `ExportLog` in local runtime only. |
 | `createManualBackup` | `src/lib/services/backup-service.ts` | Writes `backups/` and `BackupLog` in local runtime only. |
 | `getBackupDisplayPath` | `src/lib/services/backup-log-service.ts` | Converts real or historical backup paths into safe `backups/.../` display labels; no writes. |

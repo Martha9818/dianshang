@@ -406,7 +406,7 @@ async function getInspirationStatus(isWritableRuntime: boolean): Promise<Diagnos
     const [total, pendingReview, recentScanLogs, failedScanLogs, failedVisionJobs] = await Promise.all([
       prisma.inspiration.count(),
       prisma.inspiration.count({
-        where: { status: "pending_review" },
+        where: { status: "pending" },
       }),
       prisma.scanLog.findMany({
         orderBy: { startedAt: "desc" },

@@ -33,6 +33,7 @@ function badgeToneClass(action: string) {
   if (action === "UPDATE_COPYWRITING") return "bg-blue-50 text-blue-600";
   if (action.includes("PROMPT_TASK")) return "bg-violet-50 text-violet-600";
   if (action.includes("PROMPT_RESULT") || action.includes("MATERIAL")) return "bg-blue-50 text-blue-600";
+  if (action.includes("INSPIRATION")) return "bg-amber-50 text-amber-600";
   if (action.includes("EXPORT")) return action.includes("FAILED") ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600";
   if (action.includes("BACKUP")) return action.includes("FAILED") ? "bg-rose-50 text-rose-600" : "bg-blue-50 text-blue-600";
   if (action.includes("BANNED_WORD")) return "bg-rose-50 text-rose-600";
@@ -44,6 +45,7 @@ function activityLabel(action: string) {
   if (action === "UPDATE_COPYWRITING") return "编辑";
   if (action.includes("PROMPT_TASK")) return "Prompt";
   if (action.includes("PROMPT_RESULT") || action.includes("MATERIAL")) return "素材";
+  if (action.includes("INSPIRATION")) return "灵感";
   if (action.includes("EXPORT")) return "导出";
   if (action.includes("BACKUP")) return "备份";
   if (action.includes("AI_PROVIDER")) return "AI";
@@ -63,6 +65,7 @@ export default async function Home() {
   const pendingPromptReturnCount = data?.pendingPromptReturnCount ?? 0;
   const materialCount = data?.materialCount ?? 0;
   const pendingMaterialReviewCount = data?.pendingMaterialReviewCount ?? 0;
+  const pendingInspirationCount = data?.pendingInspirationCount ?? 0;
   const recentProducts = data?.recentProducts ?? [];
   const recentPromptTasks = data?.recentPromptTasks ?? [];
   const recentActivities = data?.recentActivities ?? [];
@@ -73,6 +76,7 @@ export default async function Home() {
     { title: "需要重新评分", count: data?.needsRescoreCount ?? 0, tone: "green" as const, href: "/products?needsRescore=true" },
     { title: "待回传图片", count: pendingPromptReturnCount, tone: "amber" as const, href: "/prompt-tasks" },
     { title: "待审核素材", count: pendingMaterialReviewCount, tone: "amber" as const, href: "/materials?status=%E5%BE%85%E5%AE%A1%E6%A0%B8" },
+    { title: "待处理灵感", count: pendingInspirationCount, tone: "amber" as const, href: "/inspirations?status=pending" },
   ];
 
   const statCards = [

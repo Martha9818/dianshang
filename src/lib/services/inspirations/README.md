@@ -2,7 +2,7 @@
 
 ## Responsibility
 
-`src/lib/services/inspirations/` owns the V1-Core-06 inspiration inbox. It stores the local inspiration-folder setting, performs manual folder scans, deduplicates by `fileHash`, copies newly found images into managed `uploads/inspirations/`, saves review-only inspiration drafts, records scan logs, runs lightweight AI vision suggestions through the shared AI base, and converts reviewed inspirations into formal `Product` rows only after user confirmation.
+`src/lib/services/inspirations/` owns the V1-Core-06 inspiration inbox and the V1-Plus Thread 02 management flow. It stores the local inspiration-folder setting, performs manual folder scans, deduplicates by `fileHash`, copies newly found images into managed `uploads/inspirations/`, saves review-only inspiration drafts, records scan logs, runs lightweight AI vision suggestions through the shared AI base, supports manual status management, and converts reviewed inspirations into formal `Product` rows only after user confirmation.
 
 ## Not Responsible For
 
@@ -10,6 +10,13 @@
 - OCR, link parsing, platform crawling, similarity search, or automatic cleanup.
 - Automatic product creation, automatic factual writeback, or auto-publish logic.
 - Direct UI rendering in pages or client components.
+
+## Management Flow
+
+- Supported status values are `pending`, `reviewed`, `converted`, `archived`, and `rejected`.
+- Archived and rejected inspirations are excluded from the default list unless a status filter is selected.
+- Status changes are service methods (`markReviewed`, `archiveInspiration`, `rejectInspiration`, `convertToProduct`) and are recorded through the shared `OperationLog`.
+- Converted inspirations keep their source record and `convertedProductId`; they cannot be converted again.
 
 ## Manual Scan Flow
 
@@ -20,7 +27,7 @@
 5. Read each file, compute `SHA-256 fileHash`, and skip duplicates already in `Inspiration`.
 6. Copy new files into `uploads/inspirations/original/` with short safe filenames.
 7. Reuse shared thumbnail generation to write thumbnail files under `uploads/thumbnails/...`.
-8. Create `Inspiration` rows with `status=pending_review` and `usagePermission=reference_only`.
+8. Create `Inspiration` rows with `status=pending` and `usagePermission=reference_only`.
 9. Record a `ScanLog` summary even when some files fail.
 
 ## fileHash Rule

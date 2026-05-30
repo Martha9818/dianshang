@@ -295,7 +295,7 @@ export default async function DiagnosticsPage() {
               <MetricTile label="缺失文件" value={formatCount(diagnostics.images.missingFiles)} />
               <MetricTile label="仅参考" value={formatCount(diagnostics.images.referenceOnly)} />
               <MetricTile label="灵感总数" value={formatCount(diagnostics.inspirations.total)} />
-              <MetricTile label="待审核" value={formatCount(diagnostics.inspirations.pendingReview)} />
+              <MetricTile label="待处理" value={formatCount(diagnostics.inspirations.pendingReview)} />
               <MetricTile label="uploads 摘要" value={diagnostics.images.uploadsSummary} />
               <MetricTile label="最近失败识图" value={joinEntries(diagnostics.inspirations.recentFailedVisionJobs)} />
             </div>

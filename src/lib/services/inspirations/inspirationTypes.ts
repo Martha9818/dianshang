@@ -1,9 +1,16 @@
 import type { AISchema } from "@/lib/services/ai";
 
 export const INSPIRATION_STATUSES = {
+  PENDING: "pending",
+  REVIEWED: "reviewed",
+  CONVERTED: "converted",
+  ARCHIVED: "archived",
+  REJECTED: "rejected",
+} as const;
+
+export const LEGACY_INSPIRATION_STATUSES = {
   PENDING_REVIEW: "pending_review",
   IGNORED: "ignored",
-  CONVERTED: "converted",
 } as const;
 
 export const INSPIRATION_SCAN_TYPES = {

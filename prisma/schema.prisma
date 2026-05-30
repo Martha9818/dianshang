@@ -295,10 +295,13 @@ model Inspiration {
   fileHash           String   @unique
   sourceType         String
   usagePermission    String
-  status             String   @default("pending_review")
+  status             String   @default("pending")
   aiSuggestionJson   String?
   aiJobId            Int?
   convertedProductId Int?
+  reviewedAt         DateTime?
+  archivedAt         DateTime?
+  rejectedReason     String?
   importedAt         DateTime @default(now())
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -306,6 +309,7 @@ model Inspiration {
   convertedProduct   Product? @relation("InspirationConvertedProduct", fields: [convertedProductId], references: [id], onDelete: SetNull)
   relatedAiJobs      AIJob[]  @relation("AIJobRelatedInspiration")
   relatedAiRequestLogs AIRequestLog[] @relation("AIRequestLogRelatedInspiration")
+  operationLogs       OperationLog[] @relation("OperationLogRelatedInspiration")
 
   @@index([status])
   @@index([aiJobId])
@@ -341,14 +345,17 @@ model BannedWord {
 }
 
 model OperationLog {
-  id        Int      @id @default(autoincrement())
-  productId Int
-  action    String
-  detail    String?
-  createdAt DateTime @default(now())
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id                   Int          @id @default(autoincrement())
+  productId            Int?
+  relatedInspirationId Int?
+  action               String
+  detail               String?
+  createdAt            DateTime     @default(now())
+  product              Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  relatedInspiration   Inspiration? @relation("OperationLogRelatedInspiration", fields: [relatedInspirationId], references: [id], onDelete: SetNull)
 
   @@index([productId])
+  @@index([relatedInspirationId])
 }
 
 model ExportLog {

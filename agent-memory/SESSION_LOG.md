@@ -6,6 +6,47 @@
 
 ### Task
 
+Implemented EcomPilot V1-Plus Thread 02: inspiration management enhancement.
+
+### Changed
+
+- Reused the existing inspiration inbox and added management states: `pending`, `reviewed`, `converted`, `archived`, and `rejected`.
+- Added migration `20260530033400_v1_plus_thread_02_inspiration_management` with nullable `reviewedAt`, `archivedAt`, `rejectedReason`, and `OperationLog.relatedInspirationId`.
+- Migrated historical `pending_review` to `pending` and historical `ignored` to `rejected`.
+- Added service-layer methods for `markReviewed`, `archiveInspiration`, `rejectInspiration`, and `convertToProduct` aliasing the existing confirm-first conversion flow.
+- Updated `/inspirations` with status filtering, default hiding for archived/rejected, detail processing records, mark-reviewed/archive/reject controls, reject reason input, and repeat-conversion protection.
+- Updated homepage pending todo compatibility and diagnostics wording.
+- Updated `PROJECT_MAP.md`, `DATABASE_CHANGELOG.md`, `CHANGELOG_DEV.md`, and the inspiration module README.
+- No OCR, screenshot recognition, link parsing, platform crawler, automatic collection, automatic batch AI recognition, automatic product creation, Electron, supplier, inventory, publish, messaging, comment, or multi-agent feature was added.
+
+### Verification
+
+- Created manual local backup `BackupLog #17` before migration work.
+- `npx.cmd prisma validate`
+- `npx.cmd prisma generate`
+- `npx.cmd prisma migrate dev`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- `npm.cmd run encoding:check`
+- `git diff --check`
+- `npx.cmd prisma migrate status`
+- Service-level acceptance verified mark-reviewed, archive, reject reason, conversion link, duplicate-conversion block, default archived/rejected hiding, archived/rejected filters, operation logs, Vercel readonly guard message, and cleanup of temporary acceptance records.
+- Browser-checked local `/inspirations` and `/`: five-state filters render, converted inspiration shows repeat-conversion protection, processing records area renders, image paths are relative, ScanLog folder summaries are masked, and homepage shows `待处理灵感`.
+
+### Git / Deploy Status
+
+- Implementation is pending local commit after final git status review.
+- No push or Vercel deployment refresh was requested.
+- Vercel readonly behavior was verified by runtime-guard simulation with message `预览环境只读，请在 Windows 本地验收。`; live Vercel does not yet include this local Thread 02 code.
+
+### Handoff
+
+- Keep future inspiration work inside `src/lib/services/inspirations/` and reuse runtime/local-path/logging/AI services.
+- V1.5/V2-only items remain deferred: OCR, link parsing, automatic collection, automatic batch AI recognition, Electron/desktop shell, supplier, inventory, publishing, messaging, comments, and true multi-agent scheduling.
+
+### Task
+
 Completed full acceptance for EcomPilot V1-Plus Thread 01: global search and filter enhancement.
 
 ### Changed
