@@ -3,7 +3,7 @@ import { WorkspacePage } from "@/components/ui/workspace-page";
 import { InspirationManager } from "@/components/inspirations/inspiration-manager";
 import { getProductErrorMessage } from "@/lib/modules/products";
 import { getRuntimeModeSummary } from "@/lib/services/product-runtime-service";
-import { getInspirationPageData } from "@/lib/services/inspirations";
+import { getInspirationPageData, INSPIRATION_SOURCE_TYPES, INSPIRATION_STATUSES } from "@/lib/services/inspirations";
 import { normalizeInspirationListQuery } from "@/lib/services/query-service";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +16,16 @@ type SearchParams = {
   hasImage?: string;
   sort?: string;
 };
+
+const PREVIEW_SOURCE_TYPE_OPTIONS = [
+  { value: INSPIRATION_SOURCE_TYPES.FOLDER_MANUAL_SCAN, label: "手动文件夹扫描" },
+];
+
+const PREVIEW_STATUS_OPTIONS = [
+  { value: INSPIRATION_STATUSES.PENDING_REVIEW, label: "待审核" },
+  { value: INSPIRATION_STATUSES.IGNORED, label: "已忽略" },
+  { value: INSPIRATION_STATUSES.CONVERTED, label: "已转商品" },
+];
 
 export default async function InspirationsPage({
   searchParams,
@@ -32,12 +42,12 @@ export default async function InspirationsPage({
     inspirations: [],
     recentScanLogs: [],
     filters: query,
-    sourceTypes: [],
-    statuses: [],
+    sourceTypes: PREVIEW_SOURCE_TYPE_OPTIONS,
+    statuses: PREVIEW_STATUS_OPTIONS,
     stats: { total: 0, pendingReview: 0, ignored: 0, converted: 0 },
     readError: getProductErrorMessage(error, "当前灵感页面无法读取本地数据，请在 Windows 本地重试。"),
   }));
-  const pageData = "readError" in pageResult ? null : pageResult;
+  const pageData = pageResult;
   const readError = "readError" in pageResult ? pageResult.readError : null;
 
   return (
@@ -47,11 +57,7 @@ export default async function InspirationsPage({
       description="查看手动扫描导入的灵感草稿，并按标题、来源、状态、转商品状态和图片可用性筛选。"
     >
       {readError ? <PageNote>{readError}</PageNote> : null}
-      {pageData ? (
-        <InspirationManager data={pageData} readonlyNotice={readonlyNotice} />
-      ) : (
-        <PageNote>{readonlyNotice ?? "当前灵感页面暂无可读预览数据。"}</PageNote>
-      )}
+      <InspirationManager data={pageData} readonlyNotice={readonlyNotice} />
     </WorkspacePage>
   );
 }
