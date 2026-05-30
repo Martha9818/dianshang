@@ -5,7 +5,7 @@
 - Current stage: V1-Plus has started after V1-Core completion.
 - Current task: EcomPilot V1-Plus Thread 01 global search and filter enhancement is implemented, committed, pushed, and refreshed on Vercel.
 - The prior AI Provider default-selection patch was preserved separately as local commit `788bc4c` before the V1-Plus Thread 01 commit.
-- Deployment refresh requested on 2026-05-30 pushed `main` to `origin/main` at `8984a19335c0e9ac382d8f224756066edf75b36c`.
+- Deployment refresh requested on 2026-05-30 pushed the Thread 01 feature commit `8984a19335c0e9ac382d8f224756066edf75b36c`; follow-up continuity-only commits may sit after it on `origin/main`.
 
 ## Current Product Direction
 

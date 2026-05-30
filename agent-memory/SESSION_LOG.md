@@ -26,7 +26,7 @@ Refreshed deployment from local V1-Plus Thread 01 commits.
 
 ### Git / Deploy Status
 
-- `origin/main` refreshed to `8984a19335c0e9ac382d8f224756066edf75b36c`.
+- Thread 01 feature deployment source refreshed at `8984a19335c0e9ac382d8f224756066edf75b36c`; follow-up continuity-only commits may sit after it on `origin/main`.
 - Vercel preview is available at `https://ecompilot-mvp.vercel.app`.
 - Continuity memory records the deploy-refresh smoke check.
 
