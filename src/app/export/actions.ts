@@ -3,9 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { createExcelExport } from "@/lib/services/export-service";
 import { ExportReadonlyError } from "@/lib/services/thread07-errors";
+import { getRuntimeModeSummary } from "@/lib/services/product-runtime-service";
+
+const PREVIEW_READONLY_MESSAGE = "预览环境只读，请在 Windows 本地验收。";
 
 export async function createExcelExportAction(formData: FormData) {
   try {
+    if (!getRuntimeModeSummary().isWritable) {
+      return { ok: false, message: PREVIEW_READONLY_MESSAGE };
+    }
+
     await createExcelExport({
       includeCopywritingContent: formData.get("includeCopywritingContent") === "on",
       includeImagePaths: formData.get("includeImagePaths") === "on",
@@ -18,7 +25,7 @@ export async function createExcelExportAction(formData: FormData) {
     revalidatePath("/export");
 
     if (error instanceof ExportReadonlyError || (error instanceof Error && error.name === "ExportReadonlyError")) {
-      return { ok: false, message: error.message };
+      return { ok: false, message: PREVIEW_READONLY_MESSAGE };
     }
 
     console.error("Excel export failed", error);

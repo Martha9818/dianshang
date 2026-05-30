@@ -2,9 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { BackupReadonlyError } from "@/lib/services/thread07-errors";
+import { getRuntimeModeSummary } from "@/lib/services/product-runtime-service";
+
+const PREVIEW_READONLY_MESSAGE = "预览环境只读，请在 Windows 本地验收。";
 
 export async function createManualBackupAction() {
   try {
+    if (!getRuntimeModeSummary().isWritable) {
+      return { ok: false, message: PREVIEW_READONLY_MESSAGE };
+    }
+
     const { createManualBackup } = await import(
       /* turbopackIgnore: true */
       "@/lib/services/backup-service"
@@ -18,7 +25,7 @@ export async function createManualBackupAction() {
     revalidatePath("/backup");
 
     if (error instanceof BackupReadonlyError || (error instanceof Error && error.name === "BackupReadonlyError")) {
-      return { ok: false, message: error.message };
+      return { ok: false, message: PREVIEW_READONLY_MESSAGE };
     }
 
     console.error("Manual backup failed", error);
