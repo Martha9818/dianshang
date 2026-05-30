@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+:root {
+  --background: oklch(0.988 0.003 255);
+  --foreground: oklch(0.28 0.02 253);
+  --shell: oklch(0.982 0.005 247);
+  --shell-foreground: oklch(0.29 0.02 250);
+  --surface: oklch(0.992 0.002 255);
+  --surface-strong: oklch(0.965 0.01 244);
+  --accent: oklch(0.6 0.184 260);
+  --accent-soft: oklch(0.95 0.03 252);
+  --line: oklch(0.91 0.01 248 / 0.88);
+  --muted: oklch(0.58 0.015 248);
+  --success: oklch(0.61 0.086 171);
+  --warning: oklch(0.68 0.112 68);
+  --danger: oklch(0.61 0.11 26);
+  --font-app-sans:
+    "Segoe UI Variable", "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC",
+    sans-serif;
+  --font-app-display:
+    "Palatino Linotype", "Book Antiqua", "STSong", "Songti SC", serif;
+  --font-app-mono: "Cascadia Code", "Consolas", "Courier New", monospace;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-shell: var(--shell);
+  --color-shell-foreground: var(--shell-foreground);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-app-sans);
+  --font-display: var(--font-app-display);
+  --font-mono: var(--font-app-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background:
+    radial-gradient(circle at top, rgba(107, 151, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(249, 251, 255, 0.98) 0%, rgba(243, 247, 255, 0.98) 100%);
+}
+
+body {
+  min-height: 100vh;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.72), transparent 48%),
+    radial-gradient(circle at 14% 18%, rgba(182, 208, 255, 0.16), transparent 18%),
+    linear-gradient(180deg, rgba(96, 130, 208, 0.03), rgba(96, 130, 208, 0.07));
+  color: var(--foreground);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.16) 1px, transparent 1px);
+  background-size: 100% 32px, 32px 100%;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 86%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button:not(:disabled),
+a[href],
+select:not(:disabled),
+input[type="file"]:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+select:not(:disabled),
+input[type="file"]:not(:disabled) {
+  transition:
+    border-color 200ms ease-out,
+    box-shadow 200ms ease-out,
+    background-color 200ms ease-out,
+    color 200ms ease-out;
+}
+
+select:not(:disabled):hover,
+input[type="file"]:not(:disabled):hover {
+  border-color: rgb(191 219 254);
+  box-shadow: 0 10px 22px rgba(59, 130, 246, 0.08);
+}
+
+button:disabled,
+select:disabled,
+input[type="file"]:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+button svg,
+a[href] svg,
+[role="button"] svg {
+  transition:
+    transform 200ms ease-out,
+    opacity 200ms ease-out;
+}
+
+button:not(:disabled):hover svg,
+a[href]:hover svg,
+[role="button"]:not([aria-disabled="true"]):hover svg {
+  transform: translateY(-1px) scale(1.08);
+}
+
+button:not(:disabled):active svg,
+a[href]:active svg,
+[role="button"]:not([aria-disabled="true"]):active svg {
+  transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+
+  button svg,
+  a[href] svg,
+  [role="button"] svg,
+  select:not(:disabled),
+  input[type="file"]:not(:disabled) {
+    transition: none;
+  }
+
+  button:not(:disabled):hover svg,
+  a[href]:hover svg,
+  [role="button"]:not([aria-disabled="true"]):hover svg,
+  button:not(:disabled):active svg,
+  a[href]:active svg,
+  [role="button"]:not([aria-disabled="true"]):active svg {
+    transform: none;
+  }
+}
+
+::selection {
+  background: rgba(108, 140, 214, 0.2);
+}
+
+.font-display {
+  font-family: var(--font-app-display);
+}

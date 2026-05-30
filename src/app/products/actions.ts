@@ -1,0 +1,188 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import {
+  extractProductFormValues,
+  getProductErrorMessage,
+  normalizeProductMutationInput,
+  type ProductFormValues,
+} from "@/lib/modules/products";
+import {
+  createCompetitor,
+  deleteCompetitor,
+  extractCompetitorFormValues,
+  normalizeCompetitorMutationInput,
+  updateCompetitor,
+} from "@/lib/services/competitor-service";
+import { createProduct, softDeleteProduct, updateProduct } from "@/lib/services/product-mutation-service";
+import { extractProfitFormValues, normalizeProfitMutationInput, updateProductProfit } from "@/lib/services/profit-service";
+import { extractScoreFormValues, normalizeScoreFormValues, saveScoreSnapshot } from "@/lib/services/scoring-service";
+
+type SubmitState = {
+  error?: string | null;
+};
+
+type DeleteActionState = {
+  success: boolean;
+  error?: string | null;
+};
+
+function getOptionalImage(formData: FormData, key = "mainImage") {
+  const image = formData.get(key);
+  if (!(image instanceof File) || image.size === 0) {
+    return null;
+  }
+
+  return image;
+}
+
+function buildProductValues(formData: FormData) {
+  const values: ProductFormValues = extractProductFormValues(formData);
+  return normalizeProductMutationInput(values);
+}
+
+function revalidateProductScopes(productId: number) {
+  revalidatePath("/");
+  revalidatePath("/products");
+  revalidatePath(`/products/${productId}`);
+}
+
+export async function createProductAction(_prevState: SubmitState, formData: FormData): Promise<SubmitState> {
+  let product;
+
+  try {
+    product = await createProduct({
+      values: buildProductValues(formData),
+      mainImage: getOptionalImage(formData),
+    });
+  } catch (error) {
+    return {
+      error: getProductErrorMessage(error, "保存商品失败，请稍后重试。"),
+    };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/products");
+  redirect(`/products/${product.id}`);
+}
+
+export async function updateProductAction(
+  productId: number,
+  _prevState: SubmitState,
+  formData: FormData,
+): Promise<SubmitState> {
+  let product;
+
+  try {
+    product = await updateProduct(productId, {
+      values: buildProductValues(formData),
+      mainImage: getOptionalImage(formData),
+    });
+  } catch (error) {
+    return {
+      error: getProductErrorMessage(error, "保存商品失败，请稍后重试。"),
+    };
+  }
+
+  revalidateProductScopes(productId);
+  redirect(`/products/${product.id}`);
+}
+
+export async function deleteProductAction(productId: number): Promise<DeleteActionState> {
+  try {
+    await softDeleteProduct(productId);
+    revalidateProductScopes(productId);
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: getProductErrorMessage(error, "删除商品失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function saveCompetitorAction(
+  productId: number,
+  _prevState: SubmitState,
+  formData: FormData,
+): Promise<SubmitState> {
+  try {
+    const values = normalizeCompetitorMutationInput(extractCompetitorFormValues(formData));
+    const competitorId = Number(formData.get("competitorId") ?? "");
+    const screenshot = getOptionalImage(formData, "screenshot");
+
+    if (Number.isInteger(competitorId) && competitorId > 0) {
+      await updateCompetitor({
+        productId,
+        competitorId,
+        values,
+        screenshot,
+      });
+    } else {
+      await createCompetitor({
+        productId,
+        values,
+        screenshot,
+      });
+    }
+  } catch (error) {
+    return {
+      error: getProductErrorMessage(error, "保存竞品失败，请稍后重试。"),
+    };
+  }
+
+  revalidateProductScopes(productId);
+  redirect(`/products/${productId}?tab=${encodeURIComponent("竞品数据")}`);
+}
+
+export async function deleteCompetitorAction(productId: number, competitorId: number): Promise<DeleteActionState> {
+  try {
+    await deleteCompetitor(productId, competitorId);
+    revalidateProductScopes(productId);
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: getProductErrorMessage(error, "删除竞品失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function saveProfitAction(
+  productId: number,
+  _prevState: SubmitState,
+  formData: FormData,
+): Promise<SubmitState> {
+  try {
+    const values = normalizeProfitMutationInput(extractProfitFormValues(formData));
+    await updateProductProfit(productId, values);
+  } catch (error) {
+    return {
+      error: getProductErrorMessage(error, "保存利润测算失败，请稍后重试。"),
+    };
+  }
+
+  revalidateProductScopes(productId);
+  redirect(`/products/${productId}?tab=${encodeURIComponent("利润测算")}`);
+}
+
+export async function saveScoreAction(
+  productId: number,
+  _prevState: SubmitState,
+  formData: FormData,
+): Promise<SubmitState> {
+  try {
+    const values = normalizeScoreFormValues(extractScoreFormValues(formData));
+    await saveScoreSnapshot(productId, values);
+  } catch (error) {
+    return {
+      error: getProductErrorMessage(error, "保存评分结果失败，请稍后重试。"),
+    };
+  }
+
+  revalidateProductScopes(productId);
+  redirect(`/products/${productId}?tab=${encodeURIComponent("商品评分")}`);
+}

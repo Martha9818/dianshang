@@ -1,0 +1,375 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id                  Int              @id @default(autoincrement())
+  spu                 String           @unique
+  name                String
+  categoryLevel1      String?
+  categoryLevel2      String?
+  tags                String?
+  targetUser          String?
+  targetPlatforms     String?
+  estimatedPrice      Float?
+  estimatedCost       Float?
+  estimatedShipping   Float?
+  packagingCost       Float?
+  sellingPoints       String?
+  painPoints          String?
+  usageScenes         String?
+  categoryRisk        String?
+  returnRisk          String?
+  explanationCost     String?
+  contentVisualLevel  String?
+  sceneClarityLevel   String?
+  videoFitLevel       String?
+  comparisonDemoLevel String?
+  manualRegulatedRisk Boolean          @default(false)
+  manualInfringementRisk Boolean       @default(false)
+  manualRiskNotes     String?
+  notes               String?
+  status              String           @default("待分析")
+  mainImagePath       String?
+  deletedAt           DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  variants            ProductVariant[]
+  competitors         Competitor[]
+  copywritings        Copywriting[]
+  promptTasks         PromptTask[]
+  materials           Material[]
+  scoreSnapshots      ScoreSnapshot[]
+  operationLogs       OperationLog[]
+  aiRequestLogs       AIRequestLog[]
+  aiJobs              AIJob[]
+  convertedInspirations Inspiration[]  @relation("InspirationConvertedProduct")
+
+  @@index([deletedAt])
+  @@index([updatedAt])
+  @@index([createdAt])
+}
+
+model ProductVariant {
+  id             Int      @id @default(autoincrement())
+  productId      Int
+  skuName        String
+  specText       String?
+  estimatedPrice Float?
+  estimatedCost  Float?
+  stockQuantity  Int?
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model Competitor {
+  id              Int      @id @default(autoincrement())
+  productId       Int
+  platform        String
+  title           String
+  price           Float
+  heatMetricType  String
+  heatMetricValue Float
+  sellerName      String?
+  link            String?
+  screenshotPath  String?
+  sellingPoint    String?
+  painPoint       String?
+  imageStyle      String?
+  dataDate        DateTime
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model Copywriting {
+  id                    Int         @id @default(autoincrement())
+  productId             Int
+  providerId            Int?
+  aiJobId               Int?
+  platform              String?
+  copyType              String?
+  version               String?
+  versionLabel          String?
+  style                 String?
+  title                 String?
+  content               String?
+  body                  String?
+  mainCopy              String?
+  sellingPointsJson     String?
+  tagsJson              String?
+  faqJson               String?
+  riskNotesJson         String?
+  auditStatus           String?
+  generationStatus      String?
+  riskWords             String?
+  violationScanResultJson String?
+  isUsedInListing       Boolean     @default(false)
+  usedAt                DateTime?
+  usedPlatform          String?
+  usageNote             String?
+  structuredPayloadJson String?
+  rawResponseText       String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  product               Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  provider              AIProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  aiJob                 AIJob?      @relation(fields: [aiJobId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([providerId])
+  @@index([aiJobId])
+  @@index([productId, platform])
+  @@index([productId, platform, versionLabel])
+  @@index([productId, platform, createdAt])
+  @@index([isUsedInListing])
+}
+
+model AppSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PromptTask {
+  id              Int        @id @default(autoincrement())
+  taskCode        String     @unique
+  productId       Int
+  platform        String?
+  imageType       String?
+  recommendedSize String?
+  promptText      String?
+  status          String     @default("待生成")
+  version         String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  product         Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  materials       Material[]
+
+  @@index([productId])
+}
+
+model Material {
+  id           Int         @id @default(autoincrement())
+  productId    Int
+  promptTaskId Int?
+  platform     String?
+  materialType String?
+  filePath     String
+  fileHash     String?
+  originalSizeBytes Int?
+  thumbnailSizeBytes Int?
+  width        Int?
+  height       Int?
+  mimeType     String?
+  thumbnailPath String?
+  sourceType   String?
+  usagePermission String?
+  status       String      @default("待审核")
+  source       String?
+  version      String?
+  createdAt    DateTime    @default(now())
+  product      Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  promptTask   PromptTask? @relation(fields: [promptTaskId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([promptTaskId])
+  @@index([fileHash])
+  @@index([usagePermission])
+  @@index([sourceType])
+}
+
+model ScoreSnapshot {
+  id               Int      @id @default(autoincrement())
+  productId        Int
+  totalScore       Float?
+  demandScore      Float?
+  profitScore      Float?
+  afterSalesScore  Float?
+  competitionScore Float?
+  supplierScore    Float?
+  contentScore     Float?
+  recommendation   String?
+  recommendationNote String?
+  deductionReasons String?
+  nextSuggestions  String?
+  manualRegulatedRisk Boolean @default(false)
+  manualInfringementRisk Boolean @default(false)
+  manualRiskNotes String?
+  ruleVersion      String?
+  createdAt        DateTime @default(now())
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model AIProvider {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  providerType String
+  baseUrl      String?
+  apiKey       String?
+  modelName    String?
+  purpose      String?
+  enabled      Boolean  @default(true)
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  copywritings Copywriting[]
+}
+
+model AIRequestLog {
+  id                   Int      @id @default(autoincrement())
+  provider             String
+  model                String
+  requestType          String
+  inputTokens          Int?
+  outputTokens         Int?
+  estimatedCost        Float?
+  currency             String?
+  unitPriceSnapshot    String?
+  durationMs           Int?
+  success              Boolean
+  errorSummary         String?
+  inputSummary         String?
+  relatedProductId     Int?
+  relatedInspirationId Int?
+  relatedTaskId        Int?
+  createdAt            DateTime @default(now())
+  relatedProduct       Product? @relation(fields: [relatedProductId], references: [id], onDelete: SetNull)
+  relatedInspiration   Inspiration? @relation("AIRequestLogRelatedInspiration", fields: [relatedInspirationId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([success])
+  @@index([requestType])
+  @@index([relatedProductId])
+  @@index([relatedTaskId])
+}
+
+model AIJob {
+  id                   Int       @id @default(autoincrement())
+  jobType              String
+  status               String    @default("pending")
+  idempotencyKey       String?
+  relatedProductId     Int?
+  relatedInspirationId Int?
+  inputSummary         String?
+  resultSummary        String?
+  errorSummary         String?
+  retryCount           Int       @default(0)
+  startedAt            DateTime?
+  finishedAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  relatedProduct       Product?  @relation(fields: [relatedProductId], references: [id], onDelete: SetNull)
+  relatedInspiration   Inspiration? @relation("AIJobRelatedInspiration", fields: [relatedInspirationId], references: [id], onDelete: SetNull)
+  copywritings         Copywriting[]
+  inspirationSuggestions Inspiration[] @relation("InspirationSuggestionJob")
+
+  @@index([jobType])
+  @@index([status])
+  @@index([idempotencyKey])
+  @@index([createdAt])
+  @@index([relatedProductId])
+}
+
+model Inspiration {
+  id                 Int      @id @default(autoincrement())
+  title              String?
+  note               String?
+  imagePath          String
+  thumbnailPath      String?
+  fileHash           String   @unique
+  sourceType         String
+  usagePermission    String
+  status             String   @default("pending_review")
+  aiSuggestionJson   String?
+  aiJobId            Int?
+  convertedProductId Int?
+  importedAt         DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  aiJob              AIJob?   @relation("InspirationSuggestionJob", fields: [aiJobId], references: [id], onDelete: SetNull)
+  convertedProduct   Product? @relation("InspirationConvertedProduct", fields: [convertedProductId], references: [id], onDelete: SetNull)
+  relatedAiJobs      AIJob[]  @relation("AIJobRelatedInspiration")
+  relatedAiRequestLogs AIRequestLog[] @relation("AIRequestLogRelatedInspiration")
+
+  @@index([status])
+  @@index([aiJobId])
+  @@index([convertedProductId])
+  @@index([importedAt])
+  @@index([createdAt])
+}
+
+model ScanLog {
+  id                Int      @id @default(autoincrement())
+  scanType          String
+  folderSummary     String
+  totalFiles        Int      @default(0)
+  newFiles          Int      @default(0)
+  skippedDuplicates Int      @default(0)
+  failedFiles       Int      @default(0)
+  status            String
+  errorSummary      String?
+  startedAt         DateTime @default(now())
+  finishedAt        DateTime?
+
+  @@index([scanType])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model BannedWord {
+  id        Int      @id @default(autoincrement())
+  word      String   @unique
+  category  String
+  riskLevel String
+  createdAt DateTime @default(now())
+}
+
+model OperationLog {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  action    String
+  detail    String?
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ExportLog {
+  id             Int      @id @default(autoincrement())
+  fileName       String
+  filePath       String
+  includedSheets String
+  status         String
+  createdAt      DateTime @default(now())
+  errorMessage   String?
+
+  @@index([createdAt])
+}
+
+model BackupLog {
+  id           Int      @id @default(autoincrement())
+  backupPath   String
+  status       String
+  size         Int?
+  createdAt    DateTime @default(now())
+  errorMessage String?
+
+  @@index([createdAt])
+}
