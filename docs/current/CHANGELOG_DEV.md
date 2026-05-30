@@ -9,6 +9,7 @@ This file keeps version-level summaries only. Detailed per-task history is in `a
 - Thread 03 added a read-only homepage todo summary for actionable reminders from products, inspirations, materials, copywriting, AI logs, backups, runtime, and diagnostics without creating a task system or background queue.
 - Thread 04 added a lightweight in-app notification center with sanitized notification records, unread/read state, type filtering, safe internal action links, manual cleanup, and local-only write guards.
 - Thread 05 added selected-record batch operation safety for products, inspirations, materials, and notifications with centralized rules, per-item execution, result counts, confirmation for dangerous actions, OperationLog reuse, and no batch AI/API image generation/product conversion/permanent file deletion.
+- Thread 06 added manual local file maintenance for `uploads/`, `exports/`, and `backups/`, with cleanup suggestions, app-managed `trash/`, confirmed permanent delete for trash files only, `CleanupLog`, and Vercel read-only guards.
 - V1-Plus closeout shortened active docs and moved detailed history into `agent-memory/archive/` without changing business behavior.
 
 ## V1-Core

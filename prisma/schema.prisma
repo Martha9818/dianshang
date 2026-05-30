@@ -357,6 +357,27 @@ model ScanLog {
   @@index([startedAt])
 }
 
+model CleanupLog {
+  id                   Int      @id @default(autoincrement())
+  action               String
+  fileScope            String
+  originalRelativePath String?
+  trashRelativePath    String?
+  fileSize             Int?
+  relatedType          String?
+  relatedId            String?
+  status               String
+  reason               String?
+  createdAt            DateTime @default(now())
+
+  @@index([action])
+  @@index([fileScope])
+  @@index([status])
+  @@index([createdAt])
+  @@index([originalRelativePath])
+  @@index([trashRelativePath])
+}
+
 model BannedWord {
   id        Int      @id @default(autoincrement())
   word      String   @unique

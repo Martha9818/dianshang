@@ -3,7 +3,7 @@ import path from "node:path";
 import { assertLocalWritable, isLocalWritable } from "@/lib/services/runtime";
 import { assertPathLength } from "./pathSafetyService";
 
-export const LOCAL_DIRECTORY_KEYS = ["uploads", "exports", "backups", "logs"] as const;
+export const LOCAL_DIRECTORY_KEYS = ["uploads", "exports", "backups", "logs", "trash"] as const;
 
 export type LocalDirectoryKey = (typeof LOCAL_DIRECTORY_KEYS)[number];
 
@@ -23,6 +23,7 @@ const DIRECTORY_LABELS: Record<LocalDirectoryKey, string> = {
   exports: "exports",
   backups: "backups",
   logs: "logs",
+  trash: "trash",
 };
 
 export function getLocalDirectoryDisplayPath(key: LocalDirectoryKey) {
@@ -39,6 +40,8 @@ export function getLocalDirectoryPath(key: LocalDirectoryKey) {
       return path.join(/*turbopackIgnore: true*/ process.cwd(), "backups");
     case "logs":
       return path.join(/*turbopackIgnore: true*/ process.cwd(), "logs");
+    case "trash":
+      return path.join(/*turbopackIgnore: true*/ process.cwd(), "trash");
     default:
       return path.join(/*turbopackIgnore: true*/ process.cwd(), "logs");
   }

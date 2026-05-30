@@ -24,6 +24,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 | `/notifications` | Lightweight in-app notification center for important operation results. |
 | `/settings/ai`, `/settings/banned-words` | Local settings. |
 | `/export`, `/backup` | Local export and manual backup. |
+| `/maintenance/files` | Manual local file scan, cleanup suggestions, app trash, and confirmed permanent delete. |
 | `/system/diagnostics` | Sanitized local diagnostics. |
 
 ## Service Modules
@@ -40,6 +41,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 | Copywriting | Generation, drafts/history, manual edits, usage marking. | `src/lib/services/copywriting/README.md` |
 | Inspirations | Folder setting, manual scan, dedupe, review states, optional AI suggestion, conversion. | `src/lib/services/inspirations/README.md` |
 | Notifications | Sanitized in-app operation notifications, read state, filtering, safe action URLs, and local-only writes. | `src/lib/services/notifications/README.md` |
+| File cleanup | Manual local file maintenance, cleanup log, app trash, and safe delete guards. | `src/lib/services/cleanup/README.md` |
 | Products/scoring | Product CRUD, formatting, scoring, and status summaries. | Source modules under `src/lib/services/` and `src/lib/modules/` |
 | Prompt tasks | Prompt templates, task persistence, upload linkage. | Source modules under `src/lib/services/` and `src/lib/modules/` |
 | Export/backup | Local Excel export, safe download, manual backup, display-safe paths. | Source services under `src/lib/services/` |

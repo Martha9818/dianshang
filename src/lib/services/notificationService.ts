@@ -60,6 +60,7 @@ const SAFE_ACTION_PREFIXES = [
   "/settings/banned-words",
   "/export",
   "/backup",
+  "/maintenance/files",
   "/system/diagnostics",
   "/notifications",
 ] as const;

@@ -40,7 +40,7 @@ export type DiagnosticsDatabaseStatus = {
 };
 
 export type DiagnosticsDirectoryStatus = {
-  key: "uploads" | "exports" | "backups" | "logs";
+  key: "uploads" | "exports" | "backups" | "logs" | "trash";
   label: string;
   displayPath: string;
   exists: boolean | null;

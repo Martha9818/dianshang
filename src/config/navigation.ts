@@ -8,6 +8,7 @@ export type NavigationIcon =
   | "inspirations"
   | "export"
   | "backup"
+  | "maintenance"
   | "diagnostics"
   | "aiSettings"
   | "bannedWords";
@@ -73,6 +74,12 @@ export const primaryNavigation: NavigationItem[] = [
     title: "备份",
     description: "查看本地备份状态与历史骨架",
     icon: "backup",
+  },
+  {
+    href: "/maintenance/files",
+    title: "文件清理",
+    description: "手动扫描本地文件，移入应用内回收站并二次确认永久删除",
+    icon: "maintenance",
   },
   {
     href: "/system/diagnostics",

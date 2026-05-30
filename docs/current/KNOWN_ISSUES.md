@@ -27,9 +27,3 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 - Status: OPEN OPERATIONAL FOLLOW-UP
 - Impact: The file is removed from the current tree, but account-side rotation/revocation remains the safe closeout.
 - Mitigation: Rotate or revoke the affected recovery codes in the provider account.
-
-### Cleanup Workflow Is Reminder-Only
-
-- Status: DEFERRED
-- Impact: The homepage/diagnostics can remind about cleanup, but no scan/delete workflow exists.
-- Mitigation: Treat any cleanup implementation as a future approved thread with conservative data-safety rules.

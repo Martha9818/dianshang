@@ -4,6 +4,14 @@ Only the 10 most recent key summaries stay here. Detailed entries and older hist
 
 ## 2026-05-30
 
+### V1-Plus Thread 06 File Cleanup And Trash
+
+- Changed: Added `/maintenance/files`, `CleanupLog`, app-managed `trash/`, manual scan results for uploads/exports/backups, cleanup recommendations, move-to-trash, confirmed permanent delete, and cleanup notifications.
+- Scope: Filesystem operations stay in `fileMaintenanceService`; pages/components only display and call actions. Vercel-mode returns read-only messaging and performs no real scan, move, delete, or CleanupLog write.
+- Safety: Paths are generated through the local-path service, frontend/logs/CleanupLog use relative paths, active product/material/competitor/inspiration files are not directly movable, and permanent delete only accepts files already under app trash.
+- Verified: `npm run lint`, `npm run build`, `npx prisma validate`, `npm run encoding:check`, `npx tsc --noEmit`, Thread 06 file cleanup acceptance, preview guard, local browser scan smoke, and preview-mode read-only browser smoke.
+- Handoff: No background cleanup, scheduled jobs, AI image judgment, OCR, compression, cloud sync, Windows recycle bin integration, restore workflow, database-record deletion, Electron, crawler, publishing, or multi-agent behavior was added.
+
 ### V1-Plus Thread 05 Batch Operation Safety
 
 - Changed: Added centralized batch rules/service, batch result structure, selected-record UI/action wiring for products, inspirations, materials, and notifications, plus Thread 05 acceptance and preview-guard scripts.

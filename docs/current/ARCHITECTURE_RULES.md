@@ -32,10 +32,10 @@ These are stable rules for the current mainline. Historical specs are secondary 
 
 ## Filesystem Safety
 
-- Known local runtime folders are `uploads/`, `exports/`, `backups/`, and `logs/`.
+- Known local runtime folders are `uploads/`, `exports/`, `backups/`, `logs/`, and application-managed `trash/`.
 - Folder checks, safe display labels, filename safety, and path safety should reuse local-path services.
 - Frontend, diagnostics, logs, exports, backups, and docs must not expose full local paths, database paths, API keys, `.env` values, raw prompts, full stacks, or sensitive cost data.
-- Safe cleanup may remove only transient/generated artifacts that are clearly not source, project data, configuration, documentation, or user assets.
+- File cleanup may permanently delete only files already moved into application-managed `trash/`; it must not call the Windows system recycle bin or delete active product/material/inspiration files directly.
 
 ## AI Safety
 

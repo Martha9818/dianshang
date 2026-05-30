@@ -15,6 +15,24 @@ This file records active V1-Core schema changes. Add new entries when `prisma/sc
 - If a migration fails, stop and document the cause plus the safe next step instead of forcing progress with a reset.
 - If old data is incomplete, prefer `nullable`, `legacy`, `unknown`, or an explicit repair script over invented values.
 
+## 2026-05-30 - V1-Plus Thread 06 File Cleanup And Trash
+
+- Added migration `prisma/migrations/20260530081700_v1_plus_thread_06_file_cleanup/migration.sql`.
+- Added `CleanupLog` for manual file-maintenance audit records:
+  - `action`
+  - `fileScope`
+  - `originalRelativePath`
+  - `trashRelativePath`
+  - `fileSize`
+  - `relatedType`
+  - `relatedId`
+  - `status`
+  - `reason`
+  - `createdAt`
+- Added indexes for action, file scope, status, created time, original relative path, and trash relative path.
+- Migration is additive; old migrations were not edited and no database reset was used.
+- A local SQLite backup was created before applying the migration: `backups/thread06_file_cleanup_migration_20260530_161537/`.
+
 ## 2026-05-30 - V1-Plus Thread 04 Notification Center
 
 - Added migration `prisma/migrations/20260530141322_v1_plus_thread_04_notification_center/migration.sql`.

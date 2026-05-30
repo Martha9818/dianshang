@@ -2,7 +2,7 @@
 
 ## Responsibility
 
-`src/lib/services/local-paths/` centralizes local runtime folder paths and path safety helpers for `uploads/`, `exports/`, `backups/`, and `logs/`.
+`src/lib/services/local-paths/` centralizes local runtime folder paths and path safety helpers for `uploads/`, `exports/`, `backups/`, `logs/`, and the application-managed `trash/` folder.
 
 ## Not Responsible For
 
@@ -30,7 +30,7 @@
 
 ## Local And Vercel Behavior
 
-- Local runtime may create missing `uploads/`, `exports/`, `backups/`, and `logs/`.
+- Local runtime may create missing `uploads/`, `exports/`, `backups/`, `logs/`, and `trash/`.
 - Vercel returns read-only directory status and never creates real local folders.
 
 ## Sanitization Rules
@@ -50,4 +50,3 @@
 - Do not expose `absolutePath` to client components.
 - Do not create folders on Vercel.
 - Do not broaden path traversal rules.
-
