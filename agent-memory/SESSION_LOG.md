@@ -6,6 +6,41 @@
 
 ### Task
 
+Completed full acceptance for EcomPilot V1-Plus Thread 01: global search and filter enhancement.
+
+### Changed
+
+- Fixed Vercel `/inspirations` fallback so read-error preview still renders the search/filter form, empty state, and disabled write controls.
+- Unified Vercel export and backup write attempts to return `预览环境只读，请在 Windows 本地验收。`.
+- Updated `agent-memory/CURRENT_STATUS.md`, `agent-memory/SESSION_LOG.md`, and `docs/current/CHANGELOG_DEV.md` with the acceptance result.
+- No Prisma schema, migration, dependency, AI prompt, AI call, semantic search, AI search, external search agent, collection, OCR, crawler, filesystem cleanup, export generation behavior, or backup generation behavior changed.
+
+### Verification
+
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- `npx.cmd prisma validate`
+- `npm.cmd run encoding:check`
+- `git diff --check`
+- `npm run typecheck` not applicable: no script exists.
+- `npm test` not applicable: no script exists.
+- Browser-checked local `/products`, `/materials`, `/copywriting`, `/prompt-tasks`, and `/inspirations` with search/filter/sort query parameters and empty states.
+- Browser-checked Vercel `/products`, `/materials`, `/copywriting`, `/prompt-tasks`, and `/inspirations` search/filter pages.
+- Browser-checked Vercel product create, export, backup, Prompt task create, and inspiration scan/write controls stay read-only.
+- Scanned local and Vercel list-page HTML for API-key-like strings, `.env`, SQLite database path strings, and Windows absolute paths; no real secret/path exposure found. One local false positive was CSS text `sk-form`.
+
+### Git / Deploy Status
+
+- Source fixes were committed and pushed through `cddf825`.
+- Final acceptance memory/docs update is pending commit and push after closeout verification.
+- Live preview: `https://ecompilot-mvp.vercel.app`.
+
+### Handoff
+
+- V1-Plus Thread 01 is accepted. Semantic search, AI search, and external search agents remain not applicable future-version items.
+
+### Task
+
 Refreshed deployment from local V1-Plus Thread 01 commits.
 
 ### Changed

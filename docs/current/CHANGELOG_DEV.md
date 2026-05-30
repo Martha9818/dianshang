@@ -8,6 +8,8 @@ This changelog records high-signal development changes by thread. Detailed chron
 - Enhanced `/products` with keyword, status, recommendation, platform, score range, missing competitor, missing cost, material coverage, copywriting coverage, rescore, and created/updated sort filters.
 - Enhanced `/materials` with keyword, type, status, product, platform, created-time sort, and lightweight database-only orphaned-material notice.
 - Enhanced `/copywriting`, `/prompt-tasks`, and `/inspirations` with service-layer list filtering for the approved keyword/status/platform/version/violation/conversion/image/sort dimensions.
+- Acceptance fix: Vercel `/inspirations` now renders the search/filter form even when local SQLite data is unavailable in preview.
+- Acceptance fix: export and backup write attempts in Vercel now return the unified readonly message `预览环境只读，请在 Windows 本地验收。`.
 - Kept Prisma schema, migrations, dependencies, AI search, semantic search, external search agents, filesystem cleanup, and Vercel write behavior unchanged.
 
 ## 2026-05-30 - AI Provider Default Selection Patch
