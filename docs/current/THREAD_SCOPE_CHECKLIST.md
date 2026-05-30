@@ -53,4 +53,4 @@ Use this as a short boundary/status record for development threads. Do not paste
 - Browser/routes: `/notifications` local browser flow checked for list, unread count, filter, mark read, mark all read, delete confirm, cleanup confirm, and action links
 - Data setup: additive migration applied locally; acceptance notifications created through `notificationService`
 - Cleanup: notification cleanup confirmed with zero old rows; sample acceptance notifications removed after browser checks
-- Commit/push/deploy status: pending local commit; no push unless requested
+- Commit/push/deploy status: committed and pushed to GitHub; `main` and `origin/main` are aligned after Thread 04 closeout
