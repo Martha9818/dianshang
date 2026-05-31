@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState, useActionState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ActionButton,
@@ -603,6 +604,12 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                     <MiniIcon name="spark" className="h-4 w-4" />
                     {aiPending ? "识图中..." : "AI 识图草稿"}
                   </button>
+                  <Link
+                    href={`/screenshots?sourceType=inspiration&sourceId=${selectedInspiration.id}`}
+                    className={secondaryButtonClassName}
+                  >
+                    Thread 02 截图识别
+                  </Link>
                   <button
                     formAction={applyAction}
                     type="submit"

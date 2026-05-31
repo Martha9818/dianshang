@@ -109,6 +109,9 @@ export function ProductMaterialsTab({
                         <span className="text-xs text-slate-400">只读</span>
                       ) : (
                         <div className="flex flex-wrap gap-2">
+                          <TableActionLink href={`/screenshots?sourceType=material&sourceId=${material.id}&productId=${product.id}`}>
+                            截图识别
+                          </TableActionLink>
                           {statusButtons.map((item) => (
                             <MaterialStatusButton key={item.status} materialId={material.id} status={item.status} sourceUrl={sourceUrl}>
                               {item.label}

@@ -49,6 +49,7 @@ model Product {
   aiRequestLogs       AIRequestLog[]
   aiJobs              AIJob[]
   convertedInspirations Inspiration[]  @relation("InspirationConvertedProduct")
+  screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobProduct")
 
   @@index([deletedAt])
   @@index([updatedAt])
@@ -89,6 +90,7 @@ model Competitor {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobCompetitor")
 
   @@index([productId])
 }
@@ -184,6 +186,7 @@ model Material {
   createdAt    DateTime    @default(now())
   product      Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   promptTask   PromptTask? @relation(fields: [promptTaskId], references: [id], onDelete: SetNull)
+  screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobMaterial")
 
   @@index([productId])
   @@index([promptTaskId])
@@ -279,6 +282,7 @@ model AIJob {
   copywritings         Copywriting[]
   inspirationSuggestions Inspiration[] @relation("InspirationSuggestionJob")
   inspirationAiDraftJobs InspirationAiDraftJob[] @relation("InspirationAiDraftJobAIJob")
+  screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobAIJob")
 
   @@index([jobType])
   @@index([status])
@@ -334,6 +338,7 @@ model Inspiration {
   operationLogs       OperationLog[] @relation("OperationLogRelatedInspiration")
   scanJobs            InspirationScanJob[] @relation("InspirationScanJobInspiration")
   aiDraftJobs         InspirationAiDraftJob[] @relation("InspirationAiDraftJobInspiration")
+  screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobInspiration")
 
   @@index([status])
   @@index([aiJobId])
@@ -406,6 +411,46 @@ model InspirationAiDraftJob {
   @@index([inspirationId])
   @@index([aiJobId])
   @@index([status])
+  @@index([createdAt])
+}
+
+model ScreenshotRecognitionJob {
+  id                    Int          @id @default(autoincrement())
+  sourceType            String
+  sourceId              String?
+  productId             Int?
+  inspirationId          Int?
+  materialId             Int?
+  competitorId           Int?
+  aiJobId               Int?
+  imagePath             String
+  thumbnailPath         String?
+  status                String       @default("pending")
+  resultSummary         String?
+  structuredDraft       String?
+  confirmedDraft        String?
+  qualityLevel          String?
+  errorSummary          String?
+  needsUserConfirmation Boolean      @default(true)
+  confirmedAt           DateTime?
+  ignoredAt             DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  product               Product?     @relation("ScreenshotRecognitionJobProduct", fields: [productId], references: [id], onDelete: SetNull)
+  inspiration            Inspiration? @relation("ScreenshotRecognitionJobInspiration", fields: [inspirationId], references: [id], onDelete: SetNull)
+  material              Material?    @relation("ScreenshotRecognitionJobMaterial", fields: [materialId], references: [id], onDelete: SetNull)
+  competitor            Competitor?  @relation("ScreenshotRecognitionJobCompetitor", fields: [competitorId], references: [id], onDelete: SetNull)
+  aiJob                 AIJob?       @relation("ScreenshotRecognitionJobAIJob", fields: [aiJobId], references: [id], onDelete: SetNull)
+
+  @@index([sourceType])
+  @@index([sourceId])
+  @@index([productId])
+  @@index([inspirationId])
+  @@index([materialId])
+  @@index([competitorId])
+  @@index([aiJobId])
+  @@index([status])
+  @@index([qualityLevel])
   @@index([createdAt])
 }
 

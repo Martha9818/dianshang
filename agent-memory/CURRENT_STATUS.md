@@ -2,10 +2,10 @@
 
 ## Current Progress
 
-- Current stage: V1.5 after Thread 01 implementation.
+- Current stage: V1.5 after Thread 02 implementation.
 - V1-Plus status: completed and frozen as the current development baseline.
-- Current task: V1.5 Thread 01 - local inspiration-folder scheduled scanning and automatic AI image-recognition drafts completed locally.
-- Next thread: V1.5 Thread 02 - screenshot recognition and structured image import, only if explicitly approved.
+- Current task: V1.5 Thread 02 - user-initiated screenshot recognition and structured image-import drafts completed locally.
+- Next thread: V1.5 Thread 03 - link import attempt and import quality grading, only if explicitly approved.
 
 ## Product Direction
 
@@ -17,20 +17,21 @@
 ## V1.5 Boundary
 
 - V1.5 is for lightweight intelligence and technical validation.
-- Thread 01 now covers only local inspiration-folder scan settings, app-runtime scheduled scans, new image detection, task states, and AI drafts pending user confirmation.
-- Thread 01 did not implement screenshot recognition, screenshot structured import, link import, platform crawling, automatic collection, automatic publishing, OCR, Electron, inventory, supplier management, or multi-agent orchestration.
+- Thread 01 covers only local inspiration-folder scan settings, app-runtime scheduled scans, new image detection, task states, and AI drafts pending user confirmation.
+- Thread 02 covers only user-initiated screenshot/local-image import, preview, AI recognition draft, quality grading, recognition history, edit/ignore/confirm draft flow, and conservative source links.
+- Thread 02 did not implement automatic screenshot capture, browser automation, platform crawling, link import, automatic collection, automatic publishing, automatic formal product creation, formal competitor writeback, material status changes, API image generation, Electron, inventory, supplier management, or multi-agent orchestration.
 - File cleanup and app trash remain V1-Plus Thread 06 capabilities; V1.5 must not create a second cleanup system.
 
 ## Blockers Or Risks
 
-- No active product blocker is recorded for V1.5 Thread 01.
+- No active product blocker is recorded for V1.5 Thread 02.
 - Vercel remains preview-only and read-only; it is not a formal runtime environment.
 - No `test` script exists in the current project scripts.
 - V1.5 threads must not reimplement path, environment, logging, or Vercel-readonly foundations.
-- Latest Thread 01 verification passed encoding check, lint, build, Prisma validate, typecheck, local Windows fixture acceptance, Vercel read-only simulation, and browser smoke test.
+- Latest Thread 02 verification passed encoding check, lint, build, Prisma validate, typecheck, local Windows acceptance, Vercel read-only simulation, and browser smoke test.
 - A vision-capable Doubao provider has now generated a real local inspiration AI draft successfully after the prompt fallback and image timeout compatibility patch.
 - Follow-up doc slimming for long files is deferred to a later documentation slimming pass or V1.5 Thread 09 closeout.
 
 ## Next Recommended Step
 
-- Start V1.5 Thread 02 only after explicit approval. Thread 02 must remain separate from Thread 01 and must not backfill platform crawling, automatic collection, or automatic publishing.
+- Start V1.5 Thread 03 only after explicit approval. Thread 03 is link import attempt and quality grading only; it must not become platform crawling or automatic collection.

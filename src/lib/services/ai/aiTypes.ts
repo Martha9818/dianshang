@@ -2,7 +2,14 @@ export type AIProviderType = "openai-compatible";
 
 export type AIModelPurpose = "text" | "vision" | "image";
 
-export type AIRequestType = "copywriting" | "inspiration_vision" | "provider-test" | "vision-preview" | "image-preview" | "general";
+export type AIRequestType =
+  | "copywriting"
+  | "inspiration_vision"
+  | "screenshot_recognition"
+  | "provider-test"
+  | "vision-preview"
+  | "image-preview"
+  | "general";
 
 export type AIJobStatus = "pending" | "running" | "success" | "failed" | "cancelled";
 

@@ -21,6 +21,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 | `/prompt-tasks`, `/prompt-tasks/[taskCode]/upload` | Prompt task management and material upload. |
 | `/materials` | Material library. |
 | `/inspirations` | Manual inspiration inbox, review states, and confirm-then-convert flow. |
+| `/screenshots` | V1.5 Thread 02 user-initiated screenshot recognition, structured drafts, quality grading, and manual confirmation history. |
 | `/notifications` | Lightweight in-app notification center for important operation results. |
 | `/settings/ai`, `/settings/banned-words` | Local settings. |
 | `/export`, `/backup` | Local export and manual backup. |
@@ -40,6 +41,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 | Materials | Material records, image metadata, status display. | `src/lib/services/materials/README.md` |
 | Copywriting | Generation, drafts/history, manual edits, usage marking. | `src/lib/services/copywriting/README.md` |
 | Inspirations | Folder setting, manual/app-runtime scheduled scan, dedupe, scan/AI draft task states, review states, optional AI draft, conversion. | `src/lib/services/inspirations/README.md` |
+| Screenshots | User-initiated screenshot/local-image import, AI structured draft recognition, quality grading, edit/ignore/confirm flow, and conservative source links. | `src/lib/services/screenshot/README.md` |
 | Notifications | Sanitized in-app operation notifications, read state, filtering, safe action URLs, and local-only writes. | `src/lib/services/notifications/README.md` |
 | File cleanup | V1-Plus Thread 06 manual local maintenance for uploads/exports/backups, cleanup log, app trash, Vercel no-real-scan/delete guard, path safety, and active-file protection. V1.5 must not add a second cleanup system. | `src/lib/services/cleanup/README.md` |
 | Products/scoring | Product CRUD, formatting, scoring, and status summaries. | Source modules under `src/lib/services/` and `src/lib/modules/` |

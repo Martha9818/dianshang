@@ -31,8 +31,14 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 ### Remaining V1.5 Threads Are Not Implemented Yet
 
 - Status: DEFERRED / PLANNED SCOPE
-- Impact: V1.5 Thread 01 is implemented, but Thread 02-09 still require separately approved threads; Thread 02 screenshot import remains separate.
+- Impact: V1.5 Thread 01 and Thread 02 are implemented, but Thread 03-09 still require separately approved threads.
 - Mitigation: Do not imply these are available until their thread ships and is verified locally.
+
+### Screenshot Recognition Depends On Vision-Capable AI Credentials
+
+- Status: OPEN
+- Impact: Screenshot upload and draft history can work locally, but AI recognition can fail if no valid vision-capable provider is configured.
+- Mitigation: AI failure is isolated to `ScreenshotRecognitionJob`; users can keep/upload screenshots and manually edit or retry drafts.
 
 ### V1-Plus File Cleanup Must Not Be Rebuilt In V1.5
 

@@ -148,6 +148,9 @@ export default async function ProductDetailPage({
           </div>
 
           <div className="flex flex-wrap gap-3">
+            <ActionButton href={`/screenshots?sourceType=product&sourceId=${product.id}&productId=${product.id}`} variant="secondary">
+              截图识别
+            </ActionButton>
             <ActionButton href={`/products/${product.id}/edit`} variant="secondary">
               编辑商品
             </ActionButton>

@@ -14,6 +14,7 @@ import {
   DataTableRow,
   PageNote,
   StatCard,
+  TableActionLink,
   TableScrollArea,
 } from "@/components/dashboard/primitives";
 import type { CompetitorFormValues } from "@/lib/services/competitor-service";
@@ -176,7 +177,11 @@ export function CompetitorTab({
       {runtimeNotice ? <PageNote>{runtimeNotice}</PageNote> : null}
 
       <DashboardCard>
-        <DashboardCardHeader title="竞品列表" description="支持新增、编辑、删除、截图查看。" />
+        <DashboardCardHeader
+          title="竞品列表"
+          description="支持新增、编辑、删除、截图查看。"
+          action={<TableActionLink href={`/screenshots?sourceType=competitor&productId=${productId}`}>竞品截图识别</TableActionLink>}
+        />
         <TableScrollArea>
           <DataTable className="min-w-[980px]">
             <DataTableHead>
@@ -226,6 +231,12 @@ export function CompetitorTab({
                           className="inline-flex h-10 items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:border-blue-200 hover:bg-blue-50 hover:text-[#1D4ED8]"
                         >
                           编辑
+                        </Link>
+                        <Link
+                          href={`/screenshots?sourceType=competitor&sourceId=${competitor.id}&productId=${productId}`}
+                          className="inline-flex h-10 items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:border-blue-200 hover:bg-blue-50 hover:text-[#1D4ED8]"
+                        >
+                          截图识别
                         </Link>
                         <button
                           type="button"

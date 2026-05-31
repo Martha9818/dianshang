@@ -4,6 +4,13 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 
 ## 2026-05-31
 
+### V1.5 Thread 02 - Screenshot Recognition And Structured Image Import
+
+- Changed: Added a separate `ScreenshotRecognitionJob` task model, `/screenshots` workspace, screenshot upload/source selection, AI recognition draft, quality grading, recognition history, edit/ignore/confirm flow, and conservative entry links from inspiration, product detail, competitor, and material views.
+- Safety: Thread 02 does not reuse `InspirationAiDraftJob`; AI results stay in `structuredDraft` / `confirmedDraft` and do not automatically create products, overwrite product facts, create effective competitors, update competitor fields, change material status/permission, or run cleanup.
+- Runtime: Uploads and AI calls are local-only; Vercel write attempts show `预览环境只读，请在 Windows 本地验收截图识别。`.
+- Local acceptance: A readable fixture screenshot uploaded into managed `uploads/screenshots/`, AI recognition generated a `high` quality structured draft, and confirmation saved only `confirmedDraft`; Vercel write simulation returned the required read-only notice.
+
 ### V1.5 Thread 01 - Inspiration Folder Scheduled Scan And AI Drafts
 
 - Changed: Added local inspiration scan config, app-runtime scheduled scan trigger, per-file scan jobs, AI draft jobs, manual retry, and AI draft confirm/ignore/edit flow.

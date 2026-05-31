@@ -4,17 +4,17 @@ Use this as a short boundary/status record for development threads. Do not paste
 
 ## Thread
 
-- Name: V1.5 Thread 01 - Inspiration Folder Scheduled Scan And AI Drafts
+- Name: V1.5 Thread 02 - Screenshot Recognition And Structured Image Import
 - Date: 2026-05-31
 - Type: feature / local-first validation
-- Approved version scope: V1.5 Thread 01 only
+- Approved version scope: V1.5 Thread 02 only
 - Existing working-tree changes belong to: this thread
 
 ## Safety
 
 - `git status --short` checked before work: yes
 - Touches schema, migration, new dependencies, new business feature, or destructive production operation: additive schema migration and local feature only; no new dependency or destructive operation
-- Touches local filesystem behavior: yes, local inspiration-folder scanning and managed inspiration uploads only
+- Touches local filesystem behavior: yes, managed screenshot uploads only; no automatic screenshot capture or crawler
 - Backup need evaluated when risky writes are involved: yes; local SQLite backup created before migration
 - Database reset planned: no
 - Vercel remains read-only: yes
@@ -45,6 +45,8 @@ Use this as a short boundary/status record for development threads. Do not paste
 | V1.5 Thread 07 | Electron 技术验证 | NOT STARTED | Technical validation only; no formal Electron desktop app, installer, tray, auto-update, or system notifications. |
 | V1.5 Thread 08 | 站内搜索助手与通知摘要助手 | NOT STARTED | May remind and link to existing maintenance pages; must not scan, move, delete, or clean uploads/exports/backups automatically. |
 | V1.5 Thread 09 | 最终集成验收、README 与 V2 准备 | NOT STARTED | Final acceptance, README, risks, safety scan, V1-Plus Thread 06 cleanup regression, and V2 preparation only. |
+
+Thread 02 closeout note: V1.5 Thread 02 is now complete on the current mainline. It implemented user-initiated screenshot/local-image import, AI structured drafts, quality grading, recognition history, and manual edit/ignore/confirm only; no auto screenshot, browser automation, crawler, link import, auto product creation, or formal field overwrite was added.
 
 ## File Cleanup Boundary
 

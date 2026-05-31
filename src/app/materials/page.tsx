@@ -321,6 +321,7 @@ export default async function MaterialsPage({
               </div>
               <div className="border-t border-[#EEF2F8] pt-5">
                 <div className="flex flex-wrap gap-2">
+                  <TableActionLink href={`/screenshots?sourceType=material&sourceId=${selectedMaterial.id}&productId=${selectedMaterial.productId}`}>截图识别</TableActionLink>
                   <TableActionLink href={`/products/${selectedMaterial.productId}?tab=copywriting`}>查看文案素材</TableActionLink>
                   <TableActionLink href={`/copywriting?productId=${selectedMaterial.productId}`}>去文案列表</TableActionLink>
                 </div>

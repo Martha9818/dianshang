@@ -15,6 +15,25 @@ This file records active V1-Core schema changes. Add new entries when `prisma/sc
 - If a migration fails, stop and document the cause plus the safe next step instead of forcing progress with a reset.
 - If old data is incomplete, prefer `nullable`, `legacy`, `unknown`, or an explicit repair script over invented values.
 
+## 2026-05-31 - V1.5 Thread 02 Screenshot Recognition Jobs
+
+- Added migration `prisma/migrations/20260531030346_v15_thread02_screenshot_recognition/migration.sql`.
+- Added `ScreenshotRecognitionJob` for user-initiated screenshot/local-image recognition:
+  - `sourceType`, `sourceId`
+  - optional `productId`, `inspirationId`, `materialId`, `competitorId`, `aiJobId`
+  - `imagePath`, `thumbnailPath`
+  - `status`
+  - `resultSummary`
+  - `structuredDraft`
+  - `confirmedDraft`
+  - `qualityLevel`
+  - `errorSummary`
+  - `needsUserConfirmation`, `confirmedAt`, `ignoredAt`
+  - `createdAt`, `updatedAt`
+- Added additive relations from Product, Inspiration, Material, Competitor, and AIJob to screenshot recognition jobs.
+- Migration is additive; old migrations were not edited and no database reset was used.
+- A local SQLite backup was created before applying the migration: `backups/v15_thread02_migration_20260531_110306/`.
+
 ## 2026-05-31 - V1.5 Thread 01 Inspiration Scheduled Scan And AI Draft Tasks
 
 - Added migration `prisma/migrations/20260531010807_v15_thread01_inspiration_scan_ai_draft/migration.sql`.

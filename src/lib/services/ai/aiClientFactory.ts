@@ -57,7 +57,31 @@ function buildHeaders(apiKey: string) {
 }
 
 export function sanitizeProviderErrorMessage(message: string) {
-  return sanitizeAIErrorSummary(message);
+  let normalized = message;
+
+  try {
+    const parsed = JSON.parse(message) as {
+      error?: { message?: unknown };
+      message?: unknown;
+    };
+    const parsedMessage =
+      typeof parsed.error?.message === "string"
+        ? parsed.error.message
+        : typeof parsed.message === "string"
+          ? parsed.message
+          : null;
+    if (parsedMessage) {
+      normalized = parsedMessage;
+    }
+  } catch {
+    // Keep the original text and sanitize below.
+  }
+
+  normalized = normalized
+    .replace(/request\s*id\s*[:=]\s*[a-z0-9_-]+/gi, "request id: [redacted]")
+    .replace(/request[_-]?id[\"']?\s*[:=]\s*[\"']?[a-z0-9_-]+[\"']?/gi, "requestId: [redacted]");
+
+  return sanitizeAIErrorSummary(normalized);
 }
 
 function translateAIError(status: number, message: string) {
