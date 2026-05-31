@@ -31,5 +31,5 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 ### V1.5 Features Are Not Implemented Yet
 
 - Status: DEFERRED / PLANNED SCOPE
-- Impact: User-uploaded image/screenshot recognition, local inspiration-folder scheduled scanning, lightweight API image generation, and Electron technical validation require separately approved V1.5 threads.
+- Impact: Local inspiration-folder scheduled scanning, screenshot recognition and structured image import, lightweight API image generation, and Electron technical validation require separately approved V1.5 threads.
 - Mitigation: Do not imply these are available until their thread ships and is verified locally.

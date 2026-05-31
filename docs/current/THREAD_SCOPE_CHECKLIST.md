@@ -31,20 +31,26 @@ Use this as a short boundary/status record for development threads. Do not paste
 | Thread 06 File cleanup/trash | COMPLETE | Frozen in V1-Plus baseline. |
 | Thread 07 Final acceptance/README/path closeout | COMPLETE | Frozen in V1-Plus baseline. |
 
-## V1.5 Thread Range
+## V1.5 Frozen Thread Range
 
-| V1.5 Thread Area | Status | Boundary |
+| Thread | Frozen Name | Status | Boundary |
 | --- | --- | --- |
-| Thread 00 baseline freeze | COMPLETE | Docs/status/archive only. |
-| User-uploaded image/screenshot recognition | NOT STARTED | Allowed only after explicit thread approval; no OCR implementation in Thread 00. |
-| Local inspiration-folder scheduled scan | NOT STARTED | Must stay local, bounded, and reuse desktop base; no crawler or background queue in Thread 00. |
-| Lightweight API image generation | NOT STARTED | Allowed only after explicit thread approval; no API image generation in Thread 00. |
-| Electron technical validation | NOT STARTED | Technical validation only; no formal desktop release in V1.5. |
+| V1.5 Thread 00 | V1-Plus closeout and V1.5 baseline freeze | COMPLETE | Docs/status/archive only. |
+| V1.5 Thread 01 | 灵感文件夹定时扫描与自动 AI 识图草稿 | NOT STARTED | Do not implement screenshot recognition, screenshot structured import, or product screenshot field extraction here. |
+| V1.5 Thread 02 | 截图识别与图片导入结构化 | NOT STARTED | Separate from Thread 01; do not backfill Thread 01 scope here unless explicitly approved. |
+| V1.5 Thread 03 | API 生图轻量版技术验证 | NOT STARTED | Lightweight validation only; no Vercel high-cost AI calls or automated publishing. |
+| V1.5 Thread 04 | Electron 技术验证 | NOT STARTED | Technical validation only; no formal Electron desktop app, installer, tray, auto-update, or system notifications. |
+| V1.5 Thread 05 | V1.5 AI 结果人工复核与降级验收 | NOT STARTED | Verify suggestions remain drafts/reference-only and Vercel stays read-only. |
+| V1.5 Thread 06 | V1.5 本地运行与桌面底座复用验收 | NOT STARTED | Confirm RuntimeConfig, LocalPathService, EnvironmentGuard, LogService, OperationLog, diagnostics, and Vercel guards are reused. |
+| V1.5 Thread 07 | V1.5 集成回归与安全扫描 | NOT STARTED | Regression/security only; no new product capability. |
+| V1.5 Thread 08 | V1.5 文档、风险与已知问题收口 | NOT STARTED | Documentation closeout only. |
+| V1.5 Thread 09 | V1.5 最终验收与 V2 前基线冻结 | NOT STARTED | Final acceptance and freeze only; no V2 implementation. |
 
 ## Scope
 
 - Goal: mark V1-Plus complete, set V1.5 as current stage, freeze baseline, shorten active docs, archive old summaries, and record V1.5 boundaries.
 - Non-goals: new business features, OCR, link import, API image generation, Electron implementation, crawlers, automated collection, automated publishing, private messages, comments, SKU, supplier, inventory, trial-sale review, PDF reports, or multi-agent scheduling.
+- Frozen next-step rule: V1.5 Thread 01 and Thread 02 are separate; Thread 01 must not implement screenshot recognition, screenshot structured import, or product screenshot field extraction.
 - Allowed files/systems: AGENTS, agent memory, docs/current, and archive indexes.
 - Forbidden files/systems: schema changes, migration changes, dependency changes, app behavior, AI behavior, runtime/filesystem write behavior, Vercel policy changes, and module implementation files.
 - Module README needed: no.

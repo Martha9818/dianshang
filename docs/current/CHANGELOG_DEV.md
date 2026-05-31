@@ -6,7 +6,8 @@ This file keeps version-level summaries only. Detailed per-task history is in `a
 
 - V1.5 begins after MVP, V1-Core, and V1-Plus completion.
 - V1.5 is a lightweight intelligence and technical validation stage, not a new product-foundation rewrite.
-- Allowed only in explicit V1.5 threads: user-uploaded image/screenshot recognition, local inspiration-folder scheduled scanning, lightweight API image generation, and Electron technical validation.
+- Frozen route: Thread 01 is local inspiration-folder scheduled scanning and automatic AI image-recognition drafts; Thread 02 is screenshot recognition and structured image import.
+- Allowed only in explicit V1.5 threads: local inspiration-folder scheduled scanning, user-uploaded image/screenshot recognition, lightweight API image generation, and Electron technical validation.
 - Out of V1.5 scope: formal Electron desktop app, platform crawlers, automatic collection, automatic publishing, automatic private messages, automatic comments, SKU, supplier, inventory, trial-sale review, PDF reports, and real multi-agent orchestration.
 - V1.5 threads must reuse RuntimeConfig, LocalPathService, EnvironmentGuard, LogService, OperationLog, local diagnostics, Vercel read-only degradation, AI base, image services, service-layer boundaries, and module README patterns.
 

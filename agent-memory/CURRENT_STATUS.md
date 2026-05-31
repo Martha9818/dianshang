@@ -5,7 +5,7 @@
 - Current stage: V1.5 after Thread 00 baseline freeze.
 - V1-Plus status: completed and frozen as the current development baseline.
 - Current task: Thread 00 documentation closeout, archive slimming, status confirmation, and V1.5 boundary setup completed locally.
-- Next thread: V1.5 Thread 01 - user-uploaded image/screenshot recognition planning and implementation, if explicitly approved.
+- Next thread: V1.5 Thread 01 - 灵感文件夹定时扫描与自动 AI 识图草稿, if explicitly approved.
 
 ## Product Direction
 
@@ -17,7 +17,8 @@
 ## V1.5 Boundary
 
 - V1.5 is for lightweight intelligence and technical validation.
-- Allowed by explicit thread: user-uploaded image/screenshot recognition, local inspiration-folder scheduled scanning, lightweight API image generation, and Electron technical validation.
+- Frozen route: Thread 01 is local inspiration-folder scheduled scanning and automatic AI image-recognition drafts; Thread 02 is screenshot recognition and structured image import. Do not merge them.
+- Allowed by explicit thread: local inspiration-folder scheduled scanning, user-uploaded image/screenshot recognition, lightweight API image generation, and Electron technical validation.
 - Not in V1.5: formal Electron desktop app, platform crawlers, automatic collection, automatic publishing, automatic private messages, automatic comments, SKU, supplier, inventory, trial-sale review, PDF reports, or real multi-agent scheduling.
 
 ## Blockers Or Risks
@@ -30,4 +31,4 @@
 
 ## Next Recommended Step
 
-- Start V1.5 Thread 01 only after explicit approval of its narrow scope.
+- Start V1.5 Thread 01 only after explicit approval of its narrow scope. Thread 01 must not implement screenshot recognition, screenshot structured import, or product screenshot field extraction.

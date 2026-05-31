@@ -1,6 +1,6 @@
 # EcomPilot Risk Register
 
-Keep only OPEN, MITIGATED, or DEFERRED risks here. Detailed historical risk text is archived.
+Keep only OPEN, ACTION_REQUIRED, MITIGATED, or DEFERRED risks here. Detailed historical risk text is archived.
 
 | Risk | Status | Level | Mitigation |
 | --- | --- | --- | --- |
@@ -25,6 +25,6 @@ Keep only OPEN, MITIGATED, or DEFERRED risks here. Detailed historical risk text
 | Archive history misleading current work | OPEN | Medium | Do not read archives by default; current status and thread scope win conflicts. |
 | Missing cache invalidation after writes | OPEN | Medium | Record path/tag invalidation or accepted stale-data risk for write paths. |
 | Inspiration duplicate/import drift | MITIGATED | Medium | Use file hash dedupe and scan summaries. |
-| Secret rotation after historical exposure | OPEN | High | Remove exposed outputs and rotate/revoke secrets at the provider. |
+| Historical Vercel recovery codes require provider-side rotation/revocation | ACTION_REQUIRED | High | Current files must not contain recovery code, token, or API key plaintext; rotate/revoke the historical recovery codes at the provider because removal from the current tree does not invalidate them. |
 | Parallel thread scope mixing | OPEN | Medium | Keep one active thread; document interruptions separately. |
 | GitHub history noise | MITIGATED | Medium | Prefer local commits and push only at approved milestones/refreshes/requests. |

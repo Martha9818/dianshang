@@ -7,6 +7,7 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 ### V1.5 Thread 00 - V1-Plus Closeout And Baseline Freeze
 
 - Changed: Marked V1-Plus complete, set V1.5 as the current stage, recorded V1.5 boundaries, slimmed active memory/current docs, and added baseline archive files.
+- Supplement: Corrected the next-thread route so V1.5 Thread 01 is inspiration-folder scheduled scanning and automatic AI image-recognition drafts, while Thread 02 remains screenshot recognition and structured image import.
 - Verified: `npm run lint`, `npm run build`, `npx prisma validate`, `npm run typecheck`, `npm run encoding:check`, and changed-doc sensitive-pattern scans all passed; no `test` script exists.
 - Scope: Documentation, status, risk, issue, patch, changelog, and archive-index cleanup only.
 - Handoff: No business feature, schema, migration, dependency, filesystem write behavior, AI behavior, Electron feature, OCR, link parsing, API image generation, crawler, automation, SKU, inventory, PDF, or multi-agent behavior was implemented.
@@ -15,4 +16,4 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 
 - Status: MVP, V1-Core, and V1-Plus are complete; V1-Plus is frozen as the baseline for V1.5.
 - Foundation: Future V1.5 threads must reuse RuntimeConfig, LocalPathService, EnvironmentGuard, LogService, OperationLog, local diagnostics, and Vercel read-only degradation.
-- Next: Start V1.5 Thread 01 only after explicit approval of its narrow scope.
+- Next: Start V1.5 Thread 01 only after explicit approval of its narrow scope: 灵感文件夹定时扫描与自动 AI 识图草稿. Do not merge it with Thread 02 screenshot recognition and structured image import.
