@@ -15,6 +15,22 @@ This file records active V1-Core schema changes. Add new entries when `prisma/sc
 - If a migration fails, stop and document the cause plus the safe next step instead of forcing progress with a reset.
 - If old data is incomplete, prefer `nullable`, `legacy`, `unknown`, or an explicit repair script over invented values.
 
+## 2026-05-31 - V1.5 Thread 03 Link Import Drafts
+
+- Added migration `prisma/migrations/20260531034342_v15_thread03_link_import_drafts/migration.sql`.
+- Added `LinkImportDraft` for single pasted-link import attempts:
+  - `url`, `normalizedUrl`, `sourcePlatform`, `purpose`
+  - `status`, `qualityLevel`
+  - `manualText`, `note`
+  - optional auxiliary screenshot fields: `screenshotMaterialId`, `screenshotPath`, `screenshotThumbnailPath`, `screenshotFileHash`
+  - public metadata fields: `metaTitle`, `metaDescription`
+  - `errorSummary`
+  - optional manual conversion links: `productId`, `competitorId`, `convertedInspirationId`
+  - `createdAt`, `updatedAt`
+- Added optional relations from Product, Competitor, Material, and Inspiration to link import drafts.
+- Migration is additive; old migrations were not edited and no database reset was used.
+- A local SQLite backup was created before applying the migration under `backups/v15_thread03_migration_*/`.
+
 ## 2026-05-31 - V1.5 Thread 02 Screenshot Recognition Jobs
 
 - Added migration `prisma/migrations/20260531030346_v15_thread02_screenshot_recognition/migration.sql`.

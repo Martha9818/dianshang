@@ -175,6 +175,24 @@ function SidebarIcon({ icon }: { icon: NavigationIcon | "bag" }) {
           />
         </svg>
       );
+    case "linkImports":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+          <path d="M9.8 14.2 14.2 9.8" stroke="currentColor" strokeLinecap="round" />
+          <path
+            d="M10.4 7.2 12 5.6a4 4 0 0 1 5.7 5.7l-1.6 1.6"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M13.6 16.8 12 18.4a4 4 0 0 1-5.7-5.7l1.6-1.6"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
     case "export":
       return (
         <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">

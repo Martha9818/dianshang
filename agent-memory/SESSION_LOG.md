@@ -4,6 +4,14 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 
 ## 2026-05-31
 
+### V1.5 Thread 03 - Link Import Attempts And Quality Grading
+
+- Changed: Added `LinkImportDraft`, `/link-imports`, single pasted-link draft creation, URL normalization, source-platform labels, public OpenGraph/title/description attempts, quality grading, auxiliary screenshot/text/note input, draft list/detail, reject/archive, and explicit conversion actions.
+- Safety: Public metadata attempts are SSRF-guarded, timeout/byte-limited, no-cookie, no-browser Node HTTP(S) requests; failures degrade to safe summaries and do not block draft save.
+- Boundary: Thread 03 does not implement platform crawling, batch link import, browser automation, login/cookies, private APIs, captcha/anti-crawler bypass, automatic product-detail/image/comment/sales/shop collection, automatic product creation, or formal competitor fact creation.
+- Runtime: Vercel remains read-only; link draft writes, screenshot uploads, and external metadata attempts are blocked with `预览环境只读，请在 Windows 本地验收链接导入。`.
+- Verified: Encoding check, lint, build, Prisma validate, typecheck, local service acceptance for normal/SSRF-blocked drafts, Vercel read-only simulation, and browser smoke test passed; no `test` script exists.
+
 ### V1.5 Thread 02 - Screenshot Recognition And Structured Image Import
 
 - Changed: Added a separate `ScreenshotRecognitionJob` task model, `/screenshots` workspace, screenshot upload/source selection, AI recognition draft, quality grading, recognition history, edit/ignore/confirm flow, and conservative entry links from inspiration, product detail, competitor, and material views.

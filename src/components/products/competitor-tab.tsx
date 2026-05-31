@@ -180,7 +180,12 @@ export function CompetitorTab({
         <DashboardCardHeader
           title="竞品列表"
           description="支持新增、编辑、删除、截图查看。"
-          action={<TableActionLink href={`/screenshots?sourceType=competitor&productId=${productId}`}>竞品截图识别</TableActionLink>}
+          action={
+            <div className="flex flex-wrap gap-2">
+              <TableActionLink href="/link-imports?purpose=competitor_reference">链接导入</TableActionLink>
+              <TableActionLink href={`/screenshots?sourceType=competitor&productId=${productId}`}>竞品截图识别</TableActionLink>
+            </div>
+          }
         />
         <TableScrollArea>
           <DataTable className="min-w-[980px]">

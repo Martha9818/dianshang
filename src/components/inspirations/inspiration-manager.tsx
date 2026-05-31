@@ -610,6 +610,12 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                   >
                     Thread 02 截图识别
                   </Link>
+                  <Link
+                    href="/link-imports?purpose=inspiration"
+                    className={secondaryButtonClassName}
+                  >
+                    Thread 03 链接导入
+                  </Link>
                   <button
                     formAction={applyAction}
                     type="submit"

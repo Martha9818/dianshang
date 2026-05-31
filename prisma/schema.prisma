@@ -50,6 +50,7 @@ model Product {
   aiJobs              AIJob[]
   convertedInspirations Inspiration[]  @relation("InspirationConvertedProduct")
   screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobProduct")
+  linkImportDrafts    LinkImportDraft[] @relation("LinkImportDraftProduct")
 
   @@index([deletedAt])
   @@index([updatedAt])
@@ -91,6 +92,7 @@ model Competitor {
   updatedAt       DateTime @updatedAt
   product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobCompetitor")
+  linkImportDrafts LinkImportDraft[] @relation("LinkImportDraftCompetitor")
 
   @@index([productId])
 }
@@ -187,6 +189,7 @@ model Material {
   product      Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   promptTask   PromptTask? @relation(fields: [promptTaskId], references: [id], onDelete: SetNull)
   screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobMaterial")
+  linkImportDrafts LinkImportDraft[] @relation("LinkImportDraftScreenshotMaterial")
 
   @@index([productId])
   @@index([promptTaskId])
@@ -339,6 +342,7 @@ model Inspiration {
   scanJobs            InspirationScanJob[] @relation("InspirationScanJobInspiration")
   aiDraftJobs         InspirationAiDraftJob[] @relation("InspirationAiDraftJobInspiration")
   screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobInspiration")
+  linkImportDrafts LinkImportDraft[] @relation("LinkImportDraftConvertedInspiration")
 
   @@index([status])
   @@index([aiJobId])
@@ -451,6 +455,45 @@ model ScreenshotRecognitionJob {
   @@index([aiJobId])
   @@index([status])
   @@index([qualityLevel])
+  @@index([createdAt])
+}
+
+model LinkImportDraft {
+  id                     Int          @id @default(autoincrement())
+  url                    String
+  normalizedUrl          String?
+  sourcePlatform         String       @default("other")
+  purpose                String
+  status                 String       @default("draft")
+  qualityLevel           String       @default("low")
+  manualText             String?
+  screenshotMaterialId   Int?
+  screenshotPath         String?
+  screenshotThumbnailPath String?
+  screenshotFileHash     String?
+  note                   String?
+  metaTitle              String?
+  metaDescription        String?
+  errorSummary           String?
+  productId              Int?
+  competitorId           Int?
+  convertedInspirationId Int?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  product                Product?     @relation("LinkImportDraftProduct", fields: [productId], references: [id], onDelete: SetNull)
+  competitor             Competitor?  @relation("LinkImportDraftCompetitor", fields: [competitorId], references: [id], onDelete: SetNull)
+  screenshotMaterial     Material?    @relation("LinkImportDraftScreenshotMaterial", fields: [screenshotMaterialId], references: [id], onDelete: SetNull)
+  convertedInspiration   Inspiration? @relation("LinkImportDraftConvertedInspiration", fields: [convertedInspirationId], references: [id], onDelete: SetNull)
+
+  @@index([normalizedUrl])
+  @@index([sourcePlatform])
+  @@index([purpose])
+  @@index([status])
+  @@index([qualityLevel])
+  @@index([productId])
+  @@index([competitorId])
+  @@index([convertedInspirationId])
+  @@index([screenshotMaterialId])
   @@index([createdAt])
 }
 

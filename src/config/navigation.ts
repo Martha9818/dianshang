@@ -6,6 +6,7 @@ export type NavigationIcon =
   | "promptTasks"
   | "materials"
   | "inspirations"
+  | "linkImports"
   | "export"
   | "backup"
   | "maintenance"
@@ -62,6 +63,12 @@ export const primaryNavigation: NavigationItem[] = [
     title: "灵感箱",
     description: "手动扫描本地图片，生成待审核灵感草稿与 AI 建议",
     icon: "inspirations",
+  },
+  {
+    href: "/link-imports",
+    title: "链接导入",
+    description: "手动粘贴单个链接，保存链接草稿并做质量分级",
+    icon: "linkImports",
   },
   {
     href: "/export",
