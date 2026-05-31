@@ -15,3 +15,5 @@
 /logs/
 /uploads/*
 !/uploads/.gitkeep
+
+/experiments/electron-poc/

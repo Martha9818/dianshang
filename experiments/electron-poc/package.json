@@ -1,0 +1,16 @@
+{
+  "name": "ecompilot-electron-poc",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Isolated Electron POC for loading the local EcomPilot Next.js app.",
+  "type": "module",
+  "main": "main.mjs",
+  "scripts": {
+    "dev": "electron .",
+    "smoke": "node scripts/smoke-check.mjs",
+    "electron:smoke": "node scripts/electron-smoke.mjs"
+  },
+  "devDependencies": {
+    "electron": "^39.2.6"
+  }
+}

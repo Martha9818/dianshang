@@ -21,6 +21,7 @@ Use this file only as a routing table after the required startup read. Do not co
 | `DATABASE_CHANGELOG.md` | Schema and migration history. | Prisma schema, migration, compatibility, or data-repair work. |
 | `PATCH_LOG.md` | Current effective patch state. | Patch threads or regression investigations. |
 | `KNOWN_ISSUES.md` | Unresolved limitations/issues. | Known-issue triage or when leaving a limitation. |
+| `ELECTRON_POC_REPORT.md` | V1.5 Thread 07 Electron technical validation report. | Electron POC, desktop feasibility, path/runtime risk, or V2 desktop preparation work. |
 | `V1_CORE_UNDERSTANDING_CHECK.md` | V1-Core handoff explanation. | Explaining or checking the V1-Core baseline. |
 
 ## Module READMEs

@@ -156,6 +156,14 @@ npm run encoding:check
 
 `package.json` 当前没有 `test` 脚本；如需测试命令，应在新增真实测试用例时一起补充。
 
+## Electron POC 技术验证
+
+V1.5 Thread 07 仅新增 `experiments/electron-poc/` 作为 Electron 技术验证目录。它只验证 Electron 壳加载本地 Next.js 页面和本地端口访问，不是正式 Windows 桌面端，不生成安装包，不做自动更新、系统托盘、Windows 系统通知、崩溃恢复、后台常驻，也不替换 `start.bat` 或现有 `npm run dev` 本地流程。
+
+POC 依赖只安装在 `experiments/electron-poc/` 子目录，根应用不引入 Electron 依赖。Vercel 通过 `.vercelignore` 忽略该目录，预览环境仍然只读，不执行 Electron 代码，不写 SQLite、`uploads/`、`exports/`、`backups/`、`logs/` 或 `trash/`。
+
+本线程结论与风险记录见 `docs/current/ELECTRON_POC_REPORT.md`。正式 Windows 桌面端、安装包、自动更新、桌面数据根、严格 CSP 和生命周期管理均属于 V2 范围。
+
 ## 常见问题
 
 - 启动脚本提示 3000 端口占用：关闭占用进程，或手动运行 `npm run dev -- -p 3001`。

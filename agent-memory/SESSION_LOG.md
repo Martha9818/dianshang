@@ -4,6 +4,14 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 
 ## 2026-05-31
 
+### V1.5 Thread 07 - Electron Technical Validation
+
+- Changed: Added isolated `experiments/electron-poc/` with POC-only Electron package, localhost-only main process, marker-only preload, static/local-port smoke, Electron smoke, POC README, and `.vercelignore` exclusion.
+- Safety: No root Electron dependency, no core page/service/schema/runtime changes, no installer, auto-update, tray, Windows notification, crash recovery, background residency, file association, auto-start, `start.bat` replacement, crawler, automated publishing, or V2 desktop behavior.
+- Runtime: POC loads the existing local Next.js app at `http://127.0.0.1:3000/`; Vercel remains preview-only/read-only and does not upload or execute the POC directory.
+- Risk: Electron smoke passes but Next.js dev mode emits an Electron CSP warning; V2 formal desktop must define strict production CSP, desktop data root, runtime identity, preload contract, lifecycle, installer/signing, and upgrade strategy.
+- Verification: POC install required a POC-scoped Electron mirror after default download timeout; encoding check, lint, build, Prisma validate, typecheck, POC smoke, and Electron smoke passed; `npm test` reported no root `test` script.
+
 ### V1.5 Thread 06 - Lightweight API Image Generation
 
 - Changed: Added optional API image generation settings, image-purpose AI Provider support, `ImageGenerationJob`, a local-only image-generation service, Prompt task detail trigger, generated-result material creation, AI job/request logs, operation logs, and success/failure notifications.

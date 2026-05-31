@@ -4,18 +4,18 @@ Use this as a short boundary/status record for development threads. Do not paste
 
 ## Thread
 
-- Name: V1.5 Thread 06 - Lightweight API Image Generation
+- Name: V1.5 Thread 07 - Electron Technical Validation
 - Date: 2026-05-31
-- Type: feature / local-first validation
-- Approved version scope: V1.5 Thread 06 only
+- Type: technical validation / desktop POC
+- Approved version scope: V1.5 Thread 07 only
 - Existing working-tree changes belong to: this thread
 
 ## Safety
 
 - `git status --short` checked before work: yes
-- Touches schema, migration, new dependencies, new business feature, or destructive production operation: additive schema migration and local feature only; no new dependency or destructive operation
-- Touches local filesystem behavior: optional user-triggered generated-image save through managed uploads only; no deletion, trash movement, cleanup rebuild, browser automation, crawler, link fetching, or batch generation
-- Backup need evaluated when risky writes are involved: yes; local SQLite backup created before migration
+- Touches schema, migration, new dependencies, new business feature, or destructive production operation: no schema/migration/business feature/destructive operation; Electron dependency is isolated inside `experiments/electron-poc/` only
+- Touches local filesystem behavior: POC dependency install and smoke validation only; no uploads/exports/backups/logs/trash writes by app logic and no path-service bypass
+- Backup need evaluated when risky writes are involved: yes; not needed because no schema, migration, database write, batch write, or runtime-folder migration is planned
 - Database reset planned: no
 - Vercel remains read-only: yes
 
@@ -42,7 +42,7 @@ Use this as a short boundary/status record for development threads. Do not paste
 | V1.5 Thread 04 | 竞品智能分析与差异化建议 | COMPLETE | AI-assisted local analysis snapshots only; no crawling, link fetching, scoring overwrite, status overwrite, automated publishing, messaging, comments, SKU, supplier, or inventory. |
 | V1.5 Thread 05 | 图片去重与轻量原创性风险提示 | COMPLETE | Detect duplicates/similarity/originality risk, manual ignore, and manual archive suggestions only; no auto delete, permanent delete, trash movement, uploads cleanup, auto compression, or new cleanup system. |
 | V1.5 Thread 06 | API 生图轻量版 | COMPLETE | Optional user-triggered API image generation only; no Vercel high-cost AI calls, batch/background generation, browser automation, or automated publishing. |
-| V1.5 Thread 07 | Electron 技术验证 | NOT STARTED | Technical validation only; no formal Electron desktop app, installer, tray, auto-update, or system notifications. |
+| V1.5 Thread 07 | Electron 技术验证 | COMPLETE | Technical validation only; no formal Electron desktop app, installer, tray, auto-update, or system notifications. |
 | V1.5 Thread 08 | 站内搜索助手与通知摘要助手 | NOT STARTED | May remind and link to existing maintenance pages; must not scan, move, delete, or clean uploads/exports/backups automatically. |
 | V1.5 Thread 09 | 最终集成验收、README 与 V2 准备 | NOT STARTED | Final acceptance, README, risks, safety scan, V1-Plus Thread 06 cleanup regression, and V2 preparation only. |
 
@@ -53,6 +53,8 @@ Thread 04 closeout note: V1.5 Thread 04 is now implemented on the current mainli
 Thread 05 closeout note: V1.5 Thread 05 is now implemented on the current mainline. It added local-only `ImageFingerprint` / `ImageReviewLog`, a user-triggered image-dedup service, exact SHA-256 duplicate detection, 8x8 perceptual-hash similarity hints, source-risk reminders, material/inspiration UI badges, similar-image lists, manual ignore, and archive-suggestion marking. It only detects and提示; it does not delete files, permanently delete files, move files to trash, clean uploads, compress images, replace images, upload images to search services, perform reverse-image search, call AI image generation, or make legal/copyright conclusions. Any cleanup, deletion, or trash action must go through the existing V1-Plus Thread 06 file cleanup/trash page.
 
 Thread 06 closeout note: V1.5 Thread 06 is now implemented on the current mainline. It added optional API image generation settings, image-purpose AI Provider support, `ImageGenerationJob`, a local-only image-generation service, Prompt task detail trigger, user confirmation plus high-cost second confirmation, generated-result storage through managed uploads, Material creation marked as AI-generated and needs-review, AI job/request logs, operation logs, and sanitized notifications. It does not batch generate, run background generation, open ChatGPT, use browser automation, crawl platforms, publish, list products, send private messages, comment, manage SKU/suppliers/inventory, add Electron release behavior, or orchestrate agents.
+
+Thread 07 closeout note: V1.5 Thread 07 is now implemented as an isolated Electron POC under `experiments/electron-poc/`. It validates loading the existing local Next.js page through a local port, minimal preload marking, localhost-only navigation, POC smoke checks, and Vercel exclusion. It does not add a formal Electron desktop app, installer, auto-update, tray, Windows system notifications, crash recovery, background residency, file associations, automatic startup, production packaging, `start.bat` replacement, platform crawler behavior, automated publishing, or V2 desktop behavior.
 
 ## File Cleanup Boundary
 
@@ -74,26 +76,26 @@ Thread 06 closeout note: V1.5 Thread 06 is now implemented on the current mainli
 
 ## Scope
 
-- Goal: implement V1.5 Thread 06 optional lightweight API image generation from an existing Prompt task into the material library.
-- Non-goals for Thread 06: automatic batch generation, background generation, automatic ChatGPT/browser opening, browser automation, platform crawling, automatic collection, publishing/listing, private messages, comments, SKU/suppliers/inventory, cleanup rebuild, Electron release behavior, or multi-agent scheduling.
-- Frozen thread rule: Thread 06 only calls image generation after a manual Prompt task click and confirmations; Vercel remains preview-only and read-only.
-- Allowed files/systems: additive Prisma schema/migration, image-generation service README, AI Provider purpose/settings, Prompt task UI trigger, Material creation through managed uploads, OperationLog/AIJob/AIRequestLog/notification reuse, and short current docs/status updates.
-- Forbidden files/systems: old migrations, dependency changes, crawler/browser automation libraries, cleanup/trash behavior, direct cleanup/deletion, automated publishing, background queues, high-cost Vercel calls, and API keys in frontend/logs/exports/docs.
-- Module README needed: yes, `src/lib/services/image-generation/README.md`.
+- Goal: validate whether a future Windows desktop shell can open the existing local Next.js EcomPilot app without changing the official local web workflow.
+- Non-goals for Thread 07: formal desktop app, installer, auto-update, system tray, Windows system notifications, crash recovery, background resident process, file association, automatic startup, production packaging, `start.bat` replacement, database/runtime-folder migration, Vercel behavior changes, or V2 desktop product behavior.
+- Frozen thread rule: Electron validation stays in a removable POC directory and only loads local Next.js URLs.
+- Allowed files/systems: `experiments/electron-poc/`, POC README/report, `.vercelignore`, current docs/status/log risk updates, and POC-only package lock.
+- Forbidden files/systems: core pages, core business services, Prisma schema/migrations, root package Electron dependency, root startup flow, runtime folder write behavior, Vercel read-only logic, platform crawlers, automated publishing, background queues, tray/notification/update systems, and dangerous frontend filesystem APIs.
+- Module README needed: no core module README; POC README and `docs/current/ELECTRON_POC_REPORT.md` document the validation.
 
 ## Patch Fields
 
 - Patch Thread: no
 - Origin version: V1.5 baseline
-- Discovered in: user-approved Thread 06 scope
+- Discovered in: user-approved Thread 07 scope
 - Severity: P4 feature
 - Historical data affected: no
-- Migration required: yes, additive `ImageGenerationJob`
+- Migration required: no
 - Data repair required: no
 
 ## Boundary Check
 
-- Business logic, schema, runtime services, and UI behavior changed only inside Thread 06 API image-generation scope.
+- Business logic, schema, runtime services, and UI behavior were not changed; Electron validation is isolated to the POC directory and docs.
 - V1.5 future threads must reuse the V1-Core desktop base instead of duplicating path, environment, logging, diagnostic, or Vercel-readonly logic.
 - Vercel remains preview-only and read-only; docs must not imply it is the formal runtime.
 - Docs must not include API keys, `.env` values, full local paths, database paths, full stack traces, or raw prompts.
@@ -103,7 +105,7 @@ Thread 06 closeout note: V1.5 Thread 06 is now implemented on the current mainli
 
 - Required commands: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, and `npm run typecheck` passed.
 - Optional commands: `npm test` was attempted and reported no `test` script.
-- Local acceptance: image-generation panel smoke loaded the first Prompt task without making a real provider call; `/settings/ai` and `/prompt-tasks` browser smoke returned 200 and rendered the API image-generation settings/entry.
-- Vercel preview simulation: `VERCEL=1` blocks image-generation writes with `预览环境只读，请在 Windows 本地验收 API 生图。`; preview does not call image APIs, write SQLite, or save uploads.
-- Security scans: changed source/docs passed encoding/build/lint and browser smoke; no full API key display, raw provider response storage, full local absolute paths, browser automation, crawler, or cleanup execution were added.
-- Commit/push/deploy status: local commit expected after verification; no push or Vercel live refresh requested.
+- Local acceptance: `experiments/electron-poc` static smoke and Electron smoke loaded the local Next.js app at `http://127.0.0.1:3000/`.
+- Vercel preview simulation: POC directory is excluded by `.vercelignore`; root Vercel read-only behavior is unchanged.
+- Security scans: POC uses localhost-only URL validation, `contextIsolation`, disabled `nodeIntegration`, sandbox, denied permissions, and marker-only preload with no `fs` or IPC exposure. Electron dev smoke reports a Next.js development CSP warning that must be solved before V2 production desktop release.
+- Commit/push/deploy status: local commit created; no push or Vercel live refresh requested.
