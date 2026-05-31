@@ -4,6 +4,14 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 
 ## 2026-05-31
 
+### V1.5 Thread 05 - Image Dedupe And Lightweight Originality-Risk Hints
+
+- Changed: Added `ImageFingerprint` and `ImageReviewLog`, a local-only `image-dedup` service, manual material/inspiration fingerprint rebuild actions, exact duplicate detection, 8x8 perceptual-hash high-similarity detection, source-risk hints, ignore, and archive-suggestion records.
+- UI: Material library cards/list/detail and inspiration cards/detail now show duplicate/risk badges, similar-image lists, similarity values, manual ignore, archive-suggestion marking, and links to the existing V1-Plus file cleanup/trash page.
+- Safety: Thread 05 does not delete, move to trash, permanently delete, compress, replace, upload images, call AI image generation, use reverse-image search, or make copyright/legal conclusions.
+- Runtime: Vercel/read-only write attempts return `预览环境只读，请在 Windows 本地验收图片去重。`; preview must not scan files, hash images, or write SQLite.
+- Verification: Encoding check, lint, build, Prisma validate, typecheck, local image-dedupe service smoke, Vercel read-only simulation, and `/materials` + `/inspirations` HTTP smoke checks passed; `npm test` reported no `test` script.
+
 ### V1.5 Thread 04 - Competitor Intelligent Analysis And Differentiation Suggestions
 
 - Changed: Added `CompetitorAnalysisSnapshot`, local-only competitor analysis service, centralized prompt template, product-detail analysis tab, competitor-tab entry, competitor selection, history, regeneration, reference-version marking, and archive with double confirmation.

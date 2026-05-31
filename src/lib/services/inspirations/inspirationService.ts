@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { buildSpu, BUSINESS_ERROR_CODES, ProductBusinessError } from "@/lib/modules/products";
 import { formatDateTime, stringifyJsonStringArray } from "@/lib/modules/products";
 import { getUploadsAbsolutePath } from "@/lib/services/file-storage-service";
+import { getImageDedupSummariesForTargets } from "@/lib/services/image-dedup";
 import { getInspirationFolderSettingView } from "@/lib/services/inspirations/inspirationSettingsService";
 import { getLatestScanSummary, getRecentInspirationTaskSummaries, getRecentScanLogs } from "@/lib/services/inspirations/scanLogService";
 import {
@@ -284,10 +285,18 @@ export async function getInspirationPageData(filters?: Partial<InspirationListQu
       return true;
     });
 
+    const dedupSummaries = await getImageDedupSummariesForTargets(
+      "inspiration",
+      inspirations.map((item) => item.id),
+    ).catch(() => new Map());
+
     return {
       runtime,
       settingView,
-      inspirations,
+      inspirations: inspirations.map((item) => ({
+        ...item,
+        imageDedup: dedupSummaries.get(item.id) ?? null,
+      })),
       recentScanLogs,
       latestScan,
       recentTasks,

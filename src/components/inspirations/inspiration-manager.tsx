@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState, useActionState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ActionButton,
   DashboardCard,
@@ -21,8 +21,12 @@ import {
   convertInspirationToProductAction,
   generateInspirationAiSuggestionAction,
   ignoreInspirationAiDraftAction,
+  ignoreInspirationImageReviewLogAction,
+  markInspirationImageReviewLogArchiveSuggestedAction,
   markInspirationReviewedAction,
   rejectInspirationAction,
+  rebuildInspirationFingerprintAction,
+  rebuildInspirationLibraryFingerprintsAction,
   retryInspirationAiDraftJobAction,
   retryInspirationScanJobAction,
   runInspirationScanAction,
@@ -55,6 +59,32 @@ const inspirationBatchOperations = [
 ];
 
 type Tone = "amber" | "green" | "slate" | "red" | "violet" | "blue";
+
+type ImageDedupSummary = {
+  status: "missing" | "ready" | "failed";
+  fingerprintId: number | null;
+  exactDuplicateCount: number;
+  similarCount: number;
+  riskCount: number;
+  warningLabel: string | null;
+  latestCheckedAtLabel: string | null;
+  matches: Array<{
+    reviewLogId: number;
+    targetType: "material" | "inspiration" | "risk";
+    targetId: number | null;
+    title: string;
+    href: string | null;
+    similarityLabel: string;
+    matchTypeLabel: string;
+    relationScopeLabel: string;
+    riskLevel: "info" | "warning";
+    message: string;
+    ignored: boolean;
+    archiveSuggested: boolean;
+    userStatus: string;
+    createdAtLabel: string;
+  }>;
+};
 
 type InspirationView = {
   id: number;
@@ -107,6 +137,7 @@ type InspirationView = {
     name: string;
     spu: string;
   } | null;
+  imageDedup: ImageDedupSummary | null;
 };
 
 type ScanLogView = {
@@ -247,7 +278,11 @@ function getTaskTone(status: string): Tone {
 
 export function InspirationManager({ data, readonlyNotice }: { data: InspirationsPageData; readonlyNotice: string | null }) {
   const router = useRouter();
-  const [selectedId, setSelectedId] = useState<number | null>(data.inspirations[0]?.id ?? null);
+  const searchParams = useSearchParams();
+  const initialSelectedId = Number(searchParams.get("selectedId") ?? "");
+  const [selectedId, setSelectedId] = useState<number | null>(
+    Number.isInteger(initialSelectedId) && initialSelectedId > 0 ? initialSelectedId : data.inspirations[0]?.id ?? null,
+  );
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [folderState, folderAction, folderPending] = useActionState(saveInspirationFolderAction, {
@@ -259,6 +294,22 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
     error: "",
   });
   const [scanState, scanAction, scanPending] = useActionState(runInspirationScanAction, {
+    success: false,
+    error: "",
+  });
+  const [dedupLibraryState, dedupLibraryAction, dedupLibraryPending] = useActionState(rebuildInspirationLibraryFingerprintsAction, {
+    success: false,
+    error: "",
+  });
+  const [dedupState, dedupAction, dedupPending] = useActionState(rebuildInspirationFingerprintAction, {
+    success: false,
+    error: "",
+  });
+  const [dedupIgnoreState, dedupIgnoreAction, dedupIgnorePending] = useActionState(ignoreInspirationImageReviewLogAction, {
+    success: false,
+    error: "",
+  });
+  const [dedupArchiveState, dedupArchiveAction, dedupArchivePending] = useActionState(markInspirationImageReviewLogArchiveSuggestedAction, {
     success: false,
     error: "",
   });
@@ -425,6 +476,12 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                 <MiniIcon name="spark" className="h-4 w-4" />
                 {scanPending ? "扫描中..." : "立即扫描并生成 AI 草稿"}
               </button>
+              <button formAction={dedupLibraryAction} type="submit" className={secondaryButtonClassName} disabled={dedupLibraryPending || !data.runtime.isWritable}>
+                {dedupLibraryPending ? "补建中..." : "补建灵感箱指纹"}
+              </button>
+              <Link href="/maintenance/files" className={secondaryButtonClassName}>
+                文件清理与回收站
+              </Link>
             </div>
           </form>
 
@@ -470,9 +527,15 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
             {folderState.error ? <p className="text-rose-600">{folderState.error}</p> : null}
             {scanConfigState.error ? <p className="text-rose-600">{scanConfigState.error}</p> : null}
             {scanState.error ? <p className="text-rose-600">{scanState.error}</p> : null}
+            {dedupLibraryState.error ? <p className="text-rose-600">{dedupLibraryState.error}</p> : null}
             {scanState.success ? (
               <p className="text-emerald-600">
                 扫描完成：新增 {scanState.data?.newFiles ?? 0}，重复 {scanState.data?.skippedDuplicates ?? 0}，文件失败 {scanState.data?.failedFiles ?? 0}，AI 草稿失败 {scanState.data?.aiDraftFailed ?? 0}
+              </p>
+            ) : null}
+            {dedupLibraryState.success ? (
+              <p className="text-emerald-600">
+                指纹补建完成：处理 {dedupLibraryState.data?.total ?? 0}，疑似重复 {dedupLibraryState.data?.exactCount ?? 0}，高度相似 {dedupLibraryState.data?.similarCount ?? 0}，失败 {dedupLibraryState.data?.failedCount ?? 0}
               </p>
             ) : null}
           </div>
@@ -541,6 +604,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                           <StatusBadge label={item.statusLabel} tone={item.statusTone} />
                           <StatusBadge label={item.usagePermissionLabel} tone={item.usagePermissionTone} />
                           {item.aiSuggestion ? <StatusBadge label="AI 草稿待确认" tone="violet" /> : null}
+                          {item.imageDedup?.warningLabel ? <StatusBadge label={item.imageDedup.warningLabel} tone="amber" /> : null}
                         </div>
                         <p className="line-clamp-2 min-h-[48px] text-sm font-medium text-slate-900">{item.title ?? item.fileName}</p>
                         <p className="line-clamp-2 text-xs leading-5 text-slate-500">{item.note ?? "尚未应用 AI 草稿。"}</p>
@@ -580,8 +644,32 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                   <DetailRow label="放弃" value={selectedInspiration.rejectedReason ?? "--"} />
                   <DetailRow label="AIJob" value={selectedInspiration.aiJobSummary ? `#${selectedInspiration.aiJobSummary.id} · ${selectedInspiration.aiJobSummary.status}` : "--"} />
                   <DetailRow label="转商品" value={selectedInspiration.convertedProduct ? `${selectedInspiration.convertedProduct.name} (#${selectedInspiration.convertedProduct.id})` : "--"} />
+                  <DetailRow
+                    label="去重"
+                    value={selectedInspiration.imageDedup?.warningLabel ?? selectedInspiration.imageDedup?.status ?? "未检测"}
+                    badgeTone={selectedInspiration.imageDedup?.warningLabel ? "amber" : "slate"}
+                  />
                 </div>
               </div>
+
+              <form action={dedupAction} className="flex flex-wrap gap-2">
+                <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
+                <button type="submit" className={secondaryButtonClassName} disabled={dedupPending || !data.runtime.isWritable}>
+                  {dedupPending ? "检测中..." : "检测此灵感图片"}
+                </button>
+                <Link href="/maintenance/files" className={secondaryButtonClassName}>
+                  去文件清理与回收站
+                </Link>
+              </form>
+              {dedupState.error ? <p className="text-sm text-rose-600">{dedupState.error}</p> : null}
+              {dedupIgnoreState.error ? <p className="text-sm text-rose-600">{dedupIgnoreState.error}</p> : null}
+              {dedupArchiveState.error ? <p className="text-sm text-rose-600">{dedupArchiveState.error}</p> : null}
+              <ImageDedupPanel
+                summary={selectedInspiration.imageDedup}
+                ignoreAction={dedupIgnoreAction}
+                archiveSuggestAction={dedupArchiveAction}
+                actionPending={dedupIgnorePending || dedupArchivePending || !data.runtime.isWritable}
+              />
 
               <form action={draftAction} key={formKey} className="space-y-3 rounded-[24px] border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4">
                 <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
@@ -817,6 +905,74 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           </table>
         </div>
       </DashboardCard>
+    </div>
+  );
+}
+
+function ImageDedupPanel({
+  summary,
+  ignoreAction,
+  archiveSuggestAction,
+  actionPending,
+}: {
+  summary: ImageDedupSummary | null;
+  ignoreAction: (payload: FormData) => void;
+  archiveSuggestAction: (payload: FormData) => void;
+  actionPending: boolean;
+}) {
+  if (!summary || summary.status === "missing") {
+    return <PageNote>尚未生成图片指纹。请手动点击检测；本线程只检测和提示，不删除图片。</PageNote>;
+  }
+
+  return (
+    <div className="rounded-[24px] border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900">相似图片与原创性风险提示</h3>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            最近检测：{summary.latestCheckedAtLabel ?? "--"}。提示只用于人工整理，不作“侵权”或“可商用”结论。
+          </p>
+        </div>
+        <StatusBadge label={summary.warningLabel ?? "未发现重复"} tone={summary.warningLabel ? "amber" : "green"} />
+      </div>
+      <div className="mt-3 space-y-2 text-sm text-slate-600">
+        {summary.matches.length > 0 ? (
+          summary.matches.map((match) => (
+            <div key={match.reviewLogId} className="rounded-2xl border border-[#EEF2F8] bg-white px-3 py-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge label={match.matchTypeLabel} tone={match.riskLevel === "warning" ? "amber" : "blue"} />
+                <span>{match.relationScopeLabel}</span>
+                <span>相似度 {match.similarityLabel}</span>
+                {match.archiveSuggested ? <StatusBadge label="已建议归档" tone="slate" /> : null}
+              </div>
+              <p className="mt-2 leading-6">{match.message}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {match.href ? (
+                  <Link href={match.href} className="text-sm font-medium text-[#2563EB]">
+                    {match.title}
+                  </Link>
+                ) : (
+                  <span>{match.title}</span>
+                )}
+                <form action={ignoreAction}>
+                  <input type="hidden" name="reviewLogId" value={match.reviewLogId} />
+                  <button type="submit" className="text-sm font-medium text-slate-500 disabled:opacity-50" disabled={actionPending}>
+                    忽略
+                  </button>
+                </form>
+                <form action={archiveSuggestAction}>
+                  <input type="hidden" name="reviewLogId" value={match.reviewLogId} />
+                  <button type="submit" className="text-sm font-medium text-[#2563EB] disabled:opacity-50" disabled={actionPending}>
+                    标记建议归档
+                  </button>
+                </form>
+              </div>
+            </div>
+          ))
+        ) : (
+          <PageNote>未发现完全重复或高度相似图片。来源不明时仍建议人工确认使用权限。</PageNote>
+        )}
+      </div>
     </div>
   );
 }

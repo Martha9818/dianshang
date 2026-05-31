@@ -15,6 +15,20 @@ This file records active V1-Core schema changes. Add new entries when `prisma/sc
 - If a migration fails, stop and document the cause plus the safe next step instead of forcing progress with a reset.
 - If old data is incomplete, prefer `nullable`, `legacy`, `unknown`, or an explicit repair script over invented values.
 
+## 2026-05-31 - V1.5 Thread 05 Image Dedupe And Review Logs
+
+- Added migration `prisma/migrations/20260531063406_v15_thread05_image_dedup/migration.sql`.
+- Added `ImageFingerprint` for local material/inspiration image fingerprints:
+  - `imageType`, `imageId`, optional `productId`, relative path
+  - SHA-256 `fileHash`, `perceptualHash`, dimensions, file size, MIME
+  - `status`, sanitized `errorSummary`, `lastCheckedAt`, timestamps
+- Added `ImageReviewLog` for duplicate/similarity/risk review records:
+  - source and matched fingerprint IDs, source/matched object type and ID
+  - relation scope, match type, risk level, hash values, similarity, message
+  - user handling state, ignored flag, archive-suggested flag, timestamps
+- Migration is additive; old migrations were not edited and no database reset was used.
+- A local SQLite backup was created before applying the migration under `backups/v15_thread05_migration_20260531_143358/`.
+
 ## 2026-05-31 - V1.5 Thread 04 Competitor Analysis Snapshots
 
 - Added migration `prisma/migrations/20260531042549_v15_thread04_competitor_analysis/migration.sql`.

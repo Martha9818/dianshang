@@ -6,7 +6,8 @@
 
 ## Not Responsible For
 
-- AI image generation, OCR, image scoring, similarity matching, or automatic cropping.
+- AI image generation, OCR, image scoring, reverse-image search, copyright judgment, or automatic cropping.
+- V1.5 Thread 05 similarity matching; that lives in `src/lib/services/image-dedup/` and reuses managed upload paths plus `sharp`.
 - Inspiration folder scanning.
 - File cleanup, recycle bin, or historical bulk compression.
 - Material status workflow decisions beyond returning upload metadata.
@@ -54,4 +55,3 @@ Thumbnail generation uses `sharp`. It is a native image dependency already prese
 - Do not expose absolute paths.
 - Do not silently accept unsupported formats.
 - Do not add compression, cropping, OCR, AI image generation, or cleanup behavior in this module without an approved future thread.
-

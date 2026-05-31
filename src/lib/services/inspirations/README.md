@@ -7,7 +7,7 @@
 ## Not Responsible For
 
 - Background workers, system scheduled tasks, Windows services, Electron tasks, tray behavior, system notifications, or agent flows.
-- OCR, screenshot structured import, link parsing, platform crawling, similarity search, or automatic cleanup.
+- OCR, screenshot structured import, link parsing, platform crawling, reverse-image search, copyright judgment, or automatic cleanup.
 - Automatic product creation, automatic factual writeback, automatic publishing, private messages, or comments.
 - Direct UI rendering in pages or client components.
 
@@ -51,6 +51,7 @@ Scheduled scans are application-runtime only: the client scheduler calls a guard
 
 - This module reuses the image safety base for hashing and thumbnail generation.
 - It does not refactor or expand the image module into OCR, compression, cleanup, screenshot import, or link import.
+- V1.5 Thread 05 dedupe summaries are read from `src/lib/services/image-dedup/`; manual fingerprinting reads managed uploads only after an explicit user click and never deletes or moves files.
 
 ## Side Effects
 

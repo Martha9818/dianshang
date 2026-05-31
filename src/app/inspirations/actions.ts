@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import { getProductErrorMessage } from "@/lib/modules/products";
 import { getRuntimeModeSummary } from "@/lib/services/product-runtime-service";
 import {
+  ignoreImageReviewLog,
+  markImageReviewLogArchiveSuggested,
+  rebuildImageFingerprint,
+  rebuildImageFingerprintsForLibrary,
+} from "@/lib/services/image-dedup";
+import {
   applyInspirationAiSuggestion,
   archiveInspiration,
   convertInspirationToProduct,
@@ -332,6 +338,66 @@ export async function batchInspirationOperationAction(
     return {
       ok: false,
       message: getProductErrorMessage(error, "批量操作失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function rebuildInspirationFingerprintAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const inspirationId = parsePositiveId(formData.get("inspirationId"), "灵感记录");
+    const result = await rebuildImageFingerprint({ type: "inspiration", id: inspirationId });
+    revalidateInspirations();
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "图片去重检测失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function rebuildInspirationLibraryFingerprintsAction(_prevState: unknown, _formData: FormData) {
+  void _prevState;
+  void _formData;
+  try {
+    const result = await rebuildImageFingerprintsForLibrary("inspiration");
+    revalidateInspirations();
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "灵感箱图片指纹补建失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function ignoreInspirationImageReviewLogAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const reviewLogId = parsePositiveId(formData.get("reviewLogId"), "审阅记录");
+    const result = await ignoreImageReviewLog(reviewLogId);
+    revalidateInspirations();
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "忽略图片重复提示失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function markInspirationImageReviewLogArchiveSuggestedAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const reviewLogId = parsePositiveId(formData.get("reviewLogId"), "审阅记录");
+    const result = await markImageReviewLogArchiveSuggested(reviewLogId);
+    revalidateInspirations();
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "标记建议归档失败，请稍后重试。"),
     };
   }
 }

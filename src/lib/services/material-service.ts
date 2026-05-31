@@ -21,6 +21,7 @@ import {
 import { BUSINESS_ERROR_CODES, ProductBusinessError, formatDateTime, OPERATION_LOG_ACTIONS } from "@/lib/modules/products";
 import { getImageTypeLabel, getPlatformLabel, isPromptImageType, isPromptTaskPlatform } from "@/lib/modules/prompt-task";
 import { saveMaterialImage } from "@/lib/services/file-storage-service";
+import { getImageDedupSummariesForTargets, getImageDedupSummary } from "@/lib/services/image-dedup";
 import { createOperationLog } from "@/lib/services/operation-log-service";
 import {
   ensureProductWritesAllowed,
@@ -268,10 +269,25 @@ export async function getMaterialLibraryPageData(filters?: MaterialListFilters) 
       .filter((item) => item.status !== MATERIAL_STATUS.DISCARDED)
       .reduce((sum, item) => sum + item._count._all, 0);
 
+    const mappedMaterials = await mapMaterials(materials);
+    const dedupSummaries = await getImageDedupSummariesForTargets(
+      "material",
+      mappedMaterials.map((material) => material.id),
+    ).catch(() => new Map());
+    const selectedDedupSummary = selectedMaterial ? await getImageDedupSummary("material", selectedMaterial.id).catch(() => null) : null;
+
     return {
       products,
-      materials: await mapMaterials(materials),
-      selectedMaterial,
+      materials: mappedMaterials.map((material) => ({
+        ...material,
+        imageDedup: dedupSummaries.get(material.id) ?? null,
+      })),
+      selectedMaterial: selectedMaterial
+        ? {
+            ...selectedMaterial,
+            imageDedup: selectedDedupSummary,
+          }
+        : null,
       platforms: ["xianyu", "taobao", "xiaohongshu", "douyin"].map((code) => ({ code, label: getPlatformLabel(code) })),
       materialTypes: MATERIAL_TYPES,
       statuses: MATERIAL_STATUSES,

@@ -533,6 +533,72 @@ model CompetitorAnalysisSnapshot {
   @@index([createdAt])
 }
 
+model ImageFingerprint {
+  id                 Int      @id @default(autoincrement())
+  imageType          String
+  imageId            Int
+  productId          Int?
+  relativePath       String
+  fileHash           String?
+  perceptualHash     String?
+  width              Int?
+  height             Int?
+  fileSize           Int?
+  mimeType           String?
+  status             String   @default("ready")
+  errorSummary       String?
+  lastCheckedAt      DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  sourceReviewLogs   ImageReviewLog[] @relation("ImageReviewLogSourceFingerprint")
+  matchedReviewLogs  ImageReviewLog[] @relation("ImageReviewLogMatchedFingerprint")
+
+  @@unique([imageType, imageId])
+  @@index([imageType])
+  @@index([imageId])
+  @@index([productId])
+  @@index([fileHash])
+  @@index([perceptualHash])
+  @@index([status])
+  @@index([lastCheckedAt])
+}
+
+model ImageReviewLog {
+  id                   Int      @id @default(autoincrement())
+  dedupeKey            String?  @unique
+  sourceFingerprintId  Int
+  matchedFingerprintId Int?
+  sourceType           String
+  sourceId             Int
+  matchedType          String?
+  matchedId            Int?
+  relationScope        String
+  matchType            String
+  riskLevel            String   @default("info")
+  hash                 String?
+  matchedHash          String?
+  similarity           Float?
+  message              String?
+  userStatus           String   @default("open")
+  ignored              Boolean  @default(false)
+  archiveSuggested     Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  sourceFingerprint    ImageFingerprint @relation("ImageReviewLogSourceFingerprint", fields: [sourceFingerprintId], references: [id], onDelete: Cascade)
+  matchedFingerprint   ImageFingerprint? @relation("ImageReviewLogMatchedFingerprint", fields: [matchedFingerprintId], references: [id], onDelete: SetNull)
+
+  @@index([sourceFingerprintId])
+  @@index([matchedFingerprintId])
+  @@index([sourceType, sourceId])
+  @@index([matchedType, matchedId])
+  @@index([matchType])
+  @@index([riskLevel])
+  @@index([userStatus])
+  @@index([ignored])
+  @@index([archiveSuggested])
+  @@index([createdAt])
+}
+
 model CleanupLog {
   id                   Int      @id @default(autoincrement())
   action               String

@@ -21,7 +21,13 @@ import { MaterialDiscardButton, MaterialStatusButton } from "@/components/materi
 import { ProductImage } from "@/components/products/product-image";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { MATERIAL_STATUS } from "@/lib/modules/materials";
-import { batchMaterialOperationAction } from "@/app/materials/actions";
+import {
+  batchMaterialOperationAction,
+  ignoreImageReviewLogAndRedirectAction,
+  markImageReviewLogArchiveSuggestedAndRedirectAction,
+  rebuildMaterialFingerprintAndRedirectAction,
+  rebuildMaterialLibraryFingerprintsAndRedirectAction,
+} from "@/app/materials/actions";
 import {
   buildProductReadUnavailableMessage,
   buildReadonlyRuntimeMessage,
@@ -144,6 +150,18 @@ export default async function MaterialsPage({
             <MiniIcon name="list" className="h-4 w-4" />
             列表
           </Link>
+          <form action={rebuildMaterialLibraryFingerprintsAndRedirectAction}>
+            <input type="hidden" name="sourceUrl" value={sourceUrl} />
+            <button
+              type="submit"
+              disabled={Boolean(readonlyNotice)}
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#E4EAF3] bg-white px-3 text-sm font-medium text-[#2563EB] disabled:opacity-50"
+            >
+              <MiniIcon name="spark" className="h-4 w-4" />
+              补建素材库指纹
+            </button>
+          </form>
+          <TableActionLink href="/maintenance/files">文件清理与回收站</TableActionLink>
         </div>
       </DashboardCard>
 
@@ -201,6 +219,7 @@ export default async function MaterialsPage({
                         <StatusBadge label={material.materialTypeLabel} tone="blue" />
                         <StatusBadge label={material.usagePermissionLabel} tone={material.isReferenceOnly ? "amber" : "green"} />
                         <StatusBadge label={material.status ?? "--"} tone={material.statusTone} />
+                        {material.imageDedup?.warningLabel ? <StatusBadge label={material.imageDedup.warningLabel} tone="amber" /> : null}
                       </div>
                       <p className="mt-3 text-sm text-slate-400">{material.sourceTypeLabel} / {material.sourceLabel}</p>
                       {material.isReferenceOnly ? (
@@ -219,13 +238,14 @@ export default async function MaterialsPage({
                   <DataTableHead>
                     <tr>
                       <DataTableHeaderCell className="w-[6%]">选择</DataTableHeaderCell>
-                      <DataTableHeaderCell className="w-[26%]">素材</DataTableHeaderCell>
-                      <DataTableHeaderCell className="w-[20%]">文件路径</DataTableHeaderCell>
+                      <DataTableHeaderCell className="w-[24%]">素材</DataTableHeaderCell>
+                      <DataTableHeaderCell className="w-[18%]">文件路径</DataTableHeaderCell>
                       <DataTableHeaderCell className="w-[10%]">平台</DataTableHeaderCell>
-                      <DataTableHeaderCell className="w-[12%]">类型</DataTableHeaderCell>
+                      <DataTableHeaderCell className="w-[10%]">类型</DataTableHeaderCell>
                       <DataTableHeaderCell className="w-[10%]">状态</DataTableHeaderCell>
                       <DataTableHeaderCell className="w-[10%]">来源</DataTableHeaderCell>
-                      <DataTableHeaderCell className="w-[12%]">创建时间</DataTableHeaderCell>
+                      <DataTableHeaderCell className="w-[10%]">创建时间</DataTableHeaderCell>
+                      <DataTableHeaderCell className="w-[10%]">去重</DataTableHeaderCell>
                     </tr>
                   </DataTableHead>
                   <DataTableBody>
@@ -258,6 +278,9 @@ export default async function MaterialsPage({
                           </div>
                         </DataTableCell>
                         <DataTableCell>{material.formattedCreatedAt}</DataTableCell>
+                        <DataTableCell>
+                          {material.imageDedup?.warningLabel ? <StatusBadge label={material.imageDedup.warningLabel} tone="amber" /> : "--"}
+                        </DataTableCell>
                       </DataTableRow>
                     ))}
                   </DataTableBody>
@@ -301,7 +324,26 @@ export default async function MaterialsPage({
                 <DetailRow label="平台" value={selectedMaterial.platformLabel} />
                 <DetailRow label="关联商品" value={`${selectedMaterial.product.name} / ${selectedMaterial.product.spu}`} />
                 <DetailRow label="关联 Task ID" value={selectedMaterial.taskCode ?? "--"} />
+                <DetailRow
+                  label="图片去重"
+                  value={selectedMaterial.imageDedup?.warningLabel ?? selectedMaterial.imageDedup?.status ?? "未检测"}
+                  badgeTone={selectedMaterial.imageDedup?.warningLabel ? "amber" : "slate"}
+                />
               </div>
+              <form action={rebuildMaterialFingerprintAndRedirectAction} className="flex flex-wrap gap-2">
+                <input type="hidden" name="materialId" value={selectedMaterial.id} />
+                <input type="hidden" name="sourceUrl" value={sourceUrl} />
+                <button
+                  type="submit"
+                  disabled={Boolean(readonlyNotice)}
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#DCE5F2] bg-white px-3 text-sm font-medium text-[#2563EB] disabled:opacity-50"
+                >
+                  <MiniIcon name="spark" className="h-4 w-4" />
+                  检测此素材
+                </button>
+                <TableActionLink href="/maintenance/files">去文件清理与回收站</TableActionLink>
+              </form>
+              <ImageDedupPanel summary={selectedMaterial.imageDedup ?? null} sourceUrl={sourceUrl} readonly={Boolean(readonlyNotice)} />
               {selectedMaterial.isReferenceOnly ? (
                 <PageNote>该图片仅作为灵感和分析参考，不建议直接用于商品发布。</PageNote>
               ) : null}
@@ -335,6 +377,70 @@ export default async function MaterialsPage({
         </DashboardCard>
       </section>
     </WorkspacePage>
+  );
+}
+
+type MaterialDedupSummary = NonNullable<NonNullable<Awaited<ReturnType<typeof getMaterialLibraryPageData>>["selectedMaterial"]>["imageDedup"]>;
+
+function ImageDedupPanel({
+  summary,
+  sourceUrl,
+  readonly,
+}: {
+  summary: MaterialDedupSummary | null;
+  sourceUrl: string;
+  readonly: boolean;
+}) {
+  if (!summary || summary.status === "missing") {
+    return <PageNote>尚未生成图片指纹。请手动点击检测；本线程只检测和提示，不删除文件。</PageNote>;
+  }
+
+  return (
+    <div className="rounded-[24px] border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900">相似图片与原创性风险提示</h3>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            最近检测：{summary.latestCheckedAtLabel ?? "--"}。提示仅用于整理素材，不构成版权结论；删除或移入回收站请使用 V1-Plus 文件清理功能。
+          </p>
+        </div>
+        <StatusBadge label={summary.warningLabel ?? "未发现重复"} tone={summary.warningLabel ? "amber" : "green"} />
+      </div>
+      <div className="mt-3 grid gap-2 text-sm text-slate-600">
+        {summary.matches.length > 0 ? (
+          summary.matches.map((match) => (
+            <div key={match.reviewLogId} className="rounded-2xl border border-[#EEF2F8] bg-white px-3 py-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge label={match.matchTypeLabel} tone={match.riskLevel === "warning" ? "amber" : "blue"} />
+                <span>{match.relationScopeLabel}</span>
+                <span>相似度 {match.similarityLabel}</span>
+                {match.archiveSuggested ? <StatusBadge label="已建议归档" tone="slate" /> : null}
+              </div>
+              <p className="mt-2 leading-6">{match.message}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {match.href ? <TableActionLink href={match.href}>{match.title}</TableActionLink> : <span className="text-slate-500">{match.title}</span>}
+                <form action={ignoreImageReviewLogAndRedirectAction}>
+                  <input type="hidden" name="reviewLogId" value={match.reviewLogId} />
+                  <input type="hidden" name="sourceUrl" value={sourceUrl} />
+                  <button type="submit" disabled={readonly} className="text-sm font-medium text-slate-500 disabled:opacity-50">
+                    忽略
+                  </button>
+                </form>
+                <form action={markImageReviewLogArchiveSuggestedAndRedirectAction}>
+                  <input type="hidden" name="reviewLogId" value={match.reviewLogId} />
+                  <input type="hidden" name="sourceUrl" value={sourceUrl} />
+                  <button type="submit" disabled={readonly} className="text-sm font-medium text-[#2563EB] disabled:opacity-50">
+                    标记建议归档
+                  </button>
+                </form>
+              </div>
+            </div>
+          ))
+        ) : (
+          <PageNote>未发现完全重复或高度相似图片。来源不明时仍建议人工确认使用权限。</PageNote>
+        )}
+      </div>
+    </div>
   );
 }
 

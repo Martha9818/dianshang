@@ -24,10 +24,16 @@ The material library and product material tab prefer `thumbnailPath` for display
 ## Not Responsible For
 
 - Reading raw image bytes directly in page components.
-- AI image generation or image quality judgment.
+- AI image generation, reverse-image search, copyright judgment, or automatic image cleanup.
 - Inspiration scanning.
 - File cleanup or historical bulk migration.
 - Search, notification, Electron, or Agent behavior.
+
+## V1.5 Thread 05 Dedupe Reuse
+
+- Material pages may display `image-dedup` summaries and call manual dedupe actions.
+- Fingerprinting and similarity logic stay in `src/lib/services/image-dedup/`; material pages do not read files directly.
+- Archiving/discarding a material is still a status workflow only and does not delete, move, compress, or replace the image file.
 
 ## Source And Permission Rules
 
@@ -42,4 +48,3 @@ Material writes remain blocked in preview/read-only runtime. Vercel must not wri
 ## Path Rules
 
 Frontend views show relative paths only. Full Windows paths are server-only and must not be rendered in material cards, detail panels, diagnostics, exports, or logs.
-

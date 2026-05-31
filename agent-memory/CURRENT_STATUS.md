@@ -2,10 +2,10 @@
 
 ## Current Progress
 
-- Current stage: V1.5 after Thread 04 implementation.
+- Current stage: V1.5 after Thread 05 implementation.
 - V1-Plus status: completed and frozen as the current development baseline.
-- Current task: V1.5 Thread 04 - competitor intelligent analysis and differentiation suggestions completed locally; verification scripts now match the competitor-analysis thread.
-- Next thread: V1.5 Thread 05 - image dedupe and lightweight originality-risk hints, only if explicitly approved.
+- Current task: V1.5 Thread 05 - image dedupe and lightweight originality-risk hints completed locally.
+- Next thread: V1.5 Thread 06 - lightweight API image generation, only if explicitly approved.
 
 ## Product Direction
 
@@ -21,18 +21,19 @@
 - Thread 02 covers only user-initiated screenshot/local-image import, preview, AI recognition draft, quality grading, recognition history, edit/ignore/confirm draft flow, and conservative source links.
 - Thread 03 covers only single user-pasted link import drafts, URL normalization, SSRF-guarded public meta attempts, source-platform labels, quality grading, auxiliary screenshot/text/note input, reject/archive, and user-confirmed conversion to inspiration or association with existing product/competitor records.
 - Thread 04 covers only AI-assisted analysis snapshots from local product, competitor, screenshot-draft, and link-import-draft data. It does not crawl platforms, open links, auto-collect competitors, overwrite scoring, update recommendations, update product status, or change competitor fact fields.
+- Thread 05 covers only user-triggered local image fingerprinting, exact duplicate/high-similarity hints, source-risk reminders, manual ignore, and archive-suggestion records for materials and inspirations. It does not delete, move to trash, compress, replace, upload, or run reverse-image search.
 - File cleanup and app trash remain V1-Plus Thread 06 capabilities; V1.5 must not create a second cleanup system.
 
 ## Blockers Or Risks
 
-- No active product blocker is recorded for V1.5 Thread 04.
+- No active product blocker is recorded for V1.5 Thread 05.
 - Vercel remains preview-only and read-only; it is not a formal runtime environment.
 - No `test` script exists in the current project scripts.
 - V1.5 threads must not reimplement path, environment, logging, or Vercel-readonly foundations.
-- Thread 04 verification passed encoding check, lint, build, Prisma validate, typecheck, competitor-analysis mock-provider local acceptance, and Vercel read-only simulation. `npm run thread04:verify` and `npm run thread04:preview` now target the V1.5 Thread 04 competitor-analysis flow. No `test` script exists.
-- Thread 04 AI analysis depends on a valid default text-capable AI provider. Failures are isolated to `CompetitorAnalysisSnapshot` / `AIJob`, redact local-path-like error details, and do not modify product, competitor, scoring, export, backup, or cleanup records.
+- Thread 05 verification passed encoding check, lint, build, Prisma validate, typecheck, local image-dedupe service smoke, Vercel read-only simulation, and `/materials` + `/inspirations` HTTP smoke checks. `npm test` was attempted and reported no `test` script.
+- Thread 05 similarity detection is conservative and may produce false positives/negatives; findings are advisory records only and do not modify image files or cleanup state.
 - Follow-up doc slimming for long files is deferred to a later documentation slimming pass or V1.5 Thread 09 closeout.
 
 ## Next Recommended Step
 
-- Push the Thread 04 verification-script fix after final checks. Start V1.5 Thread 05 only after explicit approval; Thread 05 may suggest duplicate/originality risk only and must not perform file cleanup or deletion.
+- Finish final verification and local commit for Thread 05. Start V1.5 Thread 06 only after explicit approval.

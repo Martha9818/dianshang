@@ -14,6 +14,7 @@ Keep only currently effective patch state here. Detailed patch history is archiv
 
 | Patch State | Severity | Summary | Verification |
 | --- | --- | --- | --- |
+| V1.5 Thread 05 feature patch | P4 | Added local-only image fingerprinting, exact duplicate/high-similarity review logs, source-risk hints, manual ignore, archive-suggestion marking, material/inspiration UI badges, and links to existing file cleanup/trash. | Encoding check, lint, build, Prisma validate, typecheck, local image-dedupe service smoke, Vercel read-only simulation, and HTTP page smoke passed; no `test` script exists. |
 | V1.5 Thread 04 verification script patch | P4 | Replaced legacy Thread 04 copywriting/provider scripts with competitor-analysis-specific local and preview verification scripts. | `npm run thread04:verify` and `npm run thread04:preview` passed. |
 | V1.5 Thread 04 feature patch | P4 | Added local-only AI-assisted competitor analysis snapshots, selection, history, regeneration without overwrite, reference marking, archive confirmation, risk scan hints, and Vercel read-only guard. | Encoding check, lint, build, Prisma validate, typecheck, mock-provider local acceptance, Vercel read-only simulation, and HTTP page smoke checks passed. |
 | V1.5 Thread 04 AI error sanitization patch | P4 | Redacted local-path-like provider error details before AI failure summaries are saved to failed snapshots, AI jobs, or AI request logs. | Encoding check, lint, build, Prisma validate, typecheck, and local mock-provider failure isolation passed. |

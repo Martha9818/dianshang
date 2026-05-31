@@ -5,6 +5,12 @@ import { redirect } from "next/navigation";
 import { getProductErrorMessage } from "@/lib/modules/products";
 import { MATERIAL_STATUS } from "@/lib/modules/materials";
 import { updateMaterialStatus } from "@/lib/services/material-service";
+import {
+  ignoreImageReviewLog,
+  markImageReviewLogArchiveSuggested,
+  rebuildImageFingerprint,
+  rebuildImageFingerprintsForLibrary,
+} from "@/lib/services/image-dedup";
 import { type BatchOperationResult } from "@/lib/modules/batch/rules";
 import { runBatchOperation } from "@/lib/services/batchOperationService";
 
@@ -124,4 +130,74 @@ export async function batchMaterialOperationAction(
       message: getProductErrorMessage(error, "批量操作失败，请稍后重试。"),
     };
   }
+}
+
+function parsePositiveId(value: FormDataEntryValue | null, label: string) {
+  const id = Number(value ?? "");
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error(`${label}无效。`);
+  }
+
+  return id;
+}
+
+function redirectWithMaterialError(sourceUrl: string, message: string) {
+  const url = new URL(`http://local${sourceUrl}`);
+  url.searchParams.set("materialError", message);
+  redirect(`${url.pathname}${url.search}`);
+}
+
+export async function rebuildMaterialFingerprintAndRedirectAction(formData: FormData) {
+  const sourceUrl = normalizeSourceUrl(String(formData.get("sourceUrl") ?? ""));
+
+  try {
+    const materialId = parsePositiveId(formData.get("materialId"), "素材 ID");
+    await rebuildImageFingerprint({ type: "material", id: materialId });
+    revalidateMaterialScopes();
+  } catch (error) {
+    redirectWithMaterialError(sourceUrl, getProductErrorMessage(error, "图片去重检测失败，请稍后重试。"));
+  }
+
+  redirect(sourceUrl);
+}
+
+export async function rebuildMaterialLibraryFingerprintsAndRedirectAction(formData: FormData) {
+  const sourceUrl = normalizeSourceUrl(String(formData.get("sourceUrl") ?? ""));
+
+  try {
+    await rebuildImageFingerprintsForLibrary("material");
+    revalidateMaterialScopes();
+  } catch (error) {
+    redirectWithMaterialError(sourceUrl, getProductErrorMessage(error, "素材库图片指纹补建失败，请稍后重试。"));
+  }
+
+  redirect(sourceUrl);
+}
+
+export async function ignoreImageReviewLogAndRedirectAction(formData: FormData) {
+  const sourceUrl = normalizeSourceUrl(String(formData.get("sourceUrl") ?? ""));
+
+  try {
+    const reviewLogId = parsePositiveId(formData.get("reviewLogId"), "审阅记录 ID");
+    await ignoreImageReviewLog(reviewLogId);
+    revalidateMaterialScopes();
+  } catch (error) {
+    redirectWithMaterialError(sourceUrl, getProductErrorMessage(error, "忽略图片重复提示失败，请稍后重试。"));
+  }
+
+  redirect(sourceUrl);
+}
+
+export async function markImageReviewLogArchiveSuggestedAndRedirectAction(formData: FormData) {
+  const sourceUrl = normalizeSourceUrl(String(formData.get("sourceUrl") ?? ""));
+
+  try {
+    const reviewLogId = parsePositiveId(formData.get("reviewLogId"), "审阅记录 ID");
+    await markImageReviewLogArchiveSuggested(reviewLogId);
+    revalidateMaterialScopes();
+  } catch (error) {
+    redirectWithMaterialError(sourceUrl, getProductErrorMessage(error, "标记建议归档失败，请稍后重试。"));
+  }
+
+  redirect(sourceUrl);
 }

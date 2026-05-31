@@ -31,7 +31,7 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 ### Remaining V1.5 Threads Are Not Implemented Yet
 
 - Status: DEFERRED / PLANNED SCOPE
-- Impact: V1.5 Thread 01, Thread 02, Thread 03, and Thread 04 are implemented, but Thread 05-09 still require separately approved threads.
+- Impact: V1.5 Thread 01, Thread 02, Thread 03, Thread 04, and Thread 05 are implemented, but Thread 06-09 still require separately approved threads.
 - Mitigation: Do not imply these are available until their thread ships and is verified locally.
 
 ### Screenshot Recognition Depends On Vision-Capable AI Credentials
