@@ -1,16 +1,19 @@
-# EcomPilot V1-Plus
+# EcomPilot V1.5
 
 EcomPilot 是一个 Windows 本地优先的电商选品与运营工作台。正式数据以本机 SQLite、`uploads/`、`exports/`、`backups/`、`logs/` 和应用内 `trash/` 为准；Vercel 仅用于只读预览。
 
-## 当前功能范围
+## 当前版本范围
 
-- MVP：商品 CRUD、软删除、详情、主图上传、竞品录入、成本和利润测算、六维评分、推荐结论、文案生成与编辑、违规词扫描、Prompt 任务、生成图回传素材库、素材预览筛选、Excel 导出、手动备份。
-- V1-Core：AI Provider 设置、AI 调用日志、多平台文案包、AI 识图轻量建议、识图结果不自动保存为事实、灵感文件夹手动扫描、图片安全处理、本地运行诊断、Vercel 只读降级、RuntimeConfig / LocalPathService / EnvironmentGuard / LogService / OperationLog 等基础能力。
-- V1-Plus：全局搜索与筛选、商品池/素材库/文案列表/Prompt 任务/灵感箱筛选、灵感箱管理增强、灵感状态流转、灵感转商品保护、首页待办、应用内通知中心、批量操作安全机制、文件清理与应用内回收站。
+- MVP：商品 CRUD、软删除、详情、主图上传、竞品录入、成本与利润测算、六维评分、推荐结论、文案生成与编辑、违规词扫描、Prompt 任务、生成图回传素材库、素材库预览筛选、Excel 导出、手动备份。
+- V1-Core：AI Provider 设置、AI 调用日志、多平台文案包、AI 识图轻量建议、识图结果不自动保存为事实、灵感文件夹手动扫描、图片安全处理、本地运行诊断、Vercel 只读降级，以及 RuntimeConfig / LocalPathService / EnvironmentGuard / LogService / OperationLog 等底座能力。
+- V1-Plus：全局搜索与筛选、灵感箱管理增强、首页待办、应用内通知中心、批量操作安全机制、文件清理与应用内回收站。
+- V1.5：灵感文件夹定时扫描、自动 AI 识图草稿、截图识别、图片导入结构化、链接导入尝试、导入质量分级、竞品智能分析、差异化建议、图片去重、轻量原创性风险提示、API 生图轻量版、Electron 技术验证、站内搜索助手、通知摘要助手。
+
+V1.5 只做轻量智能与技术验证，不提前实现 V2，不新增第二套文件清理系统，不实现正式桌面端、SKU、供应商、库存、试销复盘、PDF 报告或真正多 Agent 调度。
 
 ## Windows 本地运行
 
-首次使用请在 PowerShell 中进入项目目录：
+首次启动请在 PowerShell 中执行：
 
 ```powershell
 cd <项目目录>
@@ -21,175 +24,152 @@ npm run prisma:seed
 npm run dev
 ```
 
-启动后访问 [http://localhost:3000](http://localhost:3000)。
+然后访问 [http://localhost:3000](http://localhost:3000)。
 
-也可以双击 `start.bat`。它会检查 Node.js、npm、`.env`、依赖、本地 SQLite、默认违规词、3000 端口，以及 `uploads/`、`exports/`、`backups/`、`logs/`、`trash/` 目录；通过后会打开浏览器并启动 `npm run dev`。如果 Windows 出现 Prisma Client `EPERM` 文件锁，请先关闭相关 `node`、`next`、`prisma` 进程后重试。
+也可以直接双击 `start.bat`。它会检查 Node.js、npm、`.env`、依赖、本地 SQLite、默认违规词、3000 端口，以及 `uploads/`、`exports/`、`backups/`、`logs/`、`trash/` 目录。若 Windows 出现 Prisma Client `EPERM` 文件锁，请先关闭相关 `node`、`next`、`prisma` 进程后重试。
 
 ## 本地目录
 
-- `uploads/`：商品主图、竞品截图、素材图、Prompt 回传图、灵感箱受管图片和缩略图。
+- `uploads/`：商品主图、竞品截图、素材图、Prompt 回传图、灵感图、截图识别图及其缩略图。
 - `exports/`：Excel 导出文件。
-- `backups/`：手动备份，目录格式为 `backups/yyyyMMdd_HHmmss/`。
+- `backups/`：手动备份目录。
 - `logs/`：脱敏应用日志。
-- `trash/`：EcomPilot 应用内回收站，仅用于文件清理功能。
+- `trash/`：EcomPilot 应用内回收站，仅服务于文件清理能力。
 
-这些目录是本地运行数据，不应提交到 Git。前端展示应使用相对路径或脱敏摘要，不展示完整 Windows 绝对路径、数据库真实路径、API Key、`.env` 内容、完整 Prompt 或完整错误堆栈。
+这些目录是本地运行数据，不应提交到 Git。前端、导出、诊断、通知和日志只展示相对路径或脱敏摘要，不展示完整 Windows 绝对路径、数据库真实路径、API Key、`.env` 值、完整 Prompt 或完整堆栈。
 
 ## Vercel 只读预览
 
-Vercel 只用于页面预览和可访问性检查，不用于正式数据写入。预览环境必须满足：
+Vercel 只用于页面预览和可访问性检查，不用于正式写入验收。预览环境必须满足：
 
-- 可以打开主要页面，并显示只读数据或降级展示。
+- 可以打开主要页面并展示只读数据或安全降级内容。
 - 不写 SQLite、`uploads/`、`exports/`、`backups/`、`logs/`、`trash/`。
-- 不执行文件扫描、文件移动、文件删除或高成本 AI 调用。
-- 所有写操作提示：`预览环境只读，请在 Windows 本地验收。`
-- 页面不应暴露 API Key、完整本地路径、数据库路径、`.env` 值、原始 Prompt 或完整堆栈。
+- 不执行真实文件扫描、移动、删除，不执行高成本 AI 调用，不执行 API 生图，不执行 Electron POC。
+- 所有写操作统一提示：`预览环境只读，请在 Windows 本地验收。`
+- 页面、通知、日志、导出和诊断不暴露 API Key、完整本地路径、数据库路径、`.env` 值、原始 Prompt 或完整堆栈。
 
-需要真实创建商品、上传图片、导出 Excel、备份、生成 AI 文案、扫描灵感文件夹或清理文件时，请使用 Windows 本地环境。
+需要真实创建、上传、导出、备份、扫描、清理或 AI 写入时，请在 Windows 本地运行。
 
-## 文件清理安全
+## V1.5 智能功能边界
 
-入口：`/maintenance/files`
+### 灵感文件夹定时扫描
 
-文件清理只做人工触发的本地扫描和清理建议。它会扫描 `uploads/`、`exports/`、`backups/`，展示相对路径，并记录 `CleanupLog`。
+- 只扫描用户指定的本地灵感文件夹。
+- 只在应用本地运行时按配置间隔触发。
+- 先完成文件导入，再记录 AI 草稿任务状态。
+- AI 草稿仅供人工确认，不自动写回正式商品事实。
 
-- 有效商品主图、素材文件、竞品截图和活跃灵感图片不会直接允许清理。
-- 移入回收站需要勾选、输入确认文本，并通过浏览器确认。
-- 永久删除只允许删除已经位于应用内 `trash/` 的文件。
-- 清理不会删除数据库记录，不提供自动后台清理、定时清理、Windows 回收站集成或恢复流程。
-- 旧备份可以被建议清理，但删除备份会降低后续手工排障和恢复能力，应谨慎处理。
+### 截图识别与图片导入结构化
 
-## AI Key 安全
+- 入口：`/screenshots`
+- 支持用户主动上传截图，或从已有商品 / 竞品 / 素材 / 灵感记录进入。
+- AI 结果只保存在截图任务草稿中，不自动覆盖商品、竞品、评分、素材或状态字段。
+- 预览环境提示：`预览环境只读，请在 Windows 本地验收截图识别。`
 
-AI Provider 配置保存在本地数据库中，API Key 只在服务端使用。复制、备份或分享数据库文件前，请确认接收方和保存位置安全。
+### 链接导入尝试
 
-系统日志、诊断摘要、通知和前端错误应做脱敏处理。AI 调用失败不能影响商品保存、评分、素材、导出、备份或文件清理等非 AI 流程；无可用 AI Key 时仍可使用手动录入、编辑和导出能力。
+- 入口：`/link-imports`
+- 只支持用户手动粘贴单条链接。
+- 只尝试公开元信息，不做登录、Cookie、浏览器自动化、平台爬虫、批量采集或反爬绕过。
+- 失败时保留为手动草稿，不阻塞人工补充说明、截图或备注。
+
+### 竞品智能分析与差异化建议
+
+- 入口：商品详情页 `competitor-analysis` 标签。
+- 只基于本地已有商品、竞品、截图草稿、链接草稿数据生成分析快照。
+- 结果是 AI 参考意见，不覆盖评分、推荐结论、商品状态或竞品事实。
+
+### 图片去重与轻量原创性风险提示
+
+- 入口：`/materials`、`/inspirations`
+- 只做本地指纹比对、重复 / 高相似提示和轻量原创性风险提醒。
+- 不负责删除、不移动到回收站、不永久删除。
+- 如需删除，必须走既有的 V1-Plus 文件清理与回收站流程：`/maintenance/files`。
 
 ## API 生图轻量版
 
-入口：`/settings/ai` 和 `/prompt-tasks`
+入口：`/settings/ai` 与 `/prompt-tasks`
 
-- 在 AI 设置中新建或编辑 Provider，将用途选择为 `API 生图`，填写 OpenAI-compatible Base URL、API Key 和模型名，并设为该用途的默认 Provider。
-- 在 AI 设置的「API 生图设置」中手动启用功能，并配置默认尺寸、质量和成本提示。功能默认关闭。
-- 在 Prompt 任务详情中点击「使用 API 生图」才会调用生图接口；每次只生成 1 张图，不支持默认批量、不自动循环、不后台生成。
-- 调用前会展示成本风险提示；高成本模型、尺寸或质量会要求二次确认。
-- 成功后图片保存到受管 `uploads/` 素材路径，自动创建 Material，关联原商品和 Prompt 任务，并标记为 AI 生成、需要复核。
-- API Key 只在服务端读取，不返回前端，不写入日志、通知、导出文件或生图任务参数摘要。
-- Vercel 预览只展示按钮和说明，不调用真实生图 API、不写 SQLite、不写 `uploads/`；写操作提示：`预览环境只读，请在 Windows 本地验收 API 生图。`
-- 如果 API 调用失败、余额不足、模型不可用或命中风险词，失败只记录到生图任务/AI 任务/通知中，不会影响 Prompt、商品、已有素材、导出、备份或文件清理。
+- 需要单独配置用途为 `API 生图` 的 Provider。
+- 功能默认关闭，必须人工开启。
+- 每次点击只生成 1 张图，不做批量、循环、后台任务或自动上架。
+- 会提示尺寸、质量、模型对应的成本风险；高成本配置需要二次确认。
+- 成功后写入受管 `uploads/`，并创建关联素材记录，标记为 `ai_generated` 且 `needs_review`。
+- API Key 只在服务端读取，不返回前端，不写入日志、通知、导出或任务参数摘要。
+- Vercel 预览只展示说明，不调用真实生图 API；写操作提示：`预览环境只读，请在 Windows 本地验收 API 生图。`
 
-## 主要入口
+## 文件清理与应用内回收站
 
-- `/`：首页待办。
-- `/products`：商品池、搜索筛选、批量状态变更和软删除。
-- `/products/new`、`/products/[id]`、`/products/[id]/edit`：商品创建、详情和编辑。
-- `/copywriting`：多平台文案包、搜索筛选、手动编辑、违规词扫描。
-- `/prompt-tasks`：Prompt 任务管理、搜索筛选和生成图回传。
-- `/materials`：素材库、搜索筛选、预览和状态管理。
-- `/inspirations`：灵感箱、手动扫描、状态流转、转商品保护。
-- `/notifications`：应用内通知中心。
-- `/export`：Excel 导出。
-- `/backup`：手动备份。
-- `/maintenance/files`：文件清理与应用内回收站。
-- `/system/diagnostics`：本地运行诊断。
-- `/settings/ai`、`/settings/banned-words`：AI Provider 和违规词设置。
+入口：`/maintenance/files`
 
-## Excel 导出
+- 这是 V1-Plus 既有能力，V1.5 不会重建第二套清理系统。
+- 支持人工扫描 `uploads/`、`exports/`、`backups/`，识别孤儿文件、旧导出、旧备份和回收站内容。
+- 正在使用的商品主图、素材、竞品截图、活跃灵感图片不会被直接建议删除。
+- 移入回收站需要二次确认。
+- 永久删除只允许删除已经位于应用内 `trash/` 的文件，并且需要二次确认。
+- `CleanupLog` 只记录相对路径和脱敏摘要，不记录完整本地绝对路径。
+- 图片去重只提示，不删除；站内助手只提醒和跳转，不自动执行任何清理。
 
-入口：`/export`
+## AI 与安全说明
 
-导出文件保存在 `exports/`，包含 6 个 Sheet：
+- AI Provider 配置保存在本地数据库中，API Key 只在服务端使用。
+- AI 日志只保存脱敏摘要、状态、模型、耗时和错误摘要，不保存敏感 provider 原始响应。
+- AI 失败不应影响商品、评分、素材、导出、备份、文件清理等非 AI 流程。
+- 导出文件、文档、通知、前端错误和诊断摘要都不应包含 API Key、完整本地绝对路径或完整原始 Prompt。
+- 历史 Vercel recovery codes 风险仍需在 provider 侧轮换或吊销，当前仓库已只保留风险提醒，不再保留明文。
 
-- `Products`
-- `Competitors`
-- `Copywriting`
-- `PromptTasks`
-- `Materials`
-- `Scores`
+## Electron 技术验证
 
-导出文件不应包含 API Key、`.env` 值、数据库真实路径或完整 Windows 绝对路径。图片字段使用应用相对路径。
+V1.5 Thread 07 仅新增 `experiments/electron-poc/` 作为 Electron 技术验证目录。
 
-## 手动备份
+- 它只验证 Electron 壳加载现有本地 Next.js 页面和本地端口访问。
+- 它不是正式 Windows 桌面端，不生成安装包，不做自动更新、系统托盘、Windows 系统通知、崩溃恢复或后台常驻。
+- 它不替换 `start.bat`、`npm run dev`、本地 SQLite 路径服务或现有运行底座。
+- Vercel 通过 `.vercelignore` 忽略该目录，预览环境不执行 Electron 代码。
 
-入口：`/backup`
+正式 Windows 桌面端属于 V2 规划，不在 V1.5 内实现。
 
-手动备份会复制：
+## 站内助手
 
-- `prisma/dev.db`
-- 存在时同步复制 `dev.db-wal` 和 `dev.db-shm`
-- `uploads/` 文件夹
+入口：`/assistant`
 
-当前版本只提供手动备份，不提供应用内数据恢复。数据恢复属于 V2 规划。
-
-## 诊断中心
-
-入口：`/system/diagnostics`
-
-诊断中心用于排查本地运行问题，会显示运行环境、SQLite、目录、日志、AI、图片和灵感扫描摘要。复制或导出的诊断摘要已脱敏，不应包含 API Key、完整本地路径、完整数据库路径、完整 Prompt 或完整堆栈。
-
-## 桌面端底座
-
-V1-Core 已沉淀路径、日志、环境判断、Vercel 只读、本地诊断、图片安全、AI 失败兜底和操作记录能力。V1-Plus 继续复用这些底座，作为未来 V1.5 Electron 技术验证和 V2 Windows 桌面端的准备基础。
-
-当前版本没有实现 Electron 正式桌面端、系统托盘、Windows 系统通知、自动更新或安装包打包。
-
-## V1-Plus 验收清单
-
-- Windows 本地可以启动、读写 SQLite，并访问主要页面。
-- Vercel 预览只读，写操作显示 `预览环境只读，请在 Windows 本地验收。`
-- MVP、V1-Core、V1-Plus 功能入口可回归。
-- 批量操作、文件清理、永久删除均有二次确认。
-- 上传、导出、备份、回收站路径复用本地路径服务。
-- 日志、通知、诊断、导出和前端错误不泄露 API Key 或完整本地绝对路径。
-- 文件清理只保存相对路径到 `CleanupLog`。
-- README、当前状态、Session Log 和已知问题已更新。
+- 这是轻量站内助手，不是多 Agent，不做自治执行。
+- 包含“站内搜索助手”和“通知摘要助手”两个只读区域。
+- 搜索助手只返回本地规则生成的安全跳转、筛选、搜索或导航建议。
+- 摘要助手只基于首页待办、通知、AI 失败提醒、备份状态和已有 CleanupLog 生成摘要。
+- 它不会自动修改、删除、归档、清理、批量执行、标记通知已读、生成图片或修改商品状态。
+- 它只会提醒并跳转到 ` /maintenance/files `，不会自动执行文件清理。
+- Vercel 预览显示：`预览环境只读，请在 Windows 本地验收站内助手。`
 
 ## 验证命令
 
 ```powershell
+npm run encoding:check
 npm run lint
 npm run build
 npx prisma validate
 npm run typecheck
-npm run encoding:check
+npm run thread09:verify
 ```
 
-`package.json` 当前没有 `test` 脚本；如需测试命令，应在新增真实测试用例时一起补充。
+说明：
 
-## Electron POC 技术验证
+- 根项目当前没有 `npm test` 脚本。
+- Electron POC 验证使用 `experiments/electron-poc` 下的 `npm run smoke`。
+- Thread 09 不新增 Prisma migration；现有 migration 用途见 `docs/current/DATABASE_CHANGELOG.md`。
 
-V1.5 Thread 07 仅新增 `experiments/electron-poc/` 作为 Electron 技术验证目录。它只验证 Electron 壳加载本地 Next.js 页面和本地端口访问，不是正式 Windows 桌面端，不生成安装包，不做自动更新、系统托盘、Windows 系统通知、崩溃恢复、后台常驻，也不替换 `start.bat` 或现有 `npm run dev` 本地流程。
+## V2 规划入口
 
-POC 依赖只安装在 `experiments/electron-poc/` 子目录，根应用不引入 Electron 依赖。Vercel 通过 `.vercelignore` 忽略该目录，预览环境仍然只读，不执行 Electron 代码，不写 SQLite、`uploads/`、`exports/`、`backups/`、`logs/` 或 `trash/`。
+V2 只做规划，不在 V1.5 直接实现。下一阶段可讨论的主题：
 
-本线程结论与风险记录见 `docs/current/ELECTRON_POC_REPORT.md`。正式 Windows 桌面端、安装包、自动更新、桌面数据根、严格 CSP 和生命周期管理均属于 V2 范围。
+- 正式 Windows 桌面端
+- 数据恢复
+- 多 SKU
+- 供应商管理
+- 采购批次
+- 库存
+- 试销复盘
+- PDF 报告
+- 正式 Agent Mode
 
-## 常见问题
-
-- 启动脚本提示 3000 端口占用：关闭占用进程，或手动运行 `npm run dev -- -p 3001`。
-- Prisma 报 `EPERM`：关闭正在占用 Prisma Client 或 SQLite 的本地进程后重试。
-- Vercel 上不能创建、上传、导出、备份或清理：这是预期行为，请在 Windows 本地验收。
-- AI 失败：检查 `/settings/ai` 的 Provider 配置；AI 失败不影响手动文案、评分、素材、导出、备份和清理。
-- 文件清理看到缺失文件：系统只提示缺失，不会自动改数据库。
-- 备份能否恢复：当前版本不提供应用内恢复，恢复能力列入 V2。
-
-## 明确不在当前版本实现
-
-V1.5 才考虑：OCR、截图识别、链接导入/链接解析、API 生图技术验证、Electron 技术验证、导入质量分级、竞品共性总结、差异化建议、图片内容去重和轻量原创性审核。
-
-V2 才考虑：正式 Windows 桌面端、数据恢复、多 SKU 管理、供应商系统、库存系统、采购批次、试销复盘、退货退款流程、PDF 报告、多智能体工作流。
-
-当前 V1-Plus 不实现自动采集、自动上架、自动私信、自动评论、自动打开 ChatGPT、浏览器自动化、系统托盘、Windows 系统通知、自动更新、后台队列或真正多智能体调度。
-
-## V1.5 Thread 08 站内助手
-
-入口：`/assistant`
-
-- 这是轻量站内助手，不是真正多 Agent，也不做自主执行。
-- 页面分为“站内搜索助手”和“通知摘要助手”两个只读区域。
-- 站内搜索助手只基于本地已有数据返回辅助建议、筛选建议和安全跳转链接。
-- 通知摘要助手只基于本地通知、首页待办、AI 失败、备份状态和已有文件清理记录生成摘要。
-- AI 输出仅作辅助建议；最终链接必须由服务端规则生成，不直接信任 AI 返回 URL。
-- 助手不会自动修改、删除、归档、清理、批量执行、标记通知已读、生成图片或修改商品状态。
-- 文件清理仍属于 V1-Plus Thread 06；Thread 08 只能提醒、摘要和跳转到 `/maintenance/files`，不能执行扫描、移动、删除或永久删除。
-- Vercel 预览仅展示只读页面与规则降级结果，并显示：`预览环境只读，请在 Windows 本地验收站内助手。`
+V2 讨论前请先查看 `docs/current/CHANGELOG_DEV.md`、`docs/current/RISK_REGISTER.md`、`docs/current/THREAD_SCOPE_CHECKLIST.md`。

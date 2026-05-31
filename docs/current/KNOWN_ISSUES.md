@@ -1,71 +1,47 @@
 # EcomPilot Known Issues
 
-Only unresolved or deferred issues live here. Fixed, closed, or non-issue history is archived.
+Only unresolved or intentionally deferred issues live here.
 
 ## Open Or Deferred
 
-### External AI Success Depends On User Credentials
+### Root `npm test` Script Is Not Available
 
 - Status: OPEN
-- Impact: AI generation can fail without valid provider credentials or a reachable endpoint.
-- Mitigation: Keep manual workflows available and AI errors friendly.
+- Impact: Final validation relies on command checks plus dedicated acceptance scripts instead of a root test runner.
+- Mitigation: Use the documented verification commands and `npm run thread09:verify`.
 
 ### Vercel Preview Is Read-Only
 
 - Status: DEFERRED / INTENDED LIMITATION
-- Impact: Preview cannot validate real SQLite writes, uploads, exports, backups, logs, or local AI calls.
-- Mitigation: Validate write flows in Windows local runtime.
+- Impact: Preview cannot validate real SQLite writes, uploads, exports, backups, logs, file cleanup, API image generation, or Electron POC execution.
+- Mitigation: Accept those flows only on Windows local runtime.
 
 ### Restore Workflow Is Not Implemented
 
 - Status: DEFERRED
-- Impact: Manual backup exists, but restore is not available through the app UI.
-- Mitigation: Keep restore labeled as future work and avoid implying full disaster recovery.
+- Impact: Manual backup exists, but the app still has no in-app restore flow.
+- Mitigation: Keep restore explicitly in V2 planning only.
 
-### Vercel Recovery Codes Existed In Git History
-
-- Status: OPEN OPERATIONAL FOLLOW-UP
-- Impact: The file is removed from the current tree, but account-side rotation/revocation remains the safe closeout.
-- Mitigation: Rotate or revoke the affected recovery codes in the provider account.
-
-### Remaining V1.5 Threads Are Not Implemented Yet
-
-- Status: DEFERRED / PLANNED SCOPE
-- Impact: V1.5 Thread 01-08 are implemented, but Thread 09 still requires a separately approved closeout thread.
-- Mitigation: Do not imply these are available until their thread ships and is verified locally.
-
-### Screenshot Recognition Depends On Vision-Capable AI Credentials
+### External AI Success Depends On Valid Provider Credentials
 
 - Status: OPEN
-- Impact: Screenshot upload and draft history can work locally, but AI recognition can fail if no valid vision-capable provider is configured.
-- Mitigation: AI failure is isolated to `ScreenshotRecognitionJob`; users can keep/upload screenshots and manually edit or retry drafts.
+- Impact: Screenshot recognition, competitor analysis, inspiration AI drafts, copywriting AI, assistant intent parsing, and API image generation can fail without valid provider settings.
+- Mitigation: Keep manual workflows available and keep AI failure isolated.
 
-### Competitor Intelligent Analysis Depends On Text-Capable AI Credentials
-
-- Status: OPEN
-- Impact: Competitor analysis history can be viewed locally, but generating a new analysis can fail if no valid default AI provider is configured.
-- Mitigation: AI failure is isolated to `CompetitorAnalysisSnapshot` / `AIJob`; product, competitor, scoring, export, backup, and cleanup data are not modified.
-
-### API Image Generation Depends On Image-Capable AI Credentials
-
-- Status: OPEN
-- Impact: Prompt tasks and manual upload remain usable, but API image generation can fail if no enabled image Provider, API key, quota, model, network access, or provider-side safety approval is available.
-- Mitigation: API image generation is optional, disabled by default, one-click manual only, records failed `ImageGenerationJob` / `AIJob`, and does not create invalid materials on failure.
-
-### V1-Plus File Cleanup Must Not Be Rebuilt In V1.5
-
-- Status: DEFERRED / BOUNDARY
-- Impact: V1.5 Thread 05 image dedupe and Thread 08 assistant reminders could be confused with cleanup execution.
-- Mitigation: Use the existing V1-Plus Thread 06 file cleanup/trash flow for deletion or trash movement; V1.5 should only detect, suggest, remind, or link unless a later explicit scope changes this.
-
-### Thread 08 Assistant Is Rules-First, Not Full Natural-Language Search
+### Electron Remains POC-Only
 
 - Status: OPEN / INTENDED LIMITATION
-- Impact: `/assistant` can interpret many common local queries, but unsupported wording may degrade to generic safe suggestions instead of deep semantic retrieval.
-- Mitigation: Keep the AI layer optional, keep rule fallback available, and let users continue from the destination page with manual filters.
+- Impact: The Electron directory validates technical feasibility only; it is not a formal Windows desktop app.
+- Mitigation: Treat it as a removable experiment until V2 formally opens desktop scope.
+
+### Assistant Search Is Rules-First
+
+- Status: OPEN / INTENDED LIMITATION
+- Impact: `/assistant` can degrade to generic safe suggestions instead of deep semantic retrieval.
+- Mitigation: Keep AI optional, rule fallback available, and let users continue from destination pages with manual filters.
 
 ### Competitor Search Still Routes Through Product Views
 
 - Status: OPEN / INTENDED LIMITATION
-- Impact: Thread 08 can guide users to products that already have competitor records, but the app still has no standalone competitor list page for cross-product competitor search.
-- Mitigation: Use `/products` as the safe entry and inspect competitor or competitor-analysis tabs from product detail pages.
+- Impact: There is still no standalone competitor list route for cross-product competitor browsing.
+- Mitigation: Use `/products` as the safe entry and inspect competitor tabs from product detail pages.

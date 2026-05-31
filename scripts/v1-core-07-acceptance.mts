@@ -318,7 +318,7 @@ async function verifyImageSafety(productId: number, image: Buffer) {
   pass("V1-Core-04 image safety");
 }
 
-async function createProvider(input: { name: string; baseUrl: string; isDefault?: boolean }) {
+async function createProvider(input: { name: string; baseUrl: string; isDefault?: boolean; purpose?: "text" | "image" }) {
   const provider = await prisma.aIProvider.create({
     data: {
       name: `${PREFIX}${input.name}-${Date.now()}`,
@@ -326,7 +326,7 @@ async function createProvider(input: { name: string; baseUrl: string; isDefault?
       baseUrl: input.baseUrl,
       apiKey: `${PREFIX}stub-key`,
       modelName: "v1-core-07-stub-model",
-      purpose: "acceptance",
+      purpose: input.purpose ?? "text",
       enabled: true,
       isDefault: input.isDefault ?? false,
     },

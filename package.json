@@ -12,6 +12,7 @@
     "score:verify": "tsx scripts/score-verify.mts",
     "thread04:verify": "tsx scripts/thread04-acceptance.mts",
     "thread04:preview": "tsx scripts/thread04-preview-verify.mts",
+    "thread09:verify": "tsx scripts/thread09-final-acceptance.mts",
     "thread08:verify": "tsx scripts/thread08-final-acceptance.mts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

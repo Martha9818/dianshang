@@ -1,56 +1,14 @@
 # EcomPilot Risk Register
 
-Keep only OPEN, ACTION_REQUIRED, MITIGATED, or DEFERRED risks here. Detailed historical risk text is archived.
+Keep only risks that remain valid after V1.5 completion and before V2 begins.
 
 | Risk | Status | Level | Mitigation |
 | --- | --- | --- | --- |
-| Scope drift beyond approved V1.5 threads | OPEN | High | Start from `THREAD_SCOPE_CHECKLIST.md`; require explicit thread approval for each V1.5 feature. |
-| Reimplementing desktop base foundations | OPEN | High | Reuse RuntimeConfig, LocalPathService, EnvironmentGuard, LogService, OperationLog, local diagnostics, and Vercel read-only degradation. |
-| V1.5 lightweight AI features leaking secrets, prompts, paths, or stack details | OPEN | High | Sanitize frontend, logs, diagnostics, exports, backups, docs, and AI-facing results. |
-| V1.5 scheduled local folder scan becoming a background queue or crawler | OPEN | High | Keep scans local, explicit, bounded, and service-layer guarded; do not add platform crawling, auto-collection, or automatic cleanup. |
-| V1.5 Thread 01 AI draft failure blocking file import | MITIGATED | Medium | File import completes before AI draft status is recorded; AI failures are isolated in `InspirationAiDraftJob` and can be retried manually. |
-| V1.5 Thread 01 app-runtime timer surprising users | MITIGATED | Medium | Timer is user-configured, app-page runtime only, due-checked by server action, and disabled in read-only preview. |
-| V1.5 Thread 02 screenshot AI misrecognition treated as fact | MITIGATED | High | Store results only in `ScreenshotRecognitionJob.structuredDraft` / `confirmedDraft`; UI labels as draft and confirmation does not overwrite formal product, competitor, material, score, or status fields. |
-| V1.5 Thread 02 AI draft overwriting existing fields | MITIGATED | High | Confirmation records operation logs and keeps data in the screenshot job; competitor/product/material formal writeback is not implemented in Thread 02. |
-| V1.5 Thread 02 privacy data recognized from screenshots | OPEN | High | Prompt tells AI not to extract personal data as business facts; privacy notes remain draft-only and require user judgment before any manual use. |
-| V1.5 Thread 02 screenshot upload/AI on Vercel | MITIGATED | High | Screenshot write and AI actions use local writable guards and show `预览环境只读，请在 Windows 本地验收截图识别。` in preview. |
-| V1.5 Thread 03 link import SSRF | MITIGATED | High | URL normalization allows only HTTP(S), blocks localhost/private ranges/local hostnames, validates redirects, uses safe DNS lookup, no browser automation, timeout, and byte limits. |
-| V1.5 Thread 03 platform rules drift | OPEN | High | Keep link import as user-pasted single-link drafts and public metadata only; do not add login, cookies, private APIs, captcha bypass, anti-crawler bypass, or platform-specific detail extraction. |
-| V1.5 Thread 03 accidental crawler behavior | MITIGATED | High | No batch queue, no browser automation, no multi-link input, no image/comment/sales/shop collection, and conversion actions require explicit user confirmation. |
-| V1.5 Thread 04 AI advice misleading users | OPEN | High | Store analysis only as `CompetitorAnalysisSnapshot`, label it AI-assisted reference advice, and never overwrite scoring, recommendation, product status, or competitor facts. |
-| V1.5 Thread 04 data insufficiency causing weak conclusions | OPEN | Medium | Require at least 3 selected competitors before generation and show "建议先补充竞品数据" when local competitor data is insufficient. |
-| V1.5 Thread 04 competitor differentiation misjudgment | OPEN | Medium | Include uncertainty notes, suggested data gaps, banned-word/risk scan hints, and manual rescore reminders without automatic scoring updates. |
-| V1.5 image dedupe mistaken for file cleanup | OPEN | High | Thread 05 may detect duplicates/similarity/originality risk only; deletion or trash movement must use the existing V1-Plus Thread 06 file cleanup flow. |
-| V1.5 Thread 05 similarity false positives or misses | OPEN | Medium | Use exact SHA-256 plus conservative perceptual-hash hints, show similarity as advisory, allow manual ignore, and avoid originality/copyright certainty. |
-| V1.5 Thread 05 manual fingerprinting performance | OPEN | Medium | Detection runs only after explicit user clicks; no background scan or automatic large-scale polling is added. |
-| V1.5 Thread 05 image path safety | OPEN | High | Fingerprinting reads only managed relative upload paths through existing path guards and never returns full local absolute paths to the frontend. |
-| V1.5 assistant features executing cleanup actions | OPEN | High | Thread 08 may remind and link to existing maintenance pages only; it must not scan, move, delete, or clean uploads/exports/backups automatically. |
-| V1.5 Thread 08 AI intent parsing can suggest the wrong scope or filter | OPEN | Medium | Keep AI optional, label output as auxiliary advice, and require every final link to be generated by the local rule allowlist rather than AI-returned URLs. |
-| V1.5 Thread 08 summary text mistaken for auto-processed notifications | OPEN | Medium | Keep summaries read-only, avoid mark-read/delete actions, and state clearly that notifications remain manually handled in `/notifications`. |
-| Rebuilding file cleanup in V1.5 | OPEN | High | File cleanup/trash is already V1-Plus Thread 06; V1.5 must not add timed/background cleanup, Windows recycle-bin integration, cloud sync, auto compression, or a second cleanup system. |
-| V1.5 Electron validation becoming a formal desktop app | MITIGATED | Medium | Thread 07 stays isolated under `experiments/electron-poc/`; no installer, auto-update, tray, notifications, `start.bat` replacement, or formal desktop release was added. |
-| Electron packaged desktop path root drift | OPEN | High | POC does not write runtime folders; V2 must define a formal desktop data root and adapt RuntimeConfig/LocalPathService without exposing absolute paths. |
-| Electron renderer local capability exposure | OPEN | High | POC preload exposes only a marker and no fs/ipc; V2 must keep a minimal audited preload contract and avoid broad filesystem access. |
-| Electron production CSP and navigation policy | OPEN | Medium | The default POC path now builds and serves local production Next.js with CSP headers, but V2 still needs formal CSP review, audited external-link handling, and a final desktop navigation policy. |
-| V1.5 Thread 06 API image generation cost surprise | OPEN | High | Feature is disabled by default, manual per Prompt task only, one image per click, shows cost hint, and requires a second confirmation for high-cost model/quality/size hints. |
-| V1.5 Thread 06 image API key leakage | OPEN | High | API keys stay in server-side `AIProvider`; UI only shows masked key status, logs/notifications/jobs store provider/model/parameter summaries without API keys or raw provider responses. |
-| V1.5 Thread 06 generated-content policy risk | OPEN | High | Prompt text is scanned with existing banned/risk words before the provider call, model safety limits are not bypassed, failures create no invalid material, and generated results are marked `ai_generated` with `needs_review`. |
-| V1.5 Thread 06 Vercel high-cost/write behavior | MITIGATED | High | Preview/read-only runtime returns `预览环境只读，请在 Windows 本地验收 API 生图。` before provider calls, SQLite writes, or uploads writes. |
-| Database migration or data repair damage | OPEN | High | Add new migrations only, evaluate backup needs, never reset real data. |
-| File/database mismatch | OPEN | High | Use service-layer checks, friendly failures, diagnostics, and conservative cleanup. |
-| API key, prompt, path, stack, or diagnostic leakage | OPEN | High | Sanitize frontend, logs, diagnostics, exports, backups, and docs. |
-| Vercel write operations | OPEN | High | Keep runtime guards; Vercel remains preview-only/read-only. |
-| AI output instability or overclaiming | OPEN | Medium | Validate structured output, keep manual fallback, label AI suggestions as reference-only. |
-| AI cost estimate misunderstanding | MITIGATED | Medium | Treat costs as estimates and avoid detailed cost-report scope without approval. |
-| Image permission misuse | OPEN | High | Store/show usage permission and keep publish/export permission-aware. |
-| Backup without restore | DEFERRED | High | Keep restore labeled future work; do not imply full disaster recovery. |
-| Encoding inconsistency | MITIGATED | Medium | Run `npm.cmd run encoding:check` after Chinese text/doc edits. |
-| Windows Prisma or SQLite locks | OPEN | Medium | Stop conflicting processes when needed; normalize busy errors. |
-| Build tracing runtime files | MITIGATED | Medium | Keep runtime-only filesystem code behind established patterns and guarded build. |
-| Startup/current docs grow too long | MITIGATED | Medium | Keep active docs short and archive older detail. |
-| Archive history misleading current work | OPEN | Medium | Do not read archives by default; current status and thread scope win conflicts. |
-| Missing cache invalidation after writes | OPEN | Medium | Record path/tag invalidation or accepted stale-data risk for write paths. |
-| Inspiration duplicate/import drift | MITIGATED | Medium | Use file hash dedupe and scan summaries. |
-| Historical Vercel recovery codes require provider-side rotation/revocation | ACTION_REQUIRED | High | Current files must not contain recovery code, token, or API key plaintext; rotate/revoke the historical recovery codes at the provider because removal from the current tree does not invalidate them. |
-| Parallel thread scope mixing | OPEN | Medium | Keep one active thread; document interruptions separately. |
-| GitHub history noise | MITIGATED | Medium | Prefer local commits and push only at approved milestones/refreshes/requests. |
+| Scope drift beyond the frozen V1.5 baseline | OPEN | High | Any new behavior requires an explicitly approved new thread; do not extend V1.5 closeout into V2 implementation. |
+| Vercel preview mistaken for a writable acceptance environment | OPEN | High | Keep preview read-only; all real write acceptance stays on Windows local runtime. |
+| Historical Vercel recovery codes require provider-side rotation or revocation | ACTION_REQUIRED | High | Keep the repository clean of plaintext secrets and complete the provider-side rotation/revocation outside the repo. |
+| AI features depend on valid provider credentials, quota, network reachability, and provider policy | OPEN | Medium | Keep manual flows available and keep AI failures isolated from non-AI workflows. |
+| API image generation can still surprise users on cost or provider-side safety rejection | OPEN | High | Keep the feature disabled by default, require manual trigger, show cost hints, and keep high-cost confirmation. |
+| Image dedupe or assistant behavior could be misunderstood as cleanup execution | OPEN | Medium | Keep both features advisory-only; deletion or trash movement must continue through the existing file-maintenance page. |
+| Electron POC could be mistaken for a formal desktop runtime | OPEN | High | Keep Electron isolated under `experiments/electron-poc/`; V2 must define data root, CSP, preload contract, lifecycle, and release strategy before any formal desktop work. |
+| Manual backup exists without in-app restore | DEFERRED | High | Keep restore labeled future work and do not imply full disaster recovery. |
