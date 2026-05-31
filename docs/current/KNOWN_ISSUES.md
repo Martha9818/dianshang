@@ -28,10 +28,10 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 - Impact: The file is removed from the current tree, but account-side rotation/revocation remains the safe closeout.
 - Mitigation: Rotate or revoke the affected recovery codes in the provider account.
 
-### V1.5 Features Are Not Implemented Yet
+### Remaining V1.5 Threads Are Not Implemented Yet
 
 - Status: DEFERRED / PLANNED SCOPE
-- Impact: The frozen V1.5 Thread 01-09 feature route requires separately approved threads; Thread 01 folder scanning and Thread 02 screenshot import remain separate.
+- Impact: V1.5 Thread 01 is implemented, but Thread 02-09 still require separately approved threads; Thread 02 screenshot import remains separate.
 - Mitigation: Do not imply these are available until their thread ships and is verified locally.
 
 ### V1-Plus File Cleanup Must Not Be Rebuilt In V1.5

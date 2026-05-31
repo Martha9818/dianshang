@@ -2,17 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { getProductErrorMessage } from "@/lib/modules/products";
+import { getRuntimeModeSummary } from "@/lib/services/product-runtime-service";
 import {
   applyInspirationAiSuggestion,
   archiveInspiration,
   convertInspirationToProduct,
   generateInspirationAiSuggestion,
+  ignoreInspirationAiDraft,
   ignoreInspiration,
   markReviewed,
   rejectInspiration,
+  retryFailedInspirationScanJob,
+  retryInspirationAiDraftJob,
   runManualInspirationScan,
+  runScheduledInspirationScanIfDue,
   saveInspirationDraft,
   saveInspirationFolderPath,
+  saveInspirationScanConfig,
 } from "@/lib/services/inspirations";
 import { type BatchOperationResult } from "@/lib/modules/batch/rules";
 import { runBatchOperation } from "@/lib/services/batchOperationService";
@@ -76,6 +82,43 @@ export async function runInspirationScanAction(_prevState: unknown, _formData: F
   }
 }
 
+export async function saveInspirationScanConfigAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const result = await saveInspirationScanConfig({
+      enabled: formData.get("scanEnabled") === "on",
+      intervalMinutes: String(formData.get("scanIntervalMinutes") ?? "30"),
+    });
+    revalidateInspirations();
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "保存灵感定时扫描配置失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function runScheduledInspirationScanAction() {
+  try {
+    if (!getRuntimeModeSummary().isWritable) {
+      return { success: true as const, data: { skipped: true as const, reason: "readonly_runtime" } };
+    }
+
+    const result = await runScheduledInspirationScanIfDue();
+    if (!result.skipped) {
+      revalidateInspirations();
+      revalidatePath("/");
+    }
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "定时扫描失败，不影响手动扫描。"),
+    };
+  }
+}
+
 export async function saveInspirationDraftAction(_prevState: unknown, formData: FormData) {
   void _prevState;
   try {
@@ -125,6 +168,51 @@ export async function applyInspirationAiSuggestionAction(_prevState: unknown, fo
     return {
       success: false as const,
       error: getProductErrorMessage(error, "应用 AI 建议失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function ignoreInspirationAiDraftAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const inspirationId = parsePositiveId(formData.get("inspirationId"), "灵感记录");
+    const result = await ignoreInspirationAiDraft(inspirationId);
+    revalidateInspirations();
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "忽略 AI 草稿失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function retryInspirationAiDraftJobAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const aiDraftJobId = parsePositiveId(formData.get("aiDraftJobId"), "AI 草稿任务");
+    const result = await retryInspirationAiDraftJob(aiDraftJobId);
+    revalidateInspirations();
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "重试 AI 草稿任务失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function retryInspirationScanJobAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const scanJobId = parsePositiveId(formData.get("scanJobId"), "扫描任务");
+    const result = await retryFailedInspirationScanJob(scanJobId);
+    revalidateInspirations();
+    return { success: true as const, data: result };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "重试扫描任务失败，请稍后重试。"),
     };
   }
 }

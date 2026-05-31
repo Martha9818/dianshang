@@ -6,7 +6,7 @@ import { buildSpu, BUSINESS_ERROR_CODES, ProductBusinessError } from "@/lib/modu
 import { formatDateTime, stringifyJsonStringArray } from "@/lib/modules/products";
 import { getUploadsAbsolutePath } from "@/lib/services/file-storage-service";
 import { getInspirationFolderSettingView } from "@/lib/services/inspirations/inspirationSettingsService";
-import { getRecentScanLogs } from "@/lib/services/inspirations/scanLogService";
+import { getLatestScanSummary, getRecentInspirationTaskSummaries, getRecentScanLogs } from "@/lib/services/inspirations/scanLogService";
 import {
   INSPIRATION_STATUSES,
   LEGACY_INSPIRATION_STATUSES,
@@ -75,6 +75,20 @@ const inspirationSelect = {
       createdAt: true,
     },
   },
+  aiDraftJobs: {
+    orderBy: { createdAt: "desc" },
+    take: 3,
+    select: {
+      id: true,
+      status: true,
+      failureReasonSummary: true,
+      rawResponseSummary: true,
+      needsUserConfirmation: true,
+      retryCount: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  },
 } satisfies Prisma.InspirationSelect;
 
 type InspirationRecord = Prisma.InspirationGetPayload<{ select: typeof inspirationSelect }>;
@@ -119,6 +133,7 @@ function mapUsagePermissionLabel(permission: string) {
 
 function mapSourceTypeLabel(sourceType: string) {
   if (sourceType === "folder_manual_scan") return "手动文件夹扫描";
+  if (sourceType === "folder_scheduled_scan") return "定时文件夹扫描";
   return sourceType;
 }
 
@@ -203,6 +218,11 @@ async function mapInspiration(record: InspirationRecord) {
     formattedReviewedAt: record.reviewedAt ? formatDateTime(record.reviewedAt) : null,
     formattedArchivedAt: record.archivedAt ? formatDateTime(record.archivedAt) : null,
     aiSuggestion: parseSuggestion(record.aiSuggestionJson),
+    aiDraftJobs: record.aiDraftJobs.map((job) => ({
+      ...job,
+      formattedCreatedAt: formatDateTime(job.createdAt),
+      formattedUpdatedAt: formatDateTime(job.updatedAt),
+    })),
     operationLogs: record.operationLogs.map((log) => ({
       ...log,
       formattedCreatedAt: formatDateTime(log.createdAt),
@@ -234,7 +254,7 @@ export async function getInspirationPageData(filters?: Partial<InspirationListQu
     const runtime = getRuntimeModeSummary();
     const query = normalizeInspirationListQuery(filters);
     const where = buildInspirationWhere(query);
-    const [settingView, records, groupedStats, recentScanLogs] = await Promise.all([
+    const [settingView, records, groupedStats, recentScanLogs, latestScan, recentTasks] = await Promise.all([
       getInspirationFolderSettingView(),
       prisma.inspiration.findMany({
         where,
@@ -247,6 +267,8 @@ export async function getInspirationPageData(filters?: Partial<InspirationListQu
         _count: { _all: true },
       }),
       getRecentScanLogs(8),
+      getLatestScanSummary(),
+      getRecentInspirationTaskSummaries(8),
     ]);
 
     const mappedInspirations = await Promise.all(records.map(mapInspiration));
@@ -267,11 +289,17 @@ export async function getInspirationPageData(filters?: Partial<InspirationListQu
       settingView,
       inspirations,
       recentScanLogs,
+      latestScan,
+      recentTasks,
       filters: query,
       sourceTypes: [
         {
           value: INSPIRATION_SOURCE_TYPES.FOLDER_MANUAL_SCAN,
           label: mapSourceTypeLabel(INSPIRATION_SOURCE_TYPES.FOLDER_MANUAL_SCAN),
+        },
+        {
+          value: INSPIRATION_SOURCE_TYPES.FOLDER_SCHEDULED_SCAN,
+          label: mapSourceTypeLabel(INSPIRATION_SOURCE_TYPES.FOLDER_SCHEDULED_SCAN),
         },
       ],
       statuses: Object.values(INSPIRATION_STATUSES).map((status) => ({

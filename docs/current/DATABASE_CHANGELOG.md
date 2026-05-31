@@ -15,6 +15,34 @@ This file records active V1-Core schema changes. Add new entries when `prisma/sc
 - If a migration fails, stop and document the cause plus the safe next step instead of forcing progress with a reset.
 - If old data is incomplete, prefer `nullable`, `legacy`, `unknown`, or an explicit repair script over invented values.
 
+## 2026-05-31 - V1.5 Thread 01 Inspiration Scheduled Scan And AI Draft Tasks
+
+- Added migration `prisma/migrations/20260531010807_v15_thread01_inspiration_scan_ai_draft/migration.sql`.
+- Added `InspirationScanJob` for per-file scan task status:
+  - `scanLogId`
+  - `inspirationId`
+  - `sourceRelativePath`
+  - `sourceFileHash`
+  - `status`
+  - `failureReasonSummary`
+  - `aiDraftGenerated`
+  - `needsUserConfirmation`
+  - `retryCount`
+  - timestamps for start/finish/create/update
+- Added `InspirationAiDraftJob` for AI draft task status:
+  - `inspirationId`
+  - `aiJobId`
+  - `sourceRelativePath`
+  - `status`
+  - `failureReasonSummary`
+  - `rawResponseSummary`
+  - `needsUserConfirmation`
+  - `retryCount`
+  - timestamps for start/finish/create/update
+- Added additive relations from `ScanLog`, `Inspiration`, and `AIJob` to these task models.
+- Migration is additive; old migrations were not edited and no database reset was used.
+- A local SQLite backup was created before applying the migration: `backups/v15_thread01_migration_20260531_090709/`.
+
 ## 2026-05-30 - V1-Plus Thread 06 File Cleanup And Trash
 
 - Added migration `prisma/migrations/20260530081700_v1_plus_thread_06_file_cleanup/migration.sql`.

@@ -85,3 +85,74 @@ export async function getRecentScanLogs(limit = 8) {
     throw normalizeProductReadError(error);
   }
 }
+
+export async function getLatestScanSummary() {
+  try {
+    const log = await prisma.scanLog.findFirst({
+      where: {
+        scanType: {
+          in: ["manual", "scheduled"],
+        },
+      },
+      orderBy: { startedAt: "desc" },
+      select: scanLogSelect,
+    });
+
+    return log ? mapScanLog(log) : null;
+  } catch (error) {
+    throw normalizeProductReadError(error);
+  }
+}
+
+export async function getRecentInspirationTaskSummaries(limit = 8) {
+  try {
+    const [scanJobs, aiDraftJobs] = await Promise.all([
+      prisma.inspirationScanJob.findMany({
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        select: {
+          id: true,
+          sourceRelativePath: true,
+          status: true,
+          failureReasonSummary: true,
+          aiDraftGenerated: true,
+          needsUserConfirmation: true,
+          retryCount: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      prisma.inspirationAiDraftJob.findMany({
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        select: {
+          id: true,
+          inspirationId: true,
+          sourceRelativePath: true,
+          status: true,
+          failureReasonSummary: true,
+          rawResponseSummary: true,
+          needsUserConfirmation: true,
+          retryCount: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+    ]);
+
+    return {
+      scanJobs: scanJobs.map((job) => ({
+        ...job,
+        formattedCreatedAt: formatDateTime(job.createdAt),
+        formattedUpdatedAt: formatDateTime(job.updatedAt),
+      })),
+      aiDraftJobs: aiDraftJobs.map((job) => ({
+        ...job,
+        formattedCreatedAt: formatDateTime(job.createdAt),
+        formattedUpdatedAt: formatDateTime(job.updatedAt),
+      })),
+    };
+  } catch (error) {
+    throw normalizeProductReadError(error);
+  }
+}

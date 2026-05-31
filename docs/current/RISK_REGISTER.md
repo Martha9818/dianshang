@@ -8,6 +8,8 @@ Keep only OPEN, ACTION_REQUIRED, MITIGATED, or DEFERRED risks here. Detailed his
 | Reimplementing desktop base foundations | OPEN | High | Reuse RuntimeConfig, LocalPathService, EnvironmentGuard, LogService, OperationLog, local diagnostics, and Vercel read-only degradation. |
 | V1.5 lightweight AI features leaking secrets, prompts, paths, or stack details | OPEN | High | Sanitize frontend, logs, diagnostics, exports, backups, docs, and AI-facing results. |
 | V1.5 scheduled local folder scan becoming a background queue or crawler | OPEN | High | Keep scans local, explicit, bounded, and service-layer guarded; do not add platform crawling, auto-collection, or automatic cleanup. |
+| V1.5 Thread 01 AI draft failure blocking file import | MITIGATED | Medium | File import completes before AI draft status is recorded; AI failures are isolated in `InspirationAiDraftJob` and can be retried manually. |
+| V1.5 Thread 01 app-runtime timer surprising users | MITIGATED | Medium | Timer is user-configured, app-page runtime only, due-checked by server action, and disabled in read-only preview. |
 | V1.5 image dedupe mistaken for file cleanup | OPEN | High | Thread 05 may detect duplicates/similarity/originality risk only; deletion or trash movement must use the existing V1-Plus Thread 06 file cleanup flow. |
 | V1.5 assistant features executing cleanup actions | OPEN | High | Thread 08 may remind and link to existing maintenance pages only; it must not scan, move, delete, or clean uploads/exports/backups automatically. |
 | Rebuilding file cleanup in V1.5 | OPEN | High | File cleanup/trash is already V1-Plus Thread 06; V1.5 must not add timed/background cleanup, Windows recycle-bin integration, cloud sync, auto compression, or a second cleanup system. |

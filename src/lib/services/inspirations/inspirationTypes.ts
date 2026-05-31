@@ -15,6 +15,7 @@ export const LEGACY_INSPIRATION_STATUSES = {
 
 export const INSPIRATION_SCAN_TYPES = {
   MANUAL: "manual",
+  SCHEDULED: "scheduled",
 } as const;
 
 export const INSPIRATION_SCAN_STATUSES = {
@@ -25,6 +26,7 @@ export const INSPIRATION_SCAN_STATUSES = {
 
 export const INSPIRATION_SOURCE_TYPES = {
   FOLDER_MANUAL_SCAN: "folder_manual_scan",
+  FOLDER_SCHEDULED_SCAN: "folder_scheduled_scan",
 } as const;
 
 export const INSPIRATION_USAGE_PERMISSIONS = {
@@ -34,23 +36,35 @@ export const INSPIRATION_USAGE_PERMISSIONS = {
 
 export const INSPIRATION_AI_JOB_TYPES = {
   VISION_SUGGESTION: "inspiration_vision",
+  AUTO_VISION_DRAFT: "inspiration_auto_vision_draft",
+} as const;
+
+export const INSPIRATION_TASK_STATUSES = {
+  PENDING: "pending",
+  PROCESSING: "processing",
+  SUCCESS: "success",
+  FAILED: "failed",
+  SKIPPED: "skipped",
 } as const;
 
 export type InspirationAISuggestion = {
   titleSuggestion: string;
   shortDescription: string;
   possibleCategory: string;
+  possibleProductType: string;
+  colors: string[];
+  materials: string[];
+  styleKeywords: string[];
+  suitablePlatforms: string[];
   visibleElements: string[];
   useScenarios: string[];
   targetAudience: string[];
   sellingPoints: string[];
-  styleKeywords: string[];
+  riskNotes: string[];
+  copywritingDirections: string[];
   uncertaintyNotes: string[];
+  draftLabel: string;
 };
-
-function isStringArray(value: unknown) {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
-}
 
 function normalizeString(value: string | null | undefined) {
   return value?.trim() ?? "";
@@ -74,17 +88,7 @@ export const inspirationSuggestionSchema: AISchema<InspirationAISuggestion> = {
     }
 
     const candidate = value as Record<string, unknown>;
-    return (
-      typeof candidate.titleSuggestion === "string" &&
-      typeof candidate.shortDescription === "string" &&
-      typeof candidate.possibleCategory === "string" &&
-      isStringArray(candidate.visibleElements) &&
-      isStringArray(candidate.useScenarios) &&
-      isStringArray(candidate.targetAudience) &&
-      isStringArray(candidate.sellingPoints) &&
-      isStringArray(candidate.styleKeywords) &&
-      isStringArray(candidate.uncertaintyNotes)
-    );
+    return typeof candidate.shortDescription === "string";
   },
 };
 
@@ -98,17 +102,41 @@ export function buildInspirationSuggestionJsonSchema() {
         "titleSuggestion",
         "shortDescription",
         "possibleCategory",
+        "possibleProductType",
+        "colors",
+        "materials",
+        "styleKeywords",
+        "suitablePlatforms",
         "visibleElements",
         "useScenarios",
         "targetAudience",
         "sellingPoints",
-        "styleKeywords",
+        "riskNotes",
+        "copywritingDirections",
         "uncertaintyNotes",
+        "draftLabel",
       ],
       properties: {
         titleSuggestion: { type: "string" },
         shortDescription: { type: "string" },
         possibleCategory: { type: "string" },
+        possibleProductType: { type: "string" },
+        colors: {
+          type: "array",
+          items: { type: "string" },
+        },
+        materials: {
+          type: "array",
+          items: { type: "string" },
+        },
+        styleKeywords: {
+          type: "array",
+          items: { type: "string" },
+        },
+        suitablePlatforms: {
+          type: "array",
+          items: { type: "string" },
+        },
         visibleElements: {
           type: "array",
           items: { type: "string" },
@@ -125,7 +153,11 @@ export function buildInspirationSuggestionJsonSchema() {
           type: "array",
           items: { type: "string" },
         },
-        styleKeywords: {
+        riskNotes: {
+          type: "array",
+          items: { type: "string" },
+        },
+        copywritingDirections: {
           type: "array",
           items: { type: "string" },
         },
@@ -133,21 +165,29 @@ export function buildInspirationSuggestionJsonSchema() {
           type: "array",
           items: { type: "string" },
         },
+        draftLabel: { type: "string" },
       },
     },
   };
 }
 
-export function normalizeInspirationSuggestion(value: InspirationAISuggestion): InspirationAISuggestion {
+export function normalizeInspirationSuggestion(value: Partial<InspirationAISuggestion>): InspirationAISuggestion {
   return {
     titleSuggestion: normalizeString(value.titleSuggestion),
     shortDescription: normalizeString(value.shortDescription),
     possibleCategory: normalizeString(value.possibleCategory),
+    possibleProductType: normalizeString(value.possibleProductType || value.possibleCategory),
+    colors: normalizeStringArray(value.colors),
+    materials: normalizeStringArray(value.materials),
+    styleKeywords: normalizeStringArray(value.styleKeywords),
+    suitablePlatforms: normalizeStringArray(value.suitablePlatforms),
     visibleElements: normalizeStringArray(value.visibleElements),
     useScenarios: normalizeStringArray(value.useScenarios),
     targetAudience: normalizeStringArray(value.targetAudience),
     sellingPoints: normalizeStringArray(value.sellingPoints),
-    styleKeywords: normalizeStringArray(value.styleKeywords),
+    riskNotes: normalizeStringArray(value.riskNotes),
+    copywritingDirections: normalizeStringArray(value.copywritingDirections),
     uncertaintyNotes: normalizeStringArray(value.uncertaintyNotes),
+    draftLabel: normalizeString(value.draftLabel) || "AI 草稿 / 待用户确认",
   };
 }

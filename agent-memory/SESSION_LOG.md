@@ -4,6 +4,12 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 
 ## 2026-05-31
 
+### V1.5 Thread 01 - Inspiration Folder Scheduled Scan And AI Drafts
+
+- Changed: Added local inspiration scan config, app-runtime scheduled scan trigger, per-file scan jobs, AI draft jobs, manual retry, and AI draft confirm/ignore/edit flow.
+- Safety: Reused runtime/read-only guards, path validation, managed uploads, hash dedupe, AI base, sanitized logs, and service-layer actions; no platform crawler, screenshot import, link import, auto-publish, background service, tray, Windows notification, or formal Electron behavior was added.
+- Local acceptance: Fixture folder import created one inspiration successfully while AI draft failed because no default provider was configured, proving AI failure isolation; scheduled scan then skipped the duplicate by hash. Scheduled scanning was disabled afterward to avoid surprise local polling.
+
 ### V1.5 Thread 00 - V1-Plus Closeout And Baseline Freeze
 
 - Changed: Marked V1-Plus complete, set V1.5 as the current stage, recorded V1.5 boundaries, slimmed active memory/current docs, and added baseline archive files.

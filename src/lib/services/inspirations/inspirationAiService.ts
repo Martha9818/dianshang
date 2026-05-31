@@ -7,6 +7,7 @@ import {
   buildInspirationSuggestionJsonSchema,
   inspirationSuggestionSchema,
   INSPIRATION_AI_JOB_TYPES,
+  INSPIRATION_TASK_STATUSES,
   normalizeInspirationSuggestion,
   type InspirationAISuggestion,
 } from "@/lib/services/inspirations/inspirationTypes";
@@ -18,6 +19,7 @@ import {
   markAIJobSuccess,
   validateJsonAIOutput,
 } from "@/lib/services/ai";
+import { sanitizeAIErrorSummary, summarizePrompt } from "@/lib/services/ai/aiPromptSanitizer";
 import { getDefaultEnabledAIProvider } from "@/lib/services/ai-provider-service";
 import { getUploadsAbsolutePath } from "@/lib/services/file-storage-service";
 import { ensureProductWritesAllowed, normalizeProductWriteError } from "@/lib/services/product-runtime-service";
@@ -39,36 +41,78 @@ function getMimeTypeFromRelativePath(relativePath: string) {
 
 function buildVisionPrompt() {
   return [
-    "你是一名谨慎的电商选品助理。",
-    "请只根据图片中能直接观察到的信息，输出轻量建议。",
-    "不得虚构品牌、材质、功效、价格、成本、销量、认证、供应商、平台规则结论。",
-    "如果不确定，请放入 uncertaintyNotes，不要写成确定事实。",
-    "输出字段必须为 JSON，并符合既定 schema。",
+    "你是一名谨慎的电商选品助手。",
+    "请只根据图片中能直接观察到的信息，生成 AI 草稿 / 待用户确认 的轻量建议。",
+    "不得虚构品牌、功能、价格、销量、认证、供应商、平台规则结论或任何无法从图片判断的事实。",
+    "可以给出可能商品类型、颜色、材质、风格、适合平台、卖点建议、风险提示和文案方向，但必须把不确定内容写进 uncertaintyNotes。",
+    "输出字段必须是 JSON，并符合既定 schema；draftLabel 必须写为 AI 草稿 / 待用户确认。",
   ].join("\n");
 }
 
 function buildAppliedDraftNote(suggestion: InspirationAISuggestion) {
   const lines = [
+    "AI 草稿 / 待用户确认",
     suggestion.shortDescription,
+    suggestion.possibleProductType ? `可能商品类型：${suggestion.possibleProductType}` : null,
     suggestion.possibleCategory ? `候选类目：${suggestion.possibleCategory}` : null,
-    suggestion.sellingPoints.length > 0 ? `可见卖点：${suggestion.sellingPoints.join("；")}` : null,
-    suggestion.useScenarios.length > 0 ? `使用场景：${suggestion.useScenarios.join("；")}` : null,
-    suggestion.targetAudience.length > 0 ? `目标人群：${suggestion.targetAudience.join("；")}` : null,
-    suggestion.styleKeywords.length > 0 ? `风格关键词：${suggestion.styleKeywords.join("、")}` : null,
-    "AI 建议，仅供参考。",
+    suggestion.colors.length > 0 ? `颜色：${suggestion.colors.join("；")}` : null,
+    suggestion.materials.length > 0 ? `可能材质：${suggestion.materials.join("；")}` : null,
+    suggestion.styleKeywords.length > 0 ? `风格：${suggestion.styleKeywords.join("；")}` : null,
+    suggestion.suitablePlatforms.length > 0 ? `适合平台：${suggestion.suitablePlatforms.join("；")}` : null,
+    suggestion.sellingPoints.length > 0 ? `卖点建议：${suggestion.sellingPoints.join("；")}` : null,
+    suggestion.copywritingDirections.length > 0 ? `文案方向：${suggestion.copywritingDirections.join("；")}` : null,
+    suggestion.riskNotes.length > 0 ? `风险提示：${suggestion.riskNotes.join("；")}` : null,
+    suggestion.uncertaintyNotes.length > 0 ? `不确定项：${suggestion.uncertaintyNotes.join("；")}` : null,
   ];
 
   return lines.filter(Boolean).join("\n");
 }
 
-export async function generateInspirationAiSuggestion(inspirationId: number) {
+function buildDraftRawSummary(suggestion: InspirationAISuggestion) {
+  return summarizePrompt(
+    [
+      suggestion.draftLabel,
+      suggestion.shortDescription,
+      suggestion.possibleProductType,
+      suggestion.colors.join("/"),
+      suggestion.materials.join("/"),
+      suggestion.riskNotes.join("/"),
+    ]
+      .filter(Boolean)
+      .join(" | "),
+    300,
+  );
+}
+
+async function createDraftJob(input: {
+  inspirationId: number;
+  sourceRelativePath: string;
+  retryCount?: number;
+}) {
+  return prisma.inspirationAiDraftJob.create({
+    data: {
+      inspirationId: input.inspirationId,
+      sourceRelativePath: input.sourceRelativePath,
+      status: INSPIRATION_TASK_STATUSES.PENDING,
+      needsUserConfirmation: true,
+      retryCount: input.retryCount ?? 0,
+    },
+  });
+}
+
+async function generateInspirationAiDraft(input: {
+  inspirationId: number;
+  aiDraftJobId?: number | null;
+  retryCount?: number;
+}) {
   ensureProductWritesAllowed();
 
   let aiJobId: number | null = null;
+  let aiDraftJobId = input.aiDraftJobId ?? null;
 
   try {
     const inspiration = await prisma.inspiration.findUnique({
-      where: { id: inspirationId },
+      where: { id: input.inspirationId },
       select: {
         id: true,
         imagePath: true,
@@ -80,31 +124,56 @@ export async function generateInspirationAiSuggestion(inspirationId: number) {
       throw createNotFoundError();
     }
 
+    const sourceRelativePath = inspiration.thumbnailPath ?? inspiration.imagePath;
+    if (!aiDraftJobId) {
+      const draftJob = await createDraftJob({
+        inspirationId: inspiration.id,
+        sourceRelativePath,
+        retryCount: input.retryCount,
+      });
+      aiDraftJobId = draftJob.id;
+    }
+
+    await prisma.inspirationAiDraftJob.update({
+      where: { id: aiDraftJobId },
+      data: {
+        status: INSPIRATION_TASK_STATUSES.PROCESSING,
+        sourceRelativePath,
+        startedAt: new Date(),
+        failureReasonSummary: null,
+      },
+    });
+
     const provider = await getDefaultEnabledAIProvider();
     if (!provider) {
       throw new ProductBusinessError(BUSINESS_ERROR_CODES.DEFAULT_PROVIDER_REQUIRED, "请先配置可用的默认 AI Provider。");
     }
 
     const aiJob = await createAIJob({
-      jobType: INSPIRATION_AI_JOB_TYPES.VISION_SUGGESTION,
-      idempotencyKey: `inspiration-vision:${inspirationId}`,
-      relatedInspirationId: inspirationId,
-      inputSummary: `inspiration vision suggestion inspiration=${inspirationId}`,
+      jobType: INSPIRATION_AI_JOB_TYPES.AUTO_VISION_DRAFT,
+      idempotencyKey: `inspiration-vision:${inspiration.id}:draft:${aiDraftJobId}`,
+      relatedInspirationId: inspiration.id,
+      inputSummary: `inspiration vision draft inspiration=${inspiration.id}`,
     });
     aiJobId = aiJob.id;
 
-    await prisma.inspiration.update({
-      where: { id: inspirationId },
-      data: { aiJobId },
-    });
+    await prisma.$transaction([
+      prisma.inspiration.update({
+        where: { id: inspiration.id },
+        data: { aiJobId },
+      }),
+      prisma.inspirationAiDraftJob.update({
+        where: { id: aiDraftJobId },
+        data: { aiJobId },
+      }),
+    ]);
 
     await markAIJobRunning(aiJobId);
 
-    const sourceRelativePath = inspiration.thumbnailPath ?? inspiration.imagePath;
     const imageBuffer = await readFile(getUploadsAbsolutePath(sourceRelativePath));
     const mimeType = getMimeTypeFromRelativePath(sourceRelativePath);
     const imageDataUrl = `data:${mimeType};base64,${imageBuffer.toString("base64")}`;
-    const inputSummary = `inspiration vision suggestion inspiration=${inspirationId}`;
+    const inputSummary = `inspiration vision draft inspiration=${inspiration.id}`;
 
     const result = await generateTextJson({
       baseUrl: provider.baseUrl ?? "",
@@ -114,7 +183,7 @@ export async function generateInspirationAiSuggestion(inspirationId: number) {
       prompt: buildVisionPrompt(),
       requestType: "inspiration_vision",
       inputSummary,
-      relatedInspirationId: inspirationId,
+      relatedInspirationId: inspiration.id,
       relatedTaskId: aiJobId,
       preferStructuredOutput: true,
       responseSchema: buildInspirationSuggestionJsonSchema(),
@@ -134,7 +203,7 @@ export async function generateInspirationAiSuggestion(inspirationId: number) {
         success: false,
         errorSummary: validationError.message,
         inputSummary,
-        relatedInspirationId: inspirationId,
+        relatedInspirationId: inspiration.id,
         relatedTaskId: aiJobId,
       });
       await markAIJobFailed(aiJobId, validationError);
@@ -142,17 +211,45 @@ export async function generateInspirationAiSuggestion(inspirationId: number) {
     }
 
     const normalized = normalizeInspirationSuggestion(structured.data);
-    await prisma.inspiration.update({
-      where: { id: inspirationId },
-      data: {
-        aiJobId,
-        aiSuggestionJson: JSON.stringify(normalized),
-      },
-    });
+    const rawResponseSummary = buildDraftRawSummary(normalized);
+    await prisma.$transaction([
+      prisma.inspiration.update({
+        where: { id: inspiration.id },
+        data: {
+          aiJobId,
+          aiSuggestionJson: JSON.stringify(normalized),
+        },
+      }),
+      prisma.inspirationAiDraftJob.update({
+        where: { id: aiDraftJobId },
+        data: {
+          status: INSPIRATION_TASK_STATUSES.SUCCESS,
+          rawResponseSummary,
+          needsUserConfirmation: true,
+          finishedAt: new Date(),
+        },
+      }),
+    ]);
 
-    await markAIJobSuccess(aiJobId, `inspiration suggestion saved inspiration=${inspirationId}`);
+    await markAIJobSuccess(aiJobId, `AI draft saved inspiration=${inspiration.id}`);
     return normalized;
   } catch (error) {
+    const failureSummary = sanitizeAIErrorSummary(error);
+    if (aiDraftJobId !== null) {
+      try {
+        await prisma.inspirationAiDraftJob.update({
+          where: { id: aiDraftJobId },
+          data: {
+            status: INSPIRATION_TASK_STATUSES.FAILED,
+            failureReasonSummary: failureSummary,
+            finishedAt: new Date(),
+          },
+        });
+      } catch {
+        // Keep the original error.
+      }
+    }
+
     if (aiJobId !== null) {
       try {
         await markAIJobFailed(aiJobId, error);
@@ -161,6 +258,100 @@ export async function generateInspirationAiSuggestion(inspirationId: number) {
       }
     }
 
+    throw normalizeProductWriteError(error);
+  }
+}
+
+export async function generateInspirationAiSuggestion(inspirationId: number) {
+  return generateInspirationAiDraft({ inspirationId });
+}
+
+export async function generateAutomaticInspirationAiDraft(inspirationId: number) {
+  return generateInspirationAiDraft({ inspirationId });
+}
+
+export async function retryInspirationAiDraftJob(aiDraftJobId: number) {
+  ensureProductWritesAllowed();
+
+  try {
+    const source = await prisma.inspirationAiDraftJob.findUnique({
+      where: { id: aiDraftJobId },
+      select: {
+        id: true,
+        inspirationId: true,
+        status: true,
+        retryCount: true,
+      },
+    });
+
+    if (!source) {
+      throw createValidationError("AI 草稿任务不存在。");
+    }
+
+    if (source.status !== INSPIRATION_TASK_STATUSES.FAILED) {
+      throw createValidationError("只有失败的 AI 草稿任务可以手动重试。");
+    }
+
+    const retryJob = await createDraftJob({
+      inspirationId: source.inspirationId,
+      sourceRelativePath: "",
+      retryCount: source.retryCount + 1,
+    });
+
+    return generateInspirationAiDraft({
+      inspirationId: source.inspirationId,
+      aiDraftJobId: retryJob.id,
+      retryCount: source.retryCount + 1,
+    });
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}
+
+export async function ignoreInspirationAiDraft(inspirationId: number) {
+  ensureProductWritesAllowed();
+
+  try {
+    const inspiration = await prisma.inspiration.findUnique({
+      where: { id: inspirationId },
+      select: { id: true, aiSuggestionJson: true },
+    });
+
+    if (!inspiration) {
+      throw createNotFoundError();
+    }
+
+    if (!inspiration.aiSuggestionJson) {
+      throw createValidationError("当前灵感没有可忽略的 AI 草稿。");
+    }
+
+    await prisma.$transaction([
+      prisma.inspiration.update({
+        where: { id: inspirationId },
+        data: { aiSuggestionJson: null },
+      }),
+      prisma.inspirationAiDraftJob.updateMany({
+        where: {
+          inspirationId,
+          status: INSPIRATION_TASK_STATUSES.SUCCESS,
+        },
+        data: {
+          status: INSPIRATION_TASK_STATUSES.SKIPPED,
+          needsUserConfirmation: false,
+          finishedAt: new Date(),
+        },
+      }),
+      prisma.operationLog.create({
+        data: {
+          relatedInspirationId: inspirationId,
+          action: "IGNORE_INSPIRATION_AI_DRAFT",
+          detail: "用户忽略 AI 草稿，未写入正式商品字段。",
+        },
+      }),
+    ]);
+
+    return { success: true };
+  } catch (error) {
     throw normalizeProductWriteError(error);
   }
 }
@@ -182,18 +373,35 @@ export async function applyInspirationAiSuggestion(inspirationId: number) {
     }
 
     if (!inspiration.aiSuggestionJson) {
-      throw createValidationError("当前灵感还没有可应用的 AI 建议。");
+      throw createValidationError("当前灵感还没有可应用的 AI 草稿。");
     }
 
-    const parsed = JSON.parse(inspiration.aiSuggestionJson) as InspirationAISuggestion;
+    const parsed = JSON.parse(inspiration.aiSuggestionJson) as Partial<InspirationAISuggestion>;
     const suggestion = normalizeInspirationSuggestion(parsed);
 
-    return prisma.inspiration.update({
-      where: { id: inspirationId },
-      data: {
-        title: suggestion.titleSuggestion || null,
-        note: buildAppliedDraftNote(suggestion) || null,
-      },
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.inspiration.update({
+        where: { id: inspirationId },
+        data: {
+          title: suggestion.titleSuggestion || null,
+          note: buildAppliedDraftNote(suggestion) || null,
+        },
+      });
+
+      await tx.inspirationAiDraftJob.updateMany({
+        where: { inspirationId, status: INSPIRATION_TASK_STATUSES.SUCCESS },
+        data: { needsUserConfirmation: false },
+      });
+
+      await tx.operationLog.create({
+        data: {
+          relatedInspirationId: inspirationId,
+          action: "APPLY_INSPIRATION_AI_DRAFT",
+          detail: "用户确认并应用 AI 草稿到灵感备注，未自动写入正式商品字段。",
+        },
+      });
+
+      return updated;
     });
   } catch (error) {
     throw normalizeProductWriteError(error);

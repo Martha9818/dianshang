@@ -19,6 +19,7 @@ type SearchParams = {
 
 const PREVIEW_SOURCE_TYPE_OPTIONS = [
   { value: INSPIRATION_SOURCE_TYPES.FOLDER_MANUAL_SCAN, label: "手动文件夹扫描" },
+  { value: INSPIRATION_SOURCE_TYPES.FOLDER_SCHEDULED_SCAN, label: "定时文件夹扫描" },
 ];
 
 const PREVIEW_STATUS_OPTIONS = [
@@ -37,12 +38,14 @@ export default async function InspirationsPage({
   const params = await searchParams;
   const runtime = getRuntimeModeSummary();
   const query = normalizeInspirationListQuery(params);
-  const readonlyNotice = runtime.isWritable ? null : "预览环境只读，请在 Windows 本地验收。";
+  const readonlyNotice = runtime.isWritable ? null : "预览环境只读，请在 Windows 本地验收灵感文件夹扫描和 AI 识图。";
   const pageResult = await getInspirationPageData(query).catch((error) => ({
     runtime: { isWritable: false },
-    settingView: { configured: false, displayPath: null },
+    settingView: { configured: false, displayPath: null, scanEnabled: false, scanIntervalMinutes: 30 },
     inspirations: [],
     recentScanLogs: [],
+    latestScan: null,
+    recentTasks: { scanJobs: [], aiDraftJobs: [] },
     filters: query,
     sourceTypes: PREVIEW_SOURCE_TYPE_OPTIONS,
     statuses: PREVIEW_STATUS_OPTIONS,
@@ -56,7 +59,7 @@ export default async function InspirationsPage({
     <WorkspacePage
       eyebrow="Inbox / Inspirations"
       title="灵感箱"
-      description="查看手动扫描导入的灵感草稿，并按标题、来源、状态、转商品状态和图片可用性筛选。"
+      description="查看本地灵感文件夹扫描导入的草稿、AI 识图草稿和用户确认后的转商品流程。"
     >
       {readError ? <PageNote>{readError}</PageNote> : null}
       <InspirationManager data={pageData} readonlyNotice={readonlyNotice} />

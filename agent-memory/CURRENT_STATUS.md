@@ -2,10 +2,10 @@
 
 ## Current Progress
 
-- Current stage: V1.5 after Thread 00 baseline freeze.
+- Current stage: V1.5 after Thread 01 implementation.
 - V1-Plus status: completed and frozen as the current development baseline.
-- Current task: V1.5 baseline documentation route correction completed locally; no feature work started.
-- Next thread: V1.5 Thread 01 - 灵感文件夹定时扫描与自动 AI 识图草稿, if explicitly approved.
+- Current task: V1.5 Thread 01 - local inspiration-folder scheduled scanning and automatic AI image-recognition drafts completed locally.
+- Next thread: V1.5 Thread 02 - screenshot recognition and structured image import, only if explicitly approved.
 
 ## Product Direction
 
@@ -17,19 +17,19 @@
 ## V1.5 Boundary
 
 - V1.5 is for lightweight intelligence and technical validation.
-- Frozen route: Thread 01 is local inspiration-folder scheduled scanning and automatic AI image-recognition drafts; Thread 02 is screenshot recognition and structured image import. Do not merge them. Thread 03-09 route is frozen in `docs/current/THREAD_SCOPE_CHECKLIST.md`.
-- Not in V1.5: formal Electron desktop app, platform crawlers, automatic collection, automatic publishing, automatic private messages, automatic comments, SKU, supplier, inventory, trial-sale review, PDF reports, or real multi-agent scheduling.
-- File cleanup and app trash are already V1-Plus Thread 06 capabilities; V1.5 must not create a second cleanup system.
+- Thread 01 now covers only local inspiration-folder scan settings, app-runtime scheduled scans, new image detection, task states, and AI drafts pending user confirmation.
+- Thread 01 did not implement screenshot recognition, screenshot structured import, link import, platform crawling, automatic collection, automatic publishing, OCR, Electron, inventory, supplier management, or multi-agent orchestration.
+- File cleanup and app trash remain V1-Plus Thread 06 capabilities; V1.5 must not create a second cleanup system.
 
 ## Blockers Or Risks
 
-- No active product blocker is recorded for the V1.5 baseline.
+- No active product blocker is recorded for V1.5 Thread 01.
 - Vercel remains preview-only and read-only; it is not a formal runtime environment.
 - No `test` script exists in the current project scripts.
 - V1.5 threads must not reimplement path, environment, logging, or Vercel-readonly foundations.
-- Latest docs-only verification passed: encoding check, lint, diff whitespace check, and sensitive-pattern scans on changed docs.
+- Latest Thread 01 verification passed encoding check, lint, build, Prisma validate, typecheck, local Windows fixture acceptance, Vercel read-only simulation, and browser smoke test.
 - Follow-up doc slimming for long files is deferred to a later documentation slimming pass or V1.5 Thread 09 closeout.
 
 ## Next Recommended Step
 
-- Start V1.5 Thread 01 only after explicit approval of its narrow scope. Thread 01 must not implement screenshot recognition, screenshot structured import, or product screenshot field extraction.
+- Start V1.5 Thread 02 only after explicit approval. Thread 02 must remain separate from Thread 01 and must not backfill platform crawling, automatic collection, or automatic publishing.

@@ -4,18 +4,18 @@ Use this as a short boundary/status record for development threads. Do not paste
 
 ## Thread
 
-- Name: V1.5 Thread 00 - V1-Plus Closeout And Baseline Freeze
+- Name: V1.5 Thread 01 - Inspiration Folder Scheduled Scan And AI Drafts
 - Date: 2026-05-31
-- Type: closeout / regression / docs
-- Approved version scope: V1.5 Thread 00 only
+- Type: feature / local-first validation
+- Approved version scope: V1.5 Thread 01 only
 - Existing working-tree changes belong to: this thread
 
 ## Safety
 
 - `git status --short` checked before work: yes
-- Touches schema, migration, new dependencies, new business feature, or destructive production operation: no
-- Touches local filesystem behavior: no business/runtime filesystem behavior change; docs archive files only
-- Backup need evaluated when risky writes are involved: no schema/data-repair/runtime write change
+- Touches schema, migration, new dependencies, new business feature, or destructive production operation: additive schema migration and local feature only; no new dependency or destructive operation
+- Touches local filesystem behavior: yes, local inspiration-folder scanning and managed inspiration uploads only
+- Backup need evaluated when risky writes are involved: yes; local SQLite backup created before migration
 - Database reset planned: no
 - Vercel remains read-only: yes
 
@@ -36,7 +36,7 @@ Use this as a short boundary/status record for development threads. Do not paste
 | Thread | Frozen Name | Status | Boundary |
 | --- | --- | --- |
 | V1.5 Thread 00 | V1-Plus 收口与 V1.5 基线冻结 | COMPLETE | Docs/status/archive only. |
-| V1.5 Thread 01 | 灵感文件夹定时扫描与自动 AI 识图草稿 | NOT STARTED | Do not implement screenshot recognition, screenshot structured import, or product screenshot field extraction here. |
+| V1.5 Thread 01 | 灵感文件夹定时扫描与自动 AI 识图草稿 | COMPLETE | Implemented local folder scan settings, app-runtime scheduled scan, task states, and AI drafts only; no screenshot recognition or structured screenshot import. |
 | V1.5 Thread 02 | 截图识别与图片导入结构化 | NOT STARTED | Separate from Thread 01; do not backfill Thread 01 scope here unless explicitly approved. |
 | V1.5 Thread 03 | 链接导入尝试与导入质量分级 | NOT STARTED | Import attempt and quality grading only; no platform crawler or automatic collection. |
 | V1.5 Thread 04 | 竞品智能分析与差异化建议 | NOT STARTED | Suggestive analysis only; no automated publishing, messaging, comments, SKU, supplier, or inventory. |

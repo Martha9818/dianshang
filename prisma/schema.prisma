@@ -278,6 +278,7 @@ model AIJob {
   relatedInspiration   Inspiration? @relation("AIJobRelatedInspiration", fields: [relatedInspirationId], references: [id], onDelete: SetNull)
   copywritings         Copywriting[]
   inspirationSuggestions Inspiration[] @relation("InspirationSuggestionJob")
+  inspirationAiDraftJobs InspirationAiDraftJob[] @relation("InspirationAiDraftJobAIJob")
 
   @@index([jobType])
   @@index([status])
@@ -331,6 +332,8 @@ model Inspiration {
   relatedAiJobs      AIJob[]  @relation("AIJobRelatedInspiration")
   relatedAiRequestLogs AIRequestLog[] @relation("AIRequestLogRelatedInspiration")
   operationLogs       OperationLog[] @relation("OperationLogRelatedInspiration")
+  scanJobs            InspirationScanJob[] @relation("InspirationScanJobInspiration")
+  aiDraftJobs         InspirationAiDraftJob[] @relation("InspirationAiDraftJobInspiration")
 
   @@index([status])
   @@index([aiJobId])
@@ -351,10 +354,59 @@ model ScanLog {
   errorSummary      String?
   startedAt         DateTime @default(now())
   finishedAt        DateTime?
+  inspirationScanJobs InspirationScanJob[] @relation("InspirationScanJobScanLog")
 
   @@index([scanType])
   @@index([status])
   @@index([startedAt])
+}
+
+model InspirationScanJob {
+  id                    Int          @id @default(autoincrement())
+  scanLogId             Int?
+  inspirationId          Int?
+  sourceRelativePath     String
+  sourceFileHash         String?
+  status                String       @default("pending")
+  failureReasonSummary  String?
+  aiDraftGenerated      Boolean      @default(false)
+  needsUserConfirmation Boolean      @default(true)
+  retryCount            Int          @default(0)
+  startedAt             DateTime?
+  finishedAt            DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  scanLog               ScanLog?     @relation("InspirationScanJobScanLog", fields: [scanLogId], references: [id], onDelete: SetNull)
+  inspiration            Inspiration? @relation("InspirationScanJobInspiration", fields: [inspirationId], references: [id], onDelete: SetNull)
+
+  @@index([scanLogId])
+  @@index([inspirationId])
+  @@index([sourceFileHash])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model InspirationAiDraftJob {
+  id                    Int          @id @default(autoincrement())
+  inspirationId          Int
+  aiJobId               Int?
+  sourceRelativePath     String
+  status                String       @default("pending")
+  failureReasonSummary  String?
+  rawResponseSummary    String?
+  needsUserConfirmation Boolean      @default(true)
+  retryCount            Int          @default(0)
+  startedAt             DateTime?
+  finishedAt            DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  inspiration            Inspiration  @relation("InspirationAiDraftJobInspiration", fields: [inspirationId], references: [id], onDelete: Cascade)
+  aiJob                 AIJob?       @relation("InspirationAiDraftJobAIJob", fields: [aiJobId], references: [id], onDelete: SetNull)
+
+  @@index([inspirationId])
+  @@index([aiJobId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model CleanupLog {
