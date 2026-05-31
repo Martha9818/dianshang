@@ -15,8 +15,9 @@ Formal Windows desktop productization remains V2 scope.
 - Added a main-process shell that loads only localhost, `127.0.0.1`, or `::1` targets.
 - Added a minimal preload marker with no filesystem, shell, database, path, or IPC write capabilities exposed to the page.
 - Denied Electron permission requests in the POC.
-- Added static/local-port smoke validation and Electron smoke validation scripts.
+- Added managed local-production-shell scripts plus static/local-port smoke validation and Electron smoke validation scripts.
 - Added `.vercelignore` exclusion so Vercel preview does not upload or execute the POC directory.
+- Added production CSP response headers for the local production shell so the default Electron POC path no longer emits the Electron CSP warning.
 - Documented path, runtime, environment, security, and V2 productization risks.
 
 ## Not Completed
@@ -45,6 +46,9 @@ Formal Windows desktop productization remains V2 scope.
 - `package.json`: POC-only Electron dependency and scripts.
 - `main.mjs`: Electron main process, local URL validation, security defaults, smoke exit behavior.
 - `preload.cjs`: marker-only context bridge.
+- `scripts/local-web-runtime.mjs`: managed local production-web startup, build, port, and cleanup helpers.
+- `scripts/run-managed-poc.mjs`: default POC entry that builds the root app, starts local `next start`, and opens Electron.
+- `scripts/run-managed-smoke.mjs`: managed smoke flow for the default POC path.
 - `scripts/smoke-check.mjs`: static safety and local target reachability check.
 - `scripts/electron-smoke.mjs`: short Electron launch check.
 - `README.md`: local validation steps and non-goals.
@@ -56,18 +60,19 @@ The directory is intentionally removable. Deleting it should not affect the root
 Validated flow:
 
 1. Keep the existing root app startup unchanged.
-2. Start or reuse the existing local Next.js server on `http://127.0.0.1:3000`.
-3. Install POC dependencies inside `experiments/electron-poc/`.
-4. Run POC smoke checks.
-5. Launch Electron in smoke mode and confirm the local page loads.
+2. Install POC dependencies inside `experiments/electron-poc/`.
+3. Let the POC script build the root app and start a managed local `next start` server on `http://127.0.0.1:3001`.
+4. Run POC smoke checks against that managed local production shell.
+5. Launch Electron against the managed local production shell and confirm the local page loads.
+6. Keep `attach` mode only for explicit debugging against an already running local server.
 
 Observed POC results:
 
 - `npm install` in the POC directory initially failed through the default Electron binary download path because of network reset/timeout.
 - Retrying with a POC-scoped `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/` succeeded.
-- `npm run smoke` passed and confirmed the local target returned HTTP 200.
-- `npm run electron:smoke` passed and loaded `http://127.0.0.1:3000/`.
-- Electron printed a development CSP warning because Next.js dev mode uses development-time script behavior. This is acceptable for the POC but must be solved before any V2 production desktop release.
+- `npm run smoke` now builds the root app, starts `next start` on `http://127.0.0.1:3001`, passes the static safety check, and passes Electron smoke without the Electron CSP warning.
+- `npm run dev` now uses the same managed local production shell by default.
+- `npm run attach` remains available only for explicit attachment to an already running local server. If that target is a Next.js dev server, Electron may still show the expected development CSP warning.
 
 ## Command Verification
 
@@ -78,7 +83,8 @@ Observed POC results:
 - `npm run typecheck`: passed.
 - `npm test`: not available; root `package.json` has no `test` script.
 - `cd experiments/electron-poc; npm run smoke`: passed.
-- `cd experiments/electron-poc; npm run electron:smoke`: passed and loaded `http://127.0.0.1:3000/`.
+- `cd experiments/electron-poc; npm run smoke:static`: passed against an already running local target.
+- `cd experiments/electron-poc; npm run electron:smoke`: passed when explicitly pointed at a local target.
 
 ## Path Validation
 
@@ -145,7 +151,7 @@ POC security result:
 
 Known security risk before V2:
 
-- Next.js development mode triggers Electron's insecure CSP warning. A formal V2 desktop release must serve a production build with a strict CSP and no development-only unsafe script behavior.
+- The default POC path now uses a local production build with CSP headers, so the Electron CSP warning is resolved for the managed validation flow. An explicit attach to a Next.js dev server may still show the expected development warning and should be treated as diagnostics-only.
 
 ## V2 Must Resolve
 

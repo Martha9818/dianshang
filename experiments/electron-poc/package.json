@@ -6,8 +6,10 @@
   "type": "module",
   "main": "main.mjs",
   "scripts": {
-    "dev": "electron .",
-    "smoke": "node scripts/smoke-check.mjs",
+    "dev": "node scripts/run-managed-poc.mjs",
+    "attach": "electron .",
+    "smoke": "node scripts/run-managed-smoke.mjs",
+    "smoke:static": "node scripts/smoke-check.mjs",
     "electron:smoke": "node scripts/electron-smoke.mjs"
   },
   "devDependencies": {

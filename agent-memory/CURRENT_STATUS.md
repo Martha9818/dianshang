@@ -28,7 +28,7 @@
 
 ## Blockers Or Risks
 
-- No active product blocker is recorded for V1.5 Thread 06.
+- No active product blocker is recorded for V1.5 Thread 07.
 - Vercel remains preview-only and read-only; it is not a formal runtime environment.
 - No `test` script exists in the current project scripts.
 - V1.5 threads must not reimplement path, environment, logging, or Vercel-readonly foundations.
@@ -37,8 +37,9 @@
 - Thread 06 does not perform real API image generation unless the user manually triggers it with enabled image settings and a configured image provider; no automatic or background image generation exists.
 - Thread 06 verification passed encoding check, lint, build, Prisma validate, typecheck, local panel smoke, Vercel read-only simulation, and browser page smoke for `/settings/ai` + `/prompt-tasks`. `npm test` was attempted and reported no `test` script.
 - Real image generation success depends on a valid image-generation provider, API key, model, quota, and provider safety policy.
-- Thread 07 Electron POC verification loaded `http://127.0.0.1:3000/` through Electron smoke mode, but Next.js development mode emitted an Electron CSP warning that must be resolved before any V2 production desktop release.
+- Thread 07 Electron POC now defaults to a managed local production shell on `http://127.0.0.1:3001/`, and the default Electron smoke path no longer emits the Electron CSP warning.
 - Thread 07 root verification passed encoding check, lint, build, Prisma validate, and typecheck; `npm test` was attempted and reported no `test` script.
+- Explicit `attach` mode can still target a user-run Next.js dev server for diagnostics, and that dev target may still show the expected Electron development CSP warning.
 - POC Electron install may need a reachable Electron binary mirror in restricted networks; this remains POC-only and does not affect root app install.
 - Follow-up doc slimming for long files is deferred to a later documentation slimming pass or V1.5 Thread 09 closeout.
 

@@ -4,7 +4,7 @@ This directory is a V1.5 Thread 07 technical validation only. It is not the form
 
 ## Scope
 
-- Loads the existing local Next.js app from `http://127.0.0.1:3000` by default.
+- Loads a local Next.js app through a managed local production server on `http://127.0.0.1:3001` by default.
 - Keeps Electron files and dependencies inside `experiments/electron-poc/`.
 - Uses a minimal preload marker only: no filesystem, shell, database, path, or IPC write capability is exposed to the page.
 - Allows only localhost, `127.0.0.1`, or `::1` targets.
@@ -21,29 +21,37 @@ This directory is a V1.5 Thread 07 technical validation only. It is not the form
 
 ## Local Validation
 
-From the repository root, start the existing app first:
+From the repository root, an optional manual build is still fine if you want to warm the production output ahead of time:
 
 ```powershell
-npm run dev
+npm run build
 ```
 
-Then in another PowerShell window:
+The managed POC scripts will build the root app automatically, so in another PowerShell window you can run:
 
 ```powershell
 cd experiments/electron-poc
 npm install
 npm run smoke
-npm run electron:smoke
 npm run dev
 ```
 
-`npm run smoke` checks that the configured local Next.js URL is reachable and that the POC does not include formal desktop-release features. `npm run electron:smoke` launches Electron in a short smoke mode and exits after the local page loads.
+`npm run smoke` starts a managed local `next start` server, verifies the target URL, runs the Electron smoke check, and shuts the local web server down. `npm run dev` starts that same managed local production server and opens the Electron shell without the Next.js dev-mode CSP warning.
+
+If you explicitly want to attach to an already running local server:
+
+```powershell
+$env:ECOMPILOT_ELECTRON_POC_URL="http://127.0.0.1:3000"
+npm run smoke:static
+npm run electron:smoke
+npm run attach
+```
 
 To test another local port:
 
 ```powershell
 $env:ECOMPILOT_ELECTRON_POC_URL="http://127.0.0.1:3001"
-npm run smoke
+npm run smoke:static
 npm run electron:smoke
 ```
 

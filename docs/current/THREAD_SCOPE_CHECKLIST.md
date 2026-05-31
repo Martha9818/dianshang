@@ -56,6 +56,8 @@ Thread 06 closeout note: V1.5 Thread 06 is now implemented on the current mainli
 
 Thread 07 closeout note: V1.5 Thread 07 is now implemented as an isolated Electron POC under `experiments/electron-poc/`. It validates loading the existing local Next.js page through a local port, minimal preload marking, localhost-only navigation, POC smoke checks, and Vercel exclusion. It does not add a formal Electron desktop app, installer, auto-update, tray, Windows system notifications, crash recovery, background residency, file associations, automatic startup, production packaging, `start.bat` replacement, platform crawler behavior, automated publishing, or V2 desktop behavior.
 
+Thread 07 managed-shell note: The default POC path now builds the root app, starts a managed local `next start` server, and loads Electron against that local production shell with CSP headers. Explicit `attach` mode remains available for diagnostics against an already running local server.
+
 ## File Cleanup Boundary
 
 - Existing owner: V1-Plus Thread 06 already owns uploads/exports/backups manual scan, orphan-file detection, old export/backup detection, application-managed `trash/`, confirmed permanent delete, CleanupLog, Vercel no-real-scan/delete behavior, path sanitization, path traversal protection, and active product/material/competitor/inspiration file protection.
@@ -105,7 +107,7 @@ Thread 07 closeout note: V1.5 Thread 07 is now implemented as an isolated Electr
 
 - Required commands: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, and `npm run typecheck` passed.
 - Optional commands: `npm test` was attempted and reported no `test` script.
-- Local acceptance: `experiments/electron-poc` static smoke and Electron smoke loaded the local Next.js app at `http://127.0.0.1:3000/`.
+- Local acceptance: `experiments/electron-poc` managed smoke built the root app, started local `next start` at `http://127.0.0.1:3001/`, and loaded Electron without the CSP warning in the default path.
 - Vercel preview simulation: POC directory is excluded by `.vercelignore`; root Vercel read-only behavior is unchanged.
-- Security scans: POC uses localhost-only URL validation, `contextIsolation`, disabled `nodeIntegration`, sandbox, denied permissions, and marker-only preload with no `fs` or IPC exposure. Electron dev smoke reports a Next.js development CSP warning that must be solved before V2 production desktop release.
+- Security scans: POC uses localhost-only URL validation, `contextIsolation`, disabled `nodeIntegration`, sandbox, denied permissions, marker-only preload with no `fs` or IPC exposure, and production CSP headers for the default managed shell. Explicit attach-to-dev mode remains diagnostics-only.
 - Commit/push/deploy status: local commit created; no push or Vercel live refresh requested.

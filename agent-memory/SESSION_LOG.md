@@ -12,6 +12,12 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 - Risk: Electron smoke passes but Next.js dev mode emits an Electron CSP warning; V2 formal desktop must define strict production CSP, desktop data root, runtime identity, preload contract, lifecycle, installer/signing, and upgrade strategy.
 - Verification: POC install required a POC-scoped Electron mirror after default download timeout; encoding check, lint, build, Prisma validate, typecheck, POC smoke, and Electron smoke passed; `npm test` reported no root `test` script.
 
+### V1.5 Thread 07 Follow-Up - Managed Local Production Shell
+
+- Changed: Added managed local-production-shell scripts in `experiments/electron-poc/`, moved the default POC flow from attaching to a dev server to building the root app and running local `next start`, and added production CSP response headers in `next.config.ts`.
+- Result: The default `npm run smoke` path now loads `http://127.0.0.1:3001/` without the Electron CSP warning. Explicit `attach` mode remains available for diagnostics against a user-run local server.
+- Verification: Root encoding check, lint, build, Prisma validate, typecheck, and managed POC smoke passed. Root `npm test` still does not exist.
+
 ### V1.5 Thread 06 - Lightweight API Image Generation
 
 - Changed: Added optional API image generation settings, image-purpose AI Provider support, `ImageGenerationJob`, a local-only image-generation service, Prompt task detail trigger, generated-result material creation, AI job/request logs, operation logs, and success/failure notifications.

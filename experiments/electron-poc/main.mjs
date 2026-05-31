@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { app, BrowserWindow, Menu, session, shell } from "electron";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DEFAULT_TARGET_URL = "http://127.0.0.1:3000";
+const DEFAULT_TARGET_URL = "http://127.0.0.1:3001";
 const SMOKE_TIMEOUT_MS = 15000;
 
 function normalizeTargetUrl(rawValue) {
@@ -12,7 +12,7 @@ function normalizeTargetUrl(rawValue) {
   const allowedHostnames = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
 
   if (!["http:", "https:"].includes(parsed.protocol) || !allowedHostnames.has(parsed.hostname)) {
-    throw new Error("Electron POC only loads the local Next.js development URL.");
+    throw new Error("Electron POC only loads a local Next.js URL.");
   }
 
   return parsed.toString();
@@ -51,7 +51,7 @@ function buildFallbackHtml(message) {
       <body>
         <h1>EcomPilot Electron POC</h1>
         <p>${message}</p>
-        <p>Start the existing local web app first with <code>npm run dev</code>, then launch this POC again.</p>
+        <p>Start the managed POC flow with <code>npm run dev</code>, or attach to an existing local server with <code>npm run attach</code>.</p>
       </body>
     </html>
   `)}`;
