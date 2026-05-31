@@ -31,7 +31,7 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 ### Remaining V1.5 Threads Are Not Implemented Yet
 
 - Status: DEFERRED / PLANNED SCOPE
-- Impact: V1.5 Thread 01, Thread 02, Thread 03, Thread 04, Thread 05, and Thread 06 are implemented, but Thread 07-09 still require separately approved threads.
+- Impact: V1.5 Thread 01-08 are implemented, but Thread 09 still requires a separately approved closeout thread.
 - Mitigation: Do not imply these are available until their thread ships and is verified locally.
 
 ### Screenshot Recognition Depends On Vision-Capable AI Credentials
@@ -57,3 +57,15 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 - Status: DEFERRED / BOUNDARY
 - Impact: V1.5 Thread 05 image dedupe and Thread 08 assistant reminders could be confused with cleanup execution.
 - Mitigation: Use the existing V1-Plus Thread 06 file cleanup/trash flow for deletion or trash movement; V1.5 should only detect, suggest, remind, or link unless a later explicit scope changes this.
+
+### Thread 08 Assistant Is Rules-First, Not Full Natural-Language Search
+
+- Status: OPEN / INTENDED LIMITATION
+- Impact: `/assistant` can interpret many common local queries, but unsupported wording may degrade to generic safe suggestions instead of deep semantic retrieval.
+- Mitigation: Keep the AI layer optional, keep rule fallback available, and let users continue from the destination page with manual filters.
+
+### Competitor Search Still Routes Through Product Views
+
+- Status: OPEN / INTENDED LIMITATION
+- Impact: Thread 08 can guide users to products that already have competitor records, but the app still has no standalone competitor list page for cross-product competitor search.
+- Mitigation: Use `/products` as the safe entry and inspect competitor or competitor-analysis tabs from product detail pages.

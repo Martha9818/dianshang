@@ -4,18 +4,18 @@ Use this as a short boundary/status record for development threads. Do not paste
 
 ## Thread
 
-- Name: V1.5 Thread 07 - Electron Technical Validation
+- Name: V1.5 Thread 08 - Site-Search Assistant And Notification-Summary Assistant
 - Date: 2026-05-31
-- Type: technical validation / desktop POC
-- Approved version scope: V1.5 Thread 07 only
+- Type: lightweight intelligence / local read-only assistant
+- Approved version scope: V1.5 Thread 08 only
 - Existing working-tree changes belong to: this thread
 
 ## Safety
 
 - `git status --short` checked before work: yes
-- Touches schema, migration, new dependencies, new business feature, or destructive production operation: no schema/migration/business feature/destructive operation; Electron dependency is isolated inside `experiments/electron-poc/` only
-- Touches local filesystem behavior: POC dependency install and smoke validation only; no uploads/exports/backups/logs/trash writes by app logic and no path-service bypass
-- Backup need evaluated when risky writes are involved: yes; not needed because no schema, migration, database write, batch write, or runtime-folder migration is planned
+- Touches schema, migration, new dependencies, new business feature, or destructive production operation: new business feature only; no schema, migration, dependency, or destructive operation
+- Touches local filesystem behavior: no runtime-folder write behavior change; no uploads/exports/backups/logs/trash writes were added for assistant actions
+- Backup need evaluated when risky writes are involved: yes; no schema, migration, batch write, filesystem cleanup write, or data repair is planned in this thread
 - Database reset planned: no
 - Vercel remains read-only: yes
 
@@ -43,7 +43,7 @@ Use this as a short boundary/status record for development threads. Do not paste
 | V1.5 Thread 05 | 图片去重与轻量原创性风险提示 | COMPLETE | Detect duplicates/similarity/originality risk, manual ignore, and manual archive suggestions only; no auto delete, permanent delete, trash movement, uploads cleanup, auto compression, or new cleanup system. |
 | V1.5 Thread 06 | API 生图轻量版 | COMPLETE | Optional user-triggered API image generation only; no Vercel high-cost AI calls, batch/background generation, browser automation, or automated publishing. |
 | V1.5 Thread 07 | Electron 技术验证 | COMPLETE | Technical validation only; no formal Electron desktop app, installer, tray, auto-update, or system notifications. |
-| V1.5 Thread 08 | 站内搜索助手与通知摘要助手 | NOT STARTED | May remind and link to existing maintenance pages; must not scan, move, delete, or clean uploads/exports/backups automatically. |
+| V1.5 Thread 08 | 站内搜索助手与通知摘要助手 | COMPLETE | Implemented `/assistant` with local read-only suggestions and summaries only; may remind and link to existing maintenance pages, but must not scan, move, delete, or clean uploads/exports/backups automatically. |
 | V1.5 Thread 09 | 最终集成验收、README 与 V2 准备 | NOT STARTED | Final acceptance, README, risks, safety scan, V1-Plus Thread 06 cleanup regression, and V2 preparation only. |
 
 Thread 03 closeout note: V1.5 Thread 03 is now complete on the current mainline. It implemented single-link manual draft creation, URL normalization, SSRF-guarded public metadata attempts, source-platform labels, quality grading, auxiliary screenshot upload, list/detail views, reject/archive, and user-confirmed conversion to inspiration or association with existing product/competitor records only; no platform crawler, batch import, browser automation, login/cookie storage, private API, auto image collection, auto product creation, or formal competitor fact creation was added.
@@ -78,18 +78,18 @@ Thread 07 managed-shell note: The default POC path now builds the root app, star
 
 ## Scope
 
-- Goal: validate whether a future Windows desktop shell can open the existing local Next.js EcomPilot app without changing the official local web workflow.
-- Non-goals for Thread 07: formal desktop app, installer, auto-update, system tray, Windows system notifications, crash recovery, background resident process, file association, automatic startup, production packaging, `start.bat` replacement, database/runtime-folder migration, Vercel behavior changes, or V2 desktop product behavior.
-- Frozen thread rule: Electron validation stays in a removable POC directory and only loads local Next.js URLs.
-- Allowed files/systems: `experiments/electron-poc/`, POC README/report, `.vercelignore`, current docs/status/log risk updates, and POC-only package lock.
-- Forbidden files/systems: core pages, core business services, Prisma schema/migrations, root package Electron dependency, root startup flow, runtime folder write behavior, Vercel read-only logic, platform crawlers, automated publishing, background queues, tray/notification/update systems, and dangerous frontend filesystem APIs.
-- Module README needed: no core module README; POC README and `docs/current/ELECTRON_POC_REPORT.md` document the validation.
+- Goal: add `/assistant` as a lightweight local read-only assistant page with site-search suggestions and notification summaries based only on existing local data.
+- Non-goals for Thread 08: real multi-agent orchestration, autonomous execution, external search, crawler behavior, browser automation, automatic collection, automatic listing, automatic private messages/comments, automatic cleanup, notification write execution, batch execution, direct image generation, product-status updates, or any other write-side assistant behavior.
+- Frozen thread rule: AI may only assist with intent parsing or summary wording. Every final link must be generated by the local rule allowlist, and every action must stay inside `view` / `search` / `filter` / `navigate`.
+- Allowed files/systems: `/assistant`, `src/lib/modules/local-assistant/`, lightweight verification script, README/current docs/status/log risk updates, and reuse of existing read-only services.
+- Forbidden files/systems: Prisma schema/migrations, dangerous write actions, file cleanup write calls, direct page-level Prisma query construction, external platform access, browser automation, batch execution, and second cleanup/notification/query systems.
+- Module README needed: yes; `src/lib/modules/local-assistant/README.md` documents the module boundary.
 
 ## Patch Fields
 
 - Patch Thread: no
 - Origin version: V1.5 baseline
-- Discovered in: user-approved Thread 07 scope
+- Discovered in: user-approved Thread 08 scope
 - Severity: P4 feature
 - Historical data affected: no
 - Migration required: no
@@ -97,17 +97,18 @@ Thread 07 managed-shell note: The default POC path now builds the root app, star
 
 ## Boundary Check
 
-- Business logic, schema, runtime services, and UI behavior were not changed; Electron validation is isolated to the POC directory and docs.
-- V1.5 future threads must reuse the V1-Core desktop base instead of duplicating path, environment, logging, diagnostic, or Vercel-readonly logic.
-- Vercel remains preview-only and read-only; docs must not imply it is the formal runtime.
+- Business logic is isolated to `src/lib/modules/local-assistant/`; pages only collect the question, render summaries, and show safe links.
+- The assistant does not call delete/archive/batch/mark-read/generate-image/cleanup/status-update actions and does not call file cleanup write services.
+- V1.5 Thread 08 reuses the existing runtime guard, AI provider/log base, dashboard todo service, notification service, backup summary service, and cleanup-log reads instead of creating a second foundation.
+- Vercel remains preview-only and read-only; docs and UI must not imply that preview can run high-cost AI or write local data.
 - Docs must not include API keys, `.env` values, full local paths, database paths, full stack traces, or raw prompts.
 - `CURRENT_STATUS.md`, `SESSION_LOG.md`, `PATCH_LOG.md`, `CHANGELOG_DEV.md`, `RISK_REGISTER.md`, and `KNOWN_ISSUES.md` remain short.
 
 ## Verification
 
 - Required commands: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, and `npm run typecheck` passed.
-- Optional commands: `npm test` was attempted and reported no `test` script.
-- Local acceptance: `experiments/electron-poc` managed smoke built the root app, started local `next start` at `http://127.0.0.1:3001/`, and loaded Electron without the CSP warning in the default path.
-- Vercel preview simulation: POC directory is excluded by `.vercelignore`; root Vercel read-only behavior is unchanged.
-- Security scans: POC uses localhost-only URL validation, `contextIsolation`, disabled `nodeIntegration`, sandbox, denied permissions, marker-only preload with no `fs` or IPC exposure, and production CSP headers for the default managed shell. Explicit attach-to-dev mode remains diagnostics-only.
-- Commit/push/deploy status: local commit created; no push or Vercel live refresh requested.
+- Optional commands: `npm run thread08:verify` passed; `npm test` was attempted and reported no `test` script.
+- Local acceptance: `/assistant` loads in local runtime, returns safe local suggestions for natural-language queries, keeps notification summaries read-only, shows cleanup reminders only as links, and degrades safely when AI intent parsing is unavailable.
+- Vercel preview simulation: `/assistant` shows the assistant read-only notice, skips high-cost AI, and still renders rule-based results and summaries without SQLite write or file-operation attempts.
+- Security scans: final links are allowlisted server-side, AI output is not trusted as a URL, frontend shows no API key or absolute path, and file cleanup remains reminder-only.
+- Commit/push/deploy status: local commit pending after final verification; no push or Vercel live refresh requested.

@@ -4,6 +4,16 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 
 ## 2026-05-31
 
+### V1.5 Thread 08 - Site-Search Assistant And Notification-Summary Assistant
+
+- Changed: Added `/assistant` as a lightweight local-only assistant page with two read-only sections: site-search assistant and notification-summary assistant.
+- Search assistant: Accepts natural-language questions, optionally uses the existing text AI provider locally for intent parsing, validates AI output through a local allowlist, and returns only safe `view` / `search` / `filter` / `navigate` links.
+- Summary assistant: Aggregates dashboard todos, in-app notifications, recent AI-failure reminders, backup status, and existing cleanup-log summaries into “today focus”, “needs attention”, and “ignorable or handled” sections.
+- Safety: This thread does not implement multi-agent orchestration, autonomous execution, external search, crawler behavior, browser automation, auto collection, auto listing, private messages, comments, file cleanup execution, notification write execution, batch execution, image generation, or product-status updates.
+- Cleanup boundary: The assistant may only remind, summarize existing cleanup records, and link to `/maintenance/files`; it does not scan files, move files, delete files, call cleanup write services, or bypass user confirmation.
+- Runtime: Vercel preview shows `/assistant` in read-only mode with rule degradation and the notice `预览环境只读，请在 Windows 本地验收站内助手。`
+- Verification: Encoding check, lint, build, Prisma validate, typecheck, and lightweight `npm run thread08:verify` passed; `npm test` is still not available in the current scripts.
+
 ### V1.5 Thread 07 - Electron Technical Validation
 
 - Changed: Added isolated `experiments/electron-poc/` with POC-only Electron package, localhost-only main process, marker-only preload, static/local-port smoke, Electron smoke, POC README, and `.vercelignore` exclusion.

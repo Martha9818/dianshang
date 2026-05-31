@@ -24,6 +24,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 | `/screenshots` | V1.5 Thread 02 user-initiated screenshot recognition, structured drafts, quality grading, and manual confirmation history. |
 | `/link-imports` | V1.5 Thread 03 single-link import drafts, public meta attempts, quality grading, and manual conversion links. |
 | `/products/[id]?tab=competitor-analysis` | V1.5 Thread 04 competitor intelligent analysis snapshots, local competitor selection, history, reference marking, and archive confirmation. |
+| `/assistant` | V1.5 Thread 08 lightweight site-search assistant and notification-summary assistant based on local existing data only. |
 | `/notifications` | Lightweight in-app notification center for important operation results. |
 | `/settings/ai`, `/settings/banned-words` | Local AI Provider, optional API image generation, and banned-word settings. |
 | `/export`, `/backup` | Local export and manual backup. |
@@ -48,6 +49,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 | Competitor analysis | AI-assisted competitor analysis snapshots from local product, competitor, screenshot-draft, and link-import-draft data; no link fetching, scoring overwrite, product-status overwrite, or competitor fact mutation. | `src/lib/services/competitor-analysis/README.md` |
 | Image dedupe | V1.5 Thread 05 user-triggered local image fingerprinting, exact duplicate/high-similarity hints, source-risk reminders, manual ignore, and archive-suggestion records; no deletion or cleanup execution. | `src/lib/services/image-dedup/README.md` |
 | Image generation | V1.5 Thread 06 optional user-triggered API image generation from Prompt tasks into managed materials; no batch/background generation or publishing. | `src/lib/services/image-generation/README.md` |
+| Local assistant | V1.5 Thread 08 lightweight read-only site-search suggestions and notification summaries with rules-first safe links; not a real multi-agent system and not a cleanup executor. | `src/lib/modules/local-assistant/README.md` |
 | Notifications | Sanitized in-app operation notifications, read state, filtering, safe action URLs, and local-only writes. | `src/lib/services/notifications/README.md` |
 | File cleanup | V1-Plus Thread 06 manual local maintenance for uploads/exports/backups, cleanup log, app trash, Vercel no-real-scan/delete guard, path safety, and active-file protection. V1.5 must not add a second cleanup system. | `src/lib/services/cleanup/README.md` |
 | Products/scoring | Product CRUD, formatting, scoring, and status summaries. | Source modules under `src/lib/services/` and `src/lib/modules/` |

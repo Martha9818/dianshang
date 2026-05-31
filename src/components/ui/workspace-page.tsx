@@ -81,13 +81,13 @@ export function WorkspacePage({
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-            <button
-              type="button"
+            <Link
+              href="/assistant"
               className="flex h-12 min-w-[260px] cursor-pointer items-center gap-3 rounded-2xl border border-[#E6ECF5] bg-white px-4 text-left text-sm text-slate-400 shadow-[0_12px_26px_rgba(59,130,246,0.06)] transition-all duration-200 hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-slate-500 hover:shadow-[0_16px_30px_rgba(59,130,246,0.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
             >
               <SearchIcon className="h-4 w-4" />
-              <span className="truncate">搜索商品、任务、素材...</span>
-            </button>
+              <span className="truncate">问助手：搜索商品、通知、灵感与待办...</span>
+            </Link>
             <div className="flex items-center gap-3">
               <HeaderNotificationButton unreadPromise={unreadPromise} />
               <HeaderIconButton icon="gear" href="/settings/ai" />

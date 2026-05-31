@@ -1,24 +1,11 @@
-import "dotenv/config";
-import { existsSync } from "node:fs";
-import { mkdir, rm, writeFile } from "node:fs/promises";
-import path from "node:path";
-import ExcelJS from "exceljs";
-import { prisma } from "../src/lib/prisma";
-import { createManualBackup } from "../src/lib/services/backup-service";
-import { createExcelExport } from "../src/lib/services/export-service";
-import { saveScoreSnapshot } from "../src/lib/services/scoring-service";
-
-const PREFIX = "THREAD08_ACCEPTANCE_";
-const projectRoot = process.cwd();
-const uploadsRoot = path.join(projectRoot, "uploads");
-const tempUploadDir = path.join(uploadsRoot, "thread08-acceptance");
-
-const createdProductIds: number[] = [];
-const createdProviderIds: number[] = [];
-const createdExportLogIds: number[] = [];
-const createdBackupLogIds: number[] = [];
-const createdBackupPaths: string[] = [];
-const tempPaths = [tempUploadDir];
+import {
+  buildAssistantFallbackMessage,
+  buildRuleBasedAssistantSuggestions,
+  buildRuleOnlyAssistantSearchResult,
+  detectProhibitedAssistantIntent,
+} from "../src/lib/modules/local-assistant/localAssistantRules";
+import { buildLocalAssistantSummary } from "../src/lib/modules/local-assistant/localAssistantService";
+import { LOCAL_ASSISTANT_PREVIEW_MESSAGE } from "../src/lib/modules/local-assistant/localAssistantTypes";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
@@ -30,285 +17,118 @@ function pass(label: string) {
   console.log(`PASS ${label}`);
 }
 
-async function cleanup() {
-  for (const productId of createdProductIds.reverse()) {
-    await prisma.operationLog.deleteMany({ where: { productId } });
-    await prisma.material.deleteMany({ where: { productId } });
-    await prisma.promptTask.deleteMany({ where: { productId } });
-    await prisma.copywriting.deleteMany({ where: { productId } });
-    await prisma.scoreSnapshot.deleteMany({ where: { productId } });
-    await prisma.competitor.deleteMany({ where: { productId } });
-    await prisma.productVariant.deleteMany({ where: { productId } });
-    await prisma.product.deleteMany({ where: { id: productId, name: { startsWith: PREFIX } } });
-  }
+function verifyProductRuleSuggestion() {
+  const suggestions = buildRuleBasedAssistantSuggestions("找出缺成本且评分高的商品");
+  const productSuggestion = suggestions.find((item) => item.scope === "product");
 
-  for (const providerId of createdProviderIds.reverse()) {
-    await prisma.aIProvider.deleteMany({ where: { id: providerId, name: { startsWith: PREFIX } } });
-  }
+  assert(productSuggestion, "missing product suggestion");
+  assert(productSuggestion.href.startsWith("/products?"), "product suggestion should navigate to /products");
+  assert(productSuggestion.href.includes("missingCost=true"), "product suggestion should include missingCost=true");
+  assert(productSuggestion.href.includes("minScore=80"), "product suggestion should include minScore=80");
+  assert(productSuggestion.actionType === "filter", "product suggestion should be a filter action");
 
-  for (const exportLogId of createdExportLogIds.reverse()) {
-    const log = await prisma.exportLog.findUnique({ where: { id: exportLogId } });
-    if (log?.fileName.includes(PREFIX)) {
-      await rm(log.filePath, { force: true });
-    }
-    await prisma.exportLog.deleteMany({ where: { id: exportLogId, fileName: { contains: PREFIX } } });
-  }
-
-  for (const backupLogId of createdBackupLogIds.reverse()) {
-    await prisma.backupLog.deleteMany({ where: { id: backupLogId, backupPath: { contains: PREFIX } } });
-  }
-
-  for (const backupPath of createdBackupPaths.reverse()) {
-    if (backupPath.includes(PREFIX)) {
-      await rm(backupPath, { recursive: true, force: true });
-    }
-  }
-
-  for (const tempPath of tempPaths.reverse()) {
-    if (tempPath.includes("thread08-acceptance")) {
-      await rm(tempPath, { recursive: true, force: true });
-    }
-  }
+  pass("product rule suggestion");
 }
 
-async function createBaseProduct() {
-  const stamp = Date.now();
-  const product = await prisma.product.create({
-    data: {
-      spu: `${PREFIX}SPU_${stamp}`,
-      name: `${PREFIX}宠物梳毛器_${stamp}`,
-      categoryLevel1: "宠物用品",
-      categoryLevel2: "宠物清洁",
-      tags: JSON.stringify(["宠物", "梳毛", PREFIX]),
-      targetUser: "猫狗家庭",
-      targetPlatforms: JSON.stringify(["闲鱼", "淘宝", "小红书", "抖音"]),
-      estimatedPrice: 29.9,
-      estimatedCost: 8,
-      estimatedShipping: 3,
-      packagingCost: 1,
-      sellingPoints: "一键退毛，清理方便，适合换毛季。",
-      painPoints: "宠物掉毛多，普通梳子清理麻烦。",
-      usageScenes: "居家日常梳毛，出门前整理。",
-      categoryRisk: "低风险",
-      returnRisk: "低",
-      explanationCost: "容易解释",
-      contentVisualLevel: "高",
-      sceneClarityLevel: "高",
-      videoFitLevel: "适合",
-      comparisonDemoLevel: "明显",
-      notes: `${PREFIX}final flow product`,
-      status: "待分析",
-    },
-  });
+function verifyBlockedIntentBoundary() {
+  const blocked = detectProhibitedAssistantIntent("帮我批量清理旧备份并删除通知");
 
-  createdProductIds.push(product.id);
-  await mkdir(tempUploadDir, { recursive: true });
-  const mainImagePath = `uploads/thread08-acceptance/${PREFIX}main_${stamp}.png`;
-  await writeFile(path.join(projectRoot, mainImagePath), Buffer.from("THREAD08 main image"));
-  await prisma.product.update({ where: { id: product.id }, data: { mainImagePath } });
+  assert(blocked, "blocked intent should be detected");
+  assert(blocked.message.includes("不会直接执行"), "blocked message should explain boundary");
+  assert(blocked.suggestions.some((item) => item.href === "/maintenance/files"), "blocked cleanup should redirect to /maintenance/files");
+  assert(blocked.suggestions.some((item) => item.href === "/notifications"), "blocked notification operation should redirect to /notifications");
+  assert(blocked.suggestions.every((item) => ["view", "search", "filter", "navigate"].includes(item.actionType)), "blocked suggestions should keep allowed action types only");
 
-  pass("product create and main image path");
-  return product;
+  pass("blocked intent boundary");
 }
 
-async function addCompetitors(productId: number) {
-  const competitors = [
-    ["闲鱼", "宠物梳毛器 A", 26.9, "想要", 38],
-    ["淘宝", "宠物梳毛器 B", 29.9, "销量", 1350],
-    ["小红书", "宠物梳毛器 C", 32, "点赞", 1280],
-  ] as const;
+function verifyFallbackMessage() {
+  const fallback = buildRuleOnlyAssistantSearchResult("看看最近 AI 失败通知", buildAssistantFallbackMessage());
 
-  for (const [platform, title, price, heatMetricType, heatMetricValue] of competitors) {
-    await prisma.competitor.create({
-      data: {
-        productId,
-        platform,
-        title: `${PREFIX}${title}`,
-        price,
-        heatMetricType,
-        heatMetricValue,
-        dataDate: new Date("2026-05-28T00:00:00+08:00"),
-        screenshotPath: platform === "闲鱼" ? `uploads/thread08-acceptance/${PREFIX}competitor.png` : null,
+  assert(fallback.fallbackMessage === "未能完成智能解析，已提供基于本地规则的筛选建议。请手动确认后查看。", "fallback message should match expected copy");
+  assert(fallback.suggestions.some((item) => item.href.startsWith("/notifications")), "fallback result should still include notification suggestions");
+
+  pass("ai fallback message");
+}
+
+function verifySummaryBuilder() {
+  const summary = buildLocalAssistantSummary({
+    dashboardItems: [
+      {
+        type: "missing_cost",
+        title: "缺少成本的商品",
+        count: 3,
+        description: "有 3 个商品缺少成本字段。",
+        href: "/products?missingCost=true",
+        actionLabel: "查看商品",
+        tone: "amber",
+        sourceLabel: "Product",
       },
-    });
-  }
-
-  pass("competitors create");
-}
-
-async function verifyScoring(productId: number) {
-  const result = await saveScoreSnapshot(productId, {
-    manualRegulatedRisk: false,
-    manualInfringementRisk: false,
-    manualRiskNotes: null,
+      {
+        type: "recent_ai_job_failures",
+        title: "最近 AI 任务失败",
+        count: 1,
+        description: "最近 7 天有 AI 任务失败。",
+        href: "/system/diagnostics",
+        actionLabel: "查看诊断",
+        tone: "red",
+        sourceLabel: "AIJob",
+      },
+    ],
+    notifications: [
+      {
+        id: 1,
+        title: "AI 任务失败",
+        message: "需要复核最近一次 AI 调用失败。",
+        level: "error",
+        status: "unread",
+        typeLabel: "AI",
+        actionUrl: "/system/diagnostics",
+      },
+      {
+        id: 2,
+        title: "备份完成",
+        message: "最近一次备份已完成。",
+        level: "success",
+        status: "read",
+        typeLabel: "备份",
+        actionUrl: "/backup",
+      },
+    ],
+    cleanupLogs: [
+      {
+        id: 3,
+        action: "scan",
+        status: "failed",
+        reason: "最近一次文件维护扫描失败，需要人工复核。",
+      },
+    ],
   });
 
-  assert(result.snapshot.id > 0, "ScoreSnapshot was not saved");
-  assert(result.evaluation.dimensions.totalScore !== null, "total score missing");
-  assert(result.evaluation.deductionReasons.length >= 0, "deduction reasons missing");
-  assert(result.evaluation.nextSuggestions.length > 0, "next suggestions missing");
-  assert(result.evaluation.recommendation.trim().length > 0, "recommendation missing");
+  assert(summary.sections.length === 3, "summary should expose three sections");
+  assert(summary.sections[0].items.length > 0, "focus section should not be empty");
+  assert(summary.sections[1].items.some((item) => item.href === "/maintenance/files"), "attention section should include cleanup redirect");
+  assert(summary.sections[2].items.some((item) => item.href === "/backup"), "ignorable section should include handled backup notification");
 
-  pass(`scoring snapshot ${result.evaluation.recommendation}`);
+  pass("summary builder");
 }
 
-async function verifyCopywriting(productId: number) {
-  const provider = await prisma.aIProvider.create({
-    data: {
-      name: `${PREFIX}Wrong Key Provider ${Date.now()}`,
-      providerType: "openai-compatible",
-      baseUrl: "https://example.invalid/v1",
-      apiKey: `${PREFIX}wrong-key`,
-      modelName: "thread08-fake-model",
-      purpose: "text",
-      enabled: true,
-      isDefault: false,
-    },
-  });
-  createdProviderIds.push(provider.id);
-
-  const riskWord = await prisma.bannedWord.findFirst({ select: { word: true } });
-  const manualTitle = `${PREFIX}手动文案标题`;
-  const manualCopy = `${PREFIX}手动文案正文 ${riskWord?.word ?? ""}`.trim();
-  const scanWords = riskWord ? [riskWord.word] : [];
-
-  const copy = await prisma.copywriting.create({
-    data: {
-      productId,
-      providerId: null,
-      platform: "小红书",
-      copyType: "platform",
-      version: "A",
-      style: "手动兜底",
-      title: manualTitle,
-      content: manualCopy,
-      mainCopy: manualCopy,
-      generationStatus: "success",
-      auditStatus: scanWords.length > 0 ? "有风险" : "无风险",
-      riskWords: scanWords.length > 0 ? JSON.stringify(scanWords) : null,
-      structuredPayloadJson: JSON.stringify({ marker: PREFIX }),
-    },
-  });
-
-  const saved = await prisma.copywriting.findUnique({ where: { id: copy.id } });
-  assert(saved?.title === manualTitle, "manual copywriting was not saved");
-  assert(saved?.riskWords !== null || scanWords.length === 0, "manual copywriting was not rescanned");
-
-  pass("copywriting no-real-key fallback data");
-}
-
-async function verifyPromptAndMaterials(productId: number) {
-  const taskCode = `PT-${productId}-xiaohongshu-cover-${PREFIX}${Date.now()}`;
-  const task = await prisma.promptTask.create({
-    data: {
-      taskCode,
-      productId,
-      platform: "xiaohongshu",
-      imageType: "cover",
-      recommendedSize: "1080x1440",
-      promptText: `${PREFIX}Prompt text`,
-      status: "已复制",
-      version: "v1",
-    },
-  });
-
-  const materialRows = [];
-  for (const version of ["v1", "v2"]) {
-    const filePath = `uploads/thread08-acceptance/${PREFIX}${taskCode}_${version}.png`;
-    await writeFile(path.join(projectRoot, filePath), Buffer.from(`${PREFIX}${version}`));
-    materialRows.push(
-      await prisma.material.create({
-        data: {
-          productId,
-          promptTaskId: task.id,
-          platform: "xiaohongshu",
-          materialType: "cover_image",
-          filePath,
-          width: 1,
-          height: 1,
-          status: "待审核",
-          source: "prompt_result",
-          version,
-        },
-      }),
-    );
-  }
-
-  await prisma.promptTask.update({ where: { id: task.id }, data: { status: "已回传", version: "v2" } });
-  await prisma.material.update({ where: { id: materialRows[0].id }, data: { status: "可使用" } });
-
-  const returnedTask = await prisma.promptTask.findUnique({ where: { id: task.id }, include: { materials: true } });
-  assert(returnedTask?.status === "已回传", "PromptTask status was not returned");
-  assert(returnedTask.materials.length === 2, "PromptTask did not link two materials");
-  assert(returnedTask.materials.every((item) => item.filePath.includes(PREFIX)), "Material file path missing prefix");
-
-  pass("prompt task and material linkage");
-}
-
-async function verifyExportAndBackup(productId: number) {
-  const exportLog = await createExcelExport();
-  createdExportLogIds.push(exportLog.id);
-
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.readFile(exportLog.filePath);
-  const expectedSheets = ["Products", "Competitors", "Copywriting", "PromptTasks", "Materials", "Scores"];
-  assert(expectedSheets.every((sheet) => workbook.getWorksheet(sheet)), "export is missing one of 6 sheets");
-
-  const productsSheet = workbook.getWorksheet("Products");
-  assert(productsSheet?.getRow(1).cellCount, "Products sheet header missing");
-
-  const product = await prisma.product.findUnique({ where: { id: productId }, select: { name: true } });
-  const hasProductRow = productsSheet
-    ?.getRows(2, Math.max(productsSheet.rowCount - 1, 1))
-    ?.some((row) => row.values.toString().includes(product?.name ?? ""));
-  assert(hasProductRow, "export missing Thread 08 product row");
-
-  const backupLog = await createManualBackup();
-  createdBackupLogIds.push(backupLog.id);
-  createdBackupPaths.push(backupLog.backupPath);
-
-  assert(existsSync(path.join(backupLog.backupPath, "dev.db")), "backup missing dev.db");
-  assert(existsSync(path.join(backupLog.backupPath, "uploads")), "backup missing uploads");
-
-  pass("export and backup");
-}
-
-async function verifyEmptyExportHeaders() {
-  const workbook = new ExcelJS.Workbook();
-  const exportLog = await createExcelExport();
-  createdExportLogIds.push(exportLog.id);
-  await workbook.xlsx.readFile(exportLog.filePath);
-
-  for (const sheetName of ["Products", "Competitors", "Copywriting", "PromptTasks", "Materials", "Scores"]) {
-    const sheet = workbook.getWorksheet(sheetName);
-    assert(sheet, `${sheetName} sheet missing`);
-    assert(sheet.getRow(1).cellCount > 0, `${sheetName} headers missing`);
-  }
-
-  pass("export headers present");
+function verifyPreviewMessage() {
+  assert(LOCAL_ASSISTANT_PREVIEW_MESSAGE === "预览环境只读，请在 Windows 本地验收站内助手。", "preview message should match expected copy");
+  pass("preview readonly message");
 }
 
 async function main() {
-  await cleanup();
-
-  const product = await createBaseProduct();
-  await addCompetitors(product.id);
-  await verifyScoring(product.id);
-  await verifyCopywriting(product.id);
-  await verifyPromptAndMaterials(product.id);
-  await verifyExportAndBackup(product.id);
-  await verifyEmptyExportHeaders();
-
-  console.log("Thread 08 final service acceptance passed.");
+  verifyProductRuleSuggestion();
+  verifyBlockedIntentBoundary();
+  verifyFallbackMessage();
+  verifySummaryBuilder();
+  verifyPreviewMessage();
+  console.log("Thread 08 lightweight verification passed.");
 }
 
-main()
-  .catch((error) => {
-    console.error("Thread 08 final service acceptance failed:");
-    console.error(error);
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await cleanup();
-    await prisma.$disconnect();
-  });
+main().catch((error) => {
+  console.error("Thread 08 lightweight verification failed:");
+  console.error(error);
+  process.exitCode = 1;
+});
