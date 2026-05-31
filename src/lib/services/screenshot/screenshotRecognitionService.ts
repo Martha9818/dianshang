@@ -366,8 +366,6 @@ async function recordScreenshotOperation(input: {
   action: string;
   detail: string;
 }) {
-  if (!input.productId && !input.inspirationId) return null;
-
   return prisma.operationLog.create({
     data: {
       productId: input.productId ?? null,
