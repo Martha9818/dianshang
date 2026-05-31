@@ -1420,6 +1420,58 @@ export async function deleteCopywriting(copywritingId: number, productId: number
   }
 }
 
+export async function deleteCopywritings(copywritingIds: number[]) {
+  ensureProductWritesAllowed();
+
+  try {
+    const uniqueIds = Array.from(new Set(copywritingIds.filter((id) => Number.isInteger(id) && id > 0)));
+    if (uniqueIds.length === 0) {
+      throw createValidationError("请选择要删除的文案记录。");
+    }
+
+    const existingRecords = await prisma.copywriting.findMany({
+      where: {
+        id: { in: uniqueIds },
+        product: { deletedAt: null },
+      },
+      select: {
+        id: true,
+        productId: true,
+        platform: true,
+        versionLabel: true,
+        version: true,
+        title: true,
+      },
+    });
+
+    if (existingRecords.length === 0) {
+      throw createNotFoundError();
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.copywriting.deleteMany({
+        where: { id: { in: existingRecords.map((record) => record.id) } },
+      });
+
+      await tx.operationLog.createMany({
+        data: existingRecords.map((record) => ({
+          productId: record.productId,
+          action: OPERATION_LOG_ACTIONS.UPDATE_COPYWRITING,
+          detail: `批量删除文案记录 ${record.platform ?? ""} ${record.versionLabel ?? record.version ?? ""} ${record.title ?? ""}`.trim(),
+        })),
+      });
+    });
+
+    return {
+      ids: existingRecords.map((record) => record.id),
+      productIds: Array.from(new Set(existingRecords.map((record) => record.productId))),
+      deletedCount: existingRecords.length,
+    };
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}
+
 export async function getCopywritingById(copywritingId: number) {
   try {
     const record = await prisma.copywriting.findUnique({

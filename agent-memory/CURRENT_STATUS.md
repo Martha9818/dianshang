@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: V1.5 Stabilization ordered small-fix pass is complete locally, verified, and ready for review.
+- Current task state: V1.5 Stabilization copywriting filter/delete follow-up is complete locally, verified, and ready for review.
 - Next stage: Continue with the next approved Stabilization follow-up thread before any V2 planning thread.
 
 ## Product Direction
@@ -26,6 +26,7 @@
 - Manual backup exists, but in-app restore remains V2 scope.
 - Electron remains POC-only and is not a formal desktop runtime.
 - Recent UI stabilization adjusted copywriting, Prompt tasks, materials, inspirations, link imports, file cleanup affordances, AI settings, header status menu, and stat deltas without schema, migration, dependency, or V2 scope changes.
+- Copywriting history filtering now relies on the route-filtered server result without the stale client-side platform re-filter, and copywriting records can be selected, batch deleted, or one-click deleted for the current filtered result.
 - Build/acceptance fixture inspirations from local verification were hidden from the default inspiration view and related scan/draft jobs were cleared; uploaded files were not deleted.
 
 ## Next Recommended Step

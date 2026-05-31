@@ -6,6 +6,7 @@ import { getProductErrorMessage } from "@/lib/modules/products";
 import {
   clearCopywritingUsedMark,
   deleteCopywriting,
+  deleteCopywritings,
   generateMultiPlatformCopywritingPackage,
   generatePlatformCopywriting,
   markCopywritingAsUsed,
@@ -139,6 +140,26 @@ export async function deleteCopywritingAction(input: { copywritingId: number; pr
     return {
       success: false as const,
       error: getProductErrorMessage(error, "删除文案失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function deleteCopywritingsAction(input: { copywritingIds: number[] }) {
+  try {
+    const result = await deleteCopywritings(input.copywritingIds);
+    revalidatePath("/copywriting");
+    revalidatePath("/");
+    for (const productId of result.productIds) {
+      revalidatePath(`/products/${productId}`);
+    }
+    return {
+      success: true as const,
+      data: result,
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "批量删除文案失败，请稍后重试。"),
     };
   }
 }

@@ -4,6 +4,12 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-05-31
 
+### V1.5 Stabilization - Copywriting Filter/Delete Follow-up
+
+- Changed: Fixed the copywriting history view to use the server-filtered route result directly, removed the extra stale client-side platform re-filter, and added selected-record batch deletion plus one-click deletion for the current filtered result. Batch deletion reuses the product write guard and only deletes `Copywriting` records with operation logs; it does not delete products, AI jobs, materials, or files.
+- Verification: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, and `npm run typecheck` passed. Root `npm test` remains unavailable because the project has no `test` script. HTTP smoke checks returned 200 for `/copywriting` and `/copywriting?platform=小红书`, with the filter and batch-delete UI present in the rendered page.
+- Boundary: No schema, migration, dependency, V2 feature, second cleanup system, crawler, automatic publishing, formal desktop release, AI behavior change, or filesystem delete behavior was added.
+
 ### V1.5 Stabilization - UI/UX Follow-up Pass
 
 - Changed: Completed the ordered follow-up fixes requested after review: tightened the copywriting generation layout and filters, added per-copy delete affordances, fixed Prompt task filter overlap, renamed and added feedback for material/inspiration similarity checks, hid local acceptance fixture inspirations from default view, localized link-import status/platform/quality display, made API image Provider model name optional, improved AI Provider default persistence refresh behavior, changed the header menu to status/check links, and replaced homepage/material/product/banned-word stat placeholders with real day-start deltas.

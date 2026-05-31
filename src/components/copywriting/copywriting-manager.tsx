@@ -12,6 +12,7 @@ import {
 import {
   clearCopywritingUsedAction,
   deleteCopywritingAction,
+  deleteCopywritingsAction,
   generateCopywritingAction,
   generateMultiPlatformCopywritingAction,
   markCopywritingUsedAction,
@@ -225,6 +226,7 @@ export function CopywritingManager({
   const [providerId, setProviderId] = useState<number | "">(selectedInitialProviderId);
   const [records, setRecords] = useState<CopywritingView[]>(() => initialCopywritings);
   const [drafts, setDrafts] = useState<Record<string, EditableDraftState>>(() => buildDraftMap(initialCopywritings));
+  const [selectedRecordIds, setSelectedRecordIds] = useState<Set<number>>(() => new Set());
 
   const selectedProduct = useMemo(
     () => products.find((product) => product.id === productId) ?? null,
@@ -260,6 +262,9 @@ export function CopywritingManager({
   const groupedRecords = useMemo(() => {
     return groupRecords(records);
   }, [records]);
+  const visibleRecords = useMemo(() => groupedRecords.flatMap((group) => group.records), [groupedRecords]);
+  const visibleRecordIds = useMemo(() => visibleRecords.map((record) => record.id), [visibleRecords]);
+  const selectedVisibleCount = visibleRecordIds.filter((id) => selectedRecordIds.has(id)).length;
 
   function buildRoute(nextProductId: number | "", nextPlatform: string, nextProviderId: number | "" = activeProviderId) {
     const params = new URLSearchParams(searchParams.toString());
@@ -481,13 +486,64 @@ export function CopywritingManager({
         return;
       }
 
-      setRecords((current) => current.filter((item) => item.id !== record.id));
-      setDrafts((current) => {
-        const next = { ...current };
-        delete next[String(record.id)];
-        return next;
-      });
+      removeDeletedRecords([record.id]);
       setMessage("文案记录已删除。");
+      router.refresh();
+    });
+  }
+
+  function toggleRecordSelection(recordId: number, checked: boolean) {
+    setSelectedRecordIds((current) => {
+      const next = new Set(current);
+      if (checked) {
+        next.add(recordId);
+      } else {
+        next.delete(recordId);
+      }
+      return next;
+    });
+  }
+
+  function removeDeletedRecords(recordIds: number[]) {
+    const deletedIdSet = new Set(recordIds);
+    setRecords((current) => current.filter((item) => !deletedIdSet.has(item.id)));
+    setDrafts((current) => {
+      const next = { ...current };
+      for (const id of deletedIdSet) {
+        delete next[String(id)];
+      }
+      return next;
+    });
+    setSelectedRecordIds((current) => {
+      const next = new Set(current);
+      for (const id of deletedIdSet) {
+        next.delete(id);
+      }
+      return next;
+    });
+  }
+
+  function handleDeleteMany(recordIds: number[], confirmText: string) {
+    const uniqueIds = Array.from(new Set(recordIds));
+    if (uniqueIds.length === 0) {
+      setMessage("请先选择要删除的文案记录。");
+      return;
+    }
+
+    if (!window.confirm(confirmText)) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await deleteCopywritingsAction({ copywritingIds: uniqueIds });
+
+      if (!result.success) {
+        setMessage(result.error);
+        return;
+      }
+
+      removeDeletedRecords(result.data.ids);
+      setMessage(`已删除 ${result.data.deletedCount} 条文案记录。`);
       router.refresh();
     });
   }
@@ -601,12 +657,61 @@ export function CopywritingManager({
         </div>
       </div>
 
+      <DashboardCard className="px-5 py-4">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="text-sm text-slate-600">
+            <p className="font-medium text-slate-900">当前筛选结果：{visibleRecordIds.length} 条文案</p>
+            <p className="mt-1">已选择 {selectedVisibleCount} 条。批量删除只删除文案记录，不删除商品、AIJob 或素材文件。</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={actionButtonClassName}
+              disabled={visibleRecordIds.length === 0 || isPending}
+              onClick={() => setSelectedRecordIds(new Set(visibleRecordIds))}
+            >
+              全选当前结果
+            </button>
+            <button
+              type="button"
+              className={actionButtonClassName}
+              disabled={selectedVisibleCount === 0 || isPending}
+              onClick={() => setSelectedRecordIds(new Set())}
+            >
+              取消选择
+            </button>
+            <button
+              type="button"
+              className={dangerButtonClassName}
+              disabled={selectedVisibleCount === 0 || isPending}
+              onClick={() =>
+                handleDeleteMany(
+                  visibleRecordIds.filter((id) => selectedRecordIds.has(id)),
+                  `确认删除已选 ${selectedVisibleCount} 条文案记录？不会删除商品、AIJob 或素材文件。`,
+                )
+              }
+            >
+              删除已选
+            </button>
+            <button
+              type="button"
+              className={dangerButtonClassName}
+              disabled={visibleRecordIds.length === 0 || isPending}
+              onClick={() =>
+                handleDeleteMany(
+                  visibleRecordIds,
+                  `确认删除当前筛选结果中的 ${visibleRecordIds.length} 条文案记录？不会删除商品、AIJob 或素材文件。`,
+                )
+              }
+            >
+              一键删除当前全部
+            </button>
+          </div>
+        </div>
+      </DashboardCard>
+
       {groupedRecords.length > 0 ? (
         groupedRecords
-          .map((group) => ({
-            ...group,
-            records: platform ? group.records.filter((record) => record.platform === platform) : group.records,
-          }))
           .filter((group) => group.records.length > 0)
           .map((group) => (
             <DashboardCard key={group.key}>
@@ -618,22 +723,33 @@ export function CopywritingManager({
                 {group.records.map((record) => {
                   const draft = drafts[String(record.id)] ?? buildDraftState(record);
                   const versionLabel = record.versionLabel ?? record.version ?? "A";
+                  const isSelected = selectedRecordIds.has(record.id);
 
                   return (
                     <div key={record.id} className="rounded-[24px] border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-base font-semibold text-slate-900">
-                              {record.platform ?? "文案"} {versionLabel} 版
-                            </h3>
-                            <StatusBadge label={record.auditStatus ?? "待生成"} tone={getStatusTone(record.auditStatus)} />
-                            {record.isUsedInListing ? <StatusBadge label="实际使用中" tone="green" /> : null}
+                        <div className="flex min-w-0 flex-1 items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(event) => toggleRecordSelection(record.id, event.target.checked)}
+                            disabled={isPending}
+                            aria-label={`选择 ${record.platform ?? "文案"} ${versionLabel} 版`}
+                            className="mt-1 h-4 w-4 shrink-0 rounded border-[#CBD5E1] text-[#2563EB] focus:ring-4 focus:ring-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          />
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-base font-semibold text-slate-900">
+                                {record.platform ?? "文案"} {versionLabel} 版
+                              </h3>
+                              <StatusBadge label={record.auditStatus ?? "待生成"} tone={getStatusTone(record.auditStatus)} />
+                              {record.isUsedInListing ? <StatusBadge label="实际使用中" tone="green" /> : null}
+                            </div>
+                            <p className="mt-1 text-xs text-slate-400">
+                              创建于 {new Date(record.createdAt).toLocaleString("zh-CN")}
+                              {record.aiJobSummary ? ` · AIJob #${record.aiJobSummary.id} ${record.aiJobSummary.status}` : " · 手动记录"}
+                            </p>
                           </div>
-                          <p className="mt-1 text-xs text-slate-400">
-                            创建于 {new Date(record.createdAt).toLocaleString("zh-CN")}
-                            {record.aiJobSummary ? ` · AIJob #${record.aiJobSummary.id} ${record.aiJobSummary.status}` : " · 手动记录"}
-                          </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <button
