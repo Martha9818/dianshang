@@ -27,3 +27,9 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 - Status: OPEN OPERATIONAL FOLLOW-UP
 - Impact: The file is removed from the current tree, but account-side rotation/revocation remains the safe closeout.
 - Mitigation: Rotate or revoke the affected recovery codes in the provider account.
+
+### V1.5 Features Are Not Implemented Yet
+
+- Status: DEFERRED / PLANNED SCOPE
+- Impact: User-uploaded image/screenshot recognition, local inspiration-folder scheduled scanning, lightweight API image generation, and Electron technical validation require separately approved V1.5 threads.
+- Mitigation: Do not imply these are available until their thread ships and is verified locally.

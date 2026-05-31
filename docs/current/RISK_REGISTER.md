@@ -4,7 +4,12 @@ Keep only OPEN, MITIGATED, or DEFERRED risks here. Detailed historical risk text
 
 | Risk | Status | Level | Mitigation |
 | --- | --- | --- | --- |
-| Scope drift into V1.5/V2 features | OPEN | High | Start from `THREAD_SCOPE_CHECKLIST.md`; require explicit thread approval. |
+| Scope drift beyond approved V1.5 threads | OPEN | High | Start from `THREAD_SCOPE_CHECKLIST.md`; require explicit thread approval for each V1.5 feature. |
+| Reimplementing desktop base foundations | OPEN | High | Reuse RuntimeConfig, LocalPathService, EnvironmentGuard, LogService, OperationLog, local diagnostics, and Vercel read-only degradation. |
+| V1.5 lightweight AI features leaking secrets, prompts, paths, or stack details | OPEN | High | Sanitize frontend, logs, diagnostics, exports, backups, docs, and AI-facing results. |
+| V1.5 scheduled local folder scan becoming a background queue or crawler | OPEN | High | Keep scans local, explicit, bounded, and service-layer guarded; do not add platform crawling or auto-collection. |
+| V1.5 Electron validation becoming a formal desktop app | OPEN | Medium | Treat Electron as technical validation only; do not add installer, auto-update, tray, notifications, or formal desktop release. |
+| V1.5 API image generation cost or policy overreach | OPEN | Medium | Keep any future API image generation lightweight, explicit, guarded, and outside Vercel write/cost-heavy behavior. |
 | Database migration or data repair damage | OPEN | High | Add new migrations only, evaluate backup needs, never reset real data. |
 | File/database mismatch | OPEN | High | Use service-layer checks, friendly failures, diagnostics, and conservative cleanup. |
 | API key, prompt, path, stack, or diagnostic leakage | OPEN | High | Sanitize frontend, logs, diagnostics, exports, backups, and docs. |

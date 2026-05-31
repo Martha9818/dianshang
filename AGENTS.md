@@ -6,7 +6,7 @@ EcomPilot is a Windows local-first ecommerce operations assistant. The local app
 
 ## Current Stage
 
-- Current line: V1-Plus after V1-Core completion.
+- Current line: V1.5 after V1-Plus completion and baseline freeze.
 - Work must stay inside the approved thread scope.
 - Historical V1 / V1-Core issues are fixed only on the latest mainline through a Patch Thread.
 
@@ -23,7 +23,9 @@ Use `DOC_INDEX.md` to choose only the task-relevant current docs. Do not read `a
 
 ## Forbidden Scope
 
-Do not add login, cloud accounts, payments, crawlers, OCR, link parsing, API image generation, Electron, notification center, scheduled jobs, background queues, multi-agent systems, automated publishing, inventory, supplier management, or V1.5 / V2 behavior unless the user explicitly opens that thread.
+Do not add login, cloud accounts, payments, crawlers, OCR, link parsing, automated publishing, inventory, supplier management, notification-center expansion, background queues, real multi-agent systems, or V2 behavior unless the user explicitly opens that thread.
+
+V1.5 is a lightweight intelligence and technical validation stage only. Approved V1.5 threads may explore user-uploaded image/screenshot recognition, local inspiration-folder scheduled scans, lightweight API image generation, and Electron technical validation. V1.5 does not include a formal Electron desktop release, platform crawlers, automatic collection, automatic publishing, automatic private messages, automatic comments, SKU, supplier, inventory, trial-sale review, PDF reports, or real multi-agent orchestration.
 
 Do not change database schema, migrations, dependencies, filesystem write behavior, AI behavior, UI behavior, or product logic during docs-only tasks.
 

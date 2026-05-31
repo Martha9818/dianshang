@@ -4,6 +4,10 @@ Archive files are not part of the default startup reading flow. Start with `AGEN
 
 | Archive File | Historical Range | Read When | Default Startup Read |
 | --- | --- | --- | --- |
+| `agent-memory/archive/V1_5_BASELINE_SESSION_LOG_ARCHIVE_2026-05-31.md` | Previous active session-log summaries moved during V1.5 Thread 00. | Read only when V1-Plus Thread 02-07 summary detail is explicitly needed. | No |
+| `agent-memory/archive/V1_5_BASELINE_PATCH_LOG_ARCHIVE_2026-05-31.md` | Patch summaries moved from active patch log during V1.5 Thread 00. | Read only when investigating the provider-default, diagnostics-layout, or product-detail encoding cleanup patches. | No |
+| `agent-memory/archive/V1_5_BASELINE_CHANGELOG_HISTORY_ARCHIVE_2026-05-31.md` | Version/thread changelog detail moved during V1.5 Thread 00. | Read only when V1-Plus per-thread changelog detail is explicitly needed. | No |
+| `agent-memory/archive/V1_5_BASELINE_RISK_AND_ISSUE_ARCHIVE_2026-05-31.md` | V1.5 baseline risk/issue cleanup result. | Read only when auditing why no CLOSED/resolved entries were moved from active risk/issue docs. | No |
 | `agent-memory/archive/V1_PLUS_RECENT_SESSION_LOG_DETAIL_ARCHIVE_2026-05-30.md` | Detailed copies of the 10 recent session entries before active-log compression. | Read only when a recent short summary is insufficient. | No |
 | `agent-memory/archive/V1_PLUS_SESSION_LOG_ARCHIVE_2026-05-30.md` | Older active session-log entries moved out during V1-Plus docs closeout. | Read only when investigating V1-Core-07, diagnostics compact patch, V1-Core-06 through Thread 08 closeout details no longer retained in active log. | No |
 | `agent-memory/archive/V1_PLUS_CURRENT_DOCS_PRE_CLOSEOUT_SNAPSHOT_2026-05-30.md` | Pre-closeout snapshots of AGENTS, current status, doc index, project map, architecture rules, thread checklist, known issues, and risk register. | Read only when reconstructing the exact pre-closeout documentation wording. | No |

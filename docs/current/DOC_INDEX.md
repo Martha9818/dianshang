@@ -15,11 +15,11 @@ Use this file only as a routing table after the required startup read. Do not co
 | --- | --- | --- |
 | `PROJECT_MAP.md` | Module and route map. | Code structure, routes, services, runtime, AI, file, export, backup, or diagnostics work. |
 | `ARCHITECTURE_RULES.md` | Stable architecture and safety rules. | Before behavior, data, filesystem, AI, runtime, or dependency changes. |
-| `THREAD_SCOPE_CHECKLIST.md` | Thread boundary/status checklist. | At development-thread start and final boundary check. |
-| `RISK_REGISTER.md` | Open, mitigated, and deferred risks. | Risk-sensitive work, migrations, filesystem writes, AI, secrets, or Vercel behavior. |
-| `CHANGELOG_DEV.md` | Version-level change summary. | Recent version context and after meaningful behavior/docs changes. |
+| `THREAD_SCOPE_CHECKLIST.md` | Thread boundary/status checklist and V1.5 range map. | At development-thread start and final boundary check. |
+| `RISK_REGISTER.md` | Open, mitigated, and deferred risks. | Risk-sensitive work, V1.5 feature planning, migrations, filesystem writes, AI, secrets, or Vercel behavior. |
+| `CHANGELOG_DEV.md` | Version-level change summary and V1.5 baseline note. | Recent version context and after meaningful behavior/docs changes. |
 | `DATABASE_CHANGELOG.md` | Schema and migration history. | Prisma schema, migration, compatibility, or data-repair work. |
-| `PATCH_LOG.md` | Recent patch summaries. | Patch threads or regression investigations. |
+| `PATCH_LOG.md` | Current effective patch state. | Patch threads or regression investigations. |
 | `KNOWN_ISSUES.md` | Unresolved limitations/issues. | Known-issue triage or when leaving a limitation. |
 | `V1_CORE_UNDERSTANDING_CHECK.md` | V1-Core handoff explanation. | Explaining or checking the V1-Core baseline. |
 
@@ -30,3 +30,9 @@ Read module READMEs only when changing that module. The module index lives in `P
 ## Archive Rule
 
 Archived history lives in `agent-memory/archive/` and is indexed by `agent-memory/ARCHIVE_INDEX.md`. Do not read archives by default.
+
+## Current Baseline
+
+- MVP, V1-Core, and V1-Plus are complete.
+- V1.5 is the current stage after baseline freeze.
+- Vercel remains preview-only and read-only; Windows local runtime remains the source of truth.

@@ -2,30 +2,32 @@
 
 ## Current Progress
 
-- Current stage: V1-Plus Thread 07 final integration acceptance and README closeout completed locally.
-- Current task: Thread 07 complete acceptance report finished; no active implementation task.
-- Scope completed: MVP/V1-Core/V1-Plus regression checks, Vercel read-only simulations, path-service consolidation, README V1-Plus update, startup script directory check update, acceptance script alignment, security checks, desktop-base checks, and scope closeout.
+- Current stage: V1.5 after Thread 00 baseline freeze.
+- V1-Plus status: completed and frozen as the current development baseline.
+- Current task: Thread 00 documentation closeout, archive slimming, status confirmation, and V1.5 boundary setup completed locally.
+- Next thread: V1.5 Thread 01 - user-uploaded image/screenshot recognition planning and implementation, if explicitly approved.
 
 ## Product Direction
 
 - Keep EcomPilot local-first for Windows local runtime and SQLite-backed work.
 - Keep Vercel preview read-only with local write acceptance performed on Windows.
 - Reuse the existing Next.js / Prisma / service-layer / diagnostics / logging / notification / local-path foundations.
+- Reuse the V1-Core desktop base: RuntimeConfig, LocalPathService, EnvironmentGuard, LogService, OperationLog, local diagnostics, and Vercel read-only degradation.
 
-## Latest Completed Work
+## V1.5 Boundary
 
-- Updated root `README.md` from V1-Core wording to V1-Plus closeout documentation, including Windows startup, Vercel read-only preview, runtime directories, file cleanup risk, AI Key safety, FAQ, acceptance checklist, and V1.5/V2 boundaries.
-- Routed export and backup directory roots through the local-path service; the upload API route now reuses the existing upload path resolver.
-- Updated `start.bat` to describe V1-Plus and check/create `trash/` alongside `uploads/`, `exports/`, `backups/`, and `logs/`.
-- Aligned acceptance scripts with current V1-Plus behavior: rejected inspiration status, stricter AI invalid-output handling, preview-mode setup, and current read-only messages.
+- V1.5 is for lightweight intelligence and technical validation.
+- Allowed by explicit thread: user-uploaded image/screenshot recognition, local inspiration-folder scheduled scanning, lightweight API image generation, and Electron technical validation.
+- Not in V1.5: formal Electron desktop app, platform crawlers, automatic collection, automatic publishing, automatic private messages, automatic comments, SKU, supplier, inventory, trial-sale review, PDF reports, or real multi-agent scheduling.
 
 ## Blockers Or Risks
 
-- No active product blocker is recorded for Thread 07.
-- Vercel live preview was not refreshed in this thread; preview behavior was verified by local preview-mode scripts.
-- `package.json` now has `npm run typecheck`; there is still no `test` script because no real test suite is present.
-- Existing local runtime folders contain acceptance-generated exports/backups/log records, so local counts vary by machine.
+- No active product blocker is recorded for the V1.5 baseline.
+- Vercel remains preview-only and read-only; it is not a formal runtime environment.
+- No `test` script exists in the current project scripts.
+- V1.5 threads must not reimplement path, environment, logging, or Vercel-readonly foundations.
+- Thread 00 verification passed: lint, build, Prisma validation, typecheck, encoding check, and sensitive-pattern scans on changed docs.
 
 ## Next Recommended Step
 
-- Push only if the user approves a milestone/deployment refresh or Vercel live preview update.
+- Start V1.5 Thread 01 only after explicit approval of its narrow scope.

@@ -4,56 +4,73 @@ Use this as a short boundary/status record for development threads. Do not paste
 
 ## Thread
 
-- Name: V1-Plus Thread 07 - Final Integration Acceptance And README Closeout
-- Date: 2026-05-30
+- Name: V1.5 Thread 00 - V1-Plus Closeout And Baseline Freeze
+- Date: 2026-05-31
 - Type: closeout / regression / docs
-- Approved version scope: V1-Plus Thread 07 only
+- Approved version scope: V1.5 Thread 00 only
 - Existing working-tree changes belong to: this thread
 
 ## Safety
 
 - `git status --short` checked before work: yes
 - Touches schema, migration, new dependencies, new business feature, or destructive production operation: no
-- Touches local filesystem behavior: only startup/runtime path-service alignment and acceptance scripts
-- Backup need evaluated when risky writes are involved: no schema/data-repair change; acceptance scripts create normal export/backup artifacts
+- Touches local filesystem behavior: no business/runtime filesystem behavior change; docs archive files only
+- Backup need evaluated when risky writes are involved: no schema/data-repair/runtime write change
 - Database reset planned: no
 - Vercel remains read-only: yes
 
+## V1-Plus Completion
+
+| Thread | Status | Baseline Note |
+| --- | --- | --- |
+| Thread 01 Search/filter normalization | COMPLETE | Frozen in V1-Plus baseline. |
+| Thread 02 Inspiration management | COMPLETE | Frozen in V1-Plus baseline. |
+| Thread 03 Homepage todo summary | COMPLETE | Frozen in V1-Plus baseline. |
+| Thread 04 Notification center | COMPLETE | Frozen in V1-Plus baseline. |
+| Thread 05 Batch operation safety | COMPLETE | Frozen in V1-Plus baseline. |
+| Thread 06 File cleanup/trash | COMPLETE | Frozen in V1-Plus baseline. |
+| Thread 07 Final acceptance/README/path closeout | COMPLETE | Frozen in V1-Plus baseline. |
+
+## V1.5 Thread Range
+
+| V1.5 Thread Area | Status | Boundary |
+| --- | --- | --- |
+| Thread 00 baseline freeze | COMPLETE | Docs/status/archive only. |
+| User-uploaded image/screenshot recognition | NOT STARTED | Allowed only after explicit thread approval; no OCR implementation in Thread 00. |
+| Local inspiration-folder scheduled scan | NOT STARTED | Must stay local, bounded, and reuse desktop base; no crawler or background queue in Thread 00. |
+| Lightweight API image generation | NOT STARTED | Allowed only after explicit thread approval; no API image generation in Thread 00. |
+| Electron technical validation | NOT STARTED | Technical validation only; no formal desktop release in V1.5. |
+
 ## Scope
 
-- Goal: final regression, bug/script fixes, path-service consolidation, README V1-Plus update, acceptance checklist, and scope closeout.
-- Non-goals: new business features, OCR, screenshot recognition, link parsing, API image generation, crawlers, publishing, Electron, Windows notifications, tray, auto-update, restore, SKU, supplier, inventory, PDF reports, or multi-agent behavior.
-- Allowed files/systems: README, current docs/memory, acceptance scripts, local-path/runtime reuse, export/backup/upload path handling, startup script wording/directory checks.
-- Forbidden files/systems: schema changes, dependency changes, old migration edits, new runtime foundation, direct fs work in page components, Vercel writes, active file auto-delete, future-version features.
-- Module README needed: no new module; root README updated.
+- Goal: mark V1-Plus complete, set V1.5 as current stage, freeze baseline, shorten active docs, archive old summaries, and record V1.5 boundaries.
+- Non-goals: new business features, OCR, link import, API image generation, Electron implementation, crawlers, automated collection, automated publishing, private messages, comments, SKU, supplier, inventory, trial-sale review, PDF reports, or multi-agent scheduling.
+- Allowed files/systems: AGENTS, agent memory, docs/current, and archive indexes.
+- Forbidden files/systems: schema changes, migration changes, dependency changes, app behavior, AI behavior, runtime/filesystem write behavior, Vercel policy changes, and module implementation files.
+- Module README needed: no.
 
 ## Patch Fields
 
 - Patch Thread: no
-- Origin version: V1-Plus
-- Discovered in: user-approved Thread 07 closeout scope
-- Severity: P3
+- Origin version: V1.5 baseline
+- Discovered in: user-approved Thread 00 closeout scope
+- Severity: docs-only
 - Historical data affected: no
 - Migration required: no
 - Data repair required: no
 
 ## Boundary Check
 
-- Business logic stays in services/modules.
-- Pages/components only display, interact, and call actions.
-- Upload, export, backup, logs, and trash path roots reuse local-path services.
-- Vercel read-only checks stay centralized through runtime/product-runtime guards.
-- Logs, notifications, operation logs, diagnostics, exports, and CleanupLog do not expose API keys or full local paths in user-facing surfaces.
-- No page or client component directly executes fs operations.
-- No unrelated refactor or future-version feature added.
-- Old migrations untouched and no database reset used.
-- Core dependencies unchanged.
-- `CURRENT_STATUS.md` and `SESSION_LOG.md` remain short.
+- Business logic, schema, runtime services, and UI behavior remain unchanged.
+- V1.5 future threads must reuse the V1-Core desktop base instead of duplicating path, environment, logging, diagnostic, or Vercel-readonly logic.
+- Vercel remains preview-only and read-only; docs must not imply it is the formal runtime.
+- Docs must not include API keys, `.env` values, full local paths, database paths, full stack traces, or raw prompts.
+- `CURRENT_STATUS.md`, `SESSION_LOG.md`, `PATCH_LOG.md`, `CHANGELOG_DEV.md`, `RISK_REGISTER.md`, and `KNOWN_ISSUES.md` remain short.
 
 ## Verification
 
-- Commands: `npm run lint`, `npm run build`, `npx prisma validate`, `npm run typecheck`, `npm run encoding:check`, `npx prisma migrate status`.
-- Acceptance scripts: `scripts/thread07-final-acceptance.mts`, `scripts/thread08-final-acceptance.mts`, `scripts/v1-core-07-acceptance.mts`, `scripts/thread04-acceptance.mts`, `scripts/thread04-preview-verify.mts`, `scripts/thread05-batch-acceptance.mts`, `scripts/thread05-preview-guard.mts`, `scripts/thread06-file-cleanup-acceptance.mts`, `scripts/thread06-preview-guard.mts`.
-- Security scans: recent `CleanupLog`, `AppNotification`, and `OperationLog` records checked for API-key/full-path leakage; no runtime bad records found.
-- Data setup: acceptance scripts create temporary local records/files and clean test products/files where scripted; export/backup history artifacts may remain as normal acceptance evidence.
-- Commit/push/deploy status: local commit pending; no push or Vercel live refresh requested.
+- Required commands: `npm run lint`, `npm run build`, `npx prisma validate`, and `npm run typecheck` passed.
+- Optional commands: `npm test` was not run because no test script exists.
+- Extra check: `npm run encoding:check` passed.
+- Security scans: changed docs were checked for API-key-like strings, full local path strings, database path strings, and full stack-trace markers; no new matches found.
+- Commit/push/deploy status: local commit expected after verification; no push or Vercel live refresh requested.
