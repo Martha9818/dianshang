@@ -4,6 +4,12 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-05-31
 
+### V1.5 Stabilization - UI/UX Follow-up Pass
+
+- Changed: Completed the approved small-fix pass for AI settings entry behavior, copywriting provider/query persistence, copywriting A/B/C batch grouping and deletion, Prompt task layout/prompt wording/cancelled-task filtering, materials empty-state guidance, inspiration scan layout and AI raw-response redaction, link-import card layout and local/private URL display redaction, file-cleanup selection affordances, header settings menu, and AI image configuration status messaging.
+- Verification: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, and `npm run typecheck` passed. Root `npm test` remains unavailable because the project has no `test` script. Browser QA covered `/copywriting`, `/prompt-tasks`, `/inspirations`, `/link-imports`, `/materials`, `/maintenance/files`, and `/settings/ai`; the Codex in-app browser bridge timed out, so Chrome DevTools was used for page snapshots.
+- Boundary: No schema, migration, dependency, V2 feature, second cleanup system, crawler, automatic publishing, formal desktop release, or large workflow was added.
+
 ### V1.5 Stabilization Thread 01 - Issue Triage And Ordered Hardening
 
 - Changed: Triaged post-V1.5 issues, then completed the approved ordered stabilization fixes: hid legacy AI raw-response display, removed full Prompt text from Excel export, sanitized export/backup console errors, returned a read-only screenshot shell outside local runtime, constrained the acceptance-only cleanup helper, disabled notification actions in preview, updated the Thread 07 export assertion for Prompt summaries, and refreshed current status docs for Stabilization.

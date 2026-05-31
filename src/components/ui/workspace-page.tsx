@@ -56,6 +56,30 @@ function HeaderIconButton({
   );
 }
 
+function HeaderSettingsMenu() {
+  const className =
+    "relative flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-[#E6ECF5] bg-white text-slate-500 shadow-[0_10px_24px_rgba(59,130,246,0.08)] transition-all duration-200 hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-slate-700 hover:shadow-[0_14px_28px_rgba(59,130,246,0.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100";
+
+  return (
+    <div className="group relative">
+      <button type="button" aria-label="设置" className={className}>
+        <MiniIcon name="gear" className="h-5 w-5" />
+      </button>
+      <div className="invisible absolute right-0 top-[calc(100%+10px)] z-30 w-56 rounded-2xl border border-[#E6ECF5] bg-white p-2 opacity-0 shadow-[0_18px_40px_rgba(15,23,42,0.10)] transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+        <Link href="/settings/ai" className="block rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-[#2563EB]">
+          AI 设置
+        </Link>
+        <Link href="/settings/banned-words" className="block rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-[#2563EB]">
+          违禁词设置
+        </Link>
+        <Link href="/system/diagnostics" className="block rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-[#2563EB]">
+          诊断中心
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export function WorkspacePage({
   eyebrow,
   title,
@@ -90,7 +114,7 @@ export function WorkspacePage({
             </Link>
             <div className="flex items-center gap-3">
               <HeaderNotificationButton unreadPromise={unreadPromise} />
-              <HeaderIconButton icon="gear" href="/settings/ai" />
+              <HeaderSettingsMenu />
               <button
                 type="button"
                 className="flex h-12 cursor-pointer items-center gap-3 rounded-full border border-[#E6ECF5] bg-white px-3 pr-4 shadow-[0_10px_24px_rgba(59,130,246,0.08)] transition-all duration-200 hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:shadow-[0_14px_28px_rgba(59,130,246,0.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"

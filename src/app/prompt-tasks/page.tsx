@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  ActionButton,
   DashboardCard,
   DashboardCardHeader,
   FilterBar,
@@ -55,6 +54,15 @@ export default async function PromptTasksPage({
   const activeTask = pageData.tasks.find((task) => task.taskCode === params.taskCode) ?? pageData.tasks[0] ?? null;
   const imageGenerationPanel = await getImageGenerationPanelData(activeTask?.id ?? null).catch(() => null);
   const runtimeNotice = pageData.runtime.isWritable ? null : buildReadonlyRuntimeMessage(pageData.runtime.mode);
+  const buildTaskHref = (taskCode: string) => {
+    const next = new URLSearchParams();
+    for (const key of ["productId", "q", "platform", "imageType", "recommendedSize", "status", "sort"] as const) {
+      const value = params[key];
+      if (value) next.set(key, value);
+    }
+    next.set("taskCode", taskCode);
+    return `/prompt-tasks?${next.toString()}`;
+  };
 
   return (
     <WorkspacePage
@@ -63,7 +71,7 @@ export default async function PromptTasksPage({
       description="为商品生成可复制到网页版 ChatGPT 的生图 Prompt，并管理生成图回传状态。"
     >
       <FilterBar className="py-3">
-        <form className="grid w-full gap-3 md:grid-cols-2 xl:grid-cols-[minmax(180px,1fr)_minmax(180px,1fr)_140px_140px_140px_140px_150px_auto] xl:items-end">
+        <form className="grid w-full gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-[minmax(180px,1fr)_minmax(180px,1fr)_140px_140px_140px_140px_150px_auto] xl:items-end">
           <label className="min-w-0">
             <span className="mb-1.5 block px-1 text-sm text-slate-500">商品关键词</span>
             <input name="q" defaultValue={query.keyword ?? ""} placeholder="搜索商品 / Task ID" className={selectClassName} />
@@ -101,7 +109,7 @@ export default async function PromptTasksPage({
             ))}
           </FilterSelect>
           <FilterSelect label="状态" name="status" defaultValue={params.status ?? ""}>
-            <option value="">全部状态</option>
+            <option value="">全部状态（不含已取消）</option>
             {pageData.statuses.map((status) => (
               <option key={status} value={status}>
                 {status}
@@ -112,17 +120,21 @@ export default async function PromptTasksPage({
             <option value="createdAt_desc">从新到旧</option>
             <option value="createdAt_asc">从旧到新</option>
           </FilterSelect>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 md:col-span-2 xl:col-span-4 2xl:col-span-1">
             <button
               type="submit"
-              className="group inline-flex h-11 cursor-pointer items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-4 text-sm font-medium text-white shadow-[0_16px_36px_rgba(43,115,255,0.22)] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:bg-[linear-gradient(135deg,#4A86FF,#275FE8)] hover:shadow-[0_20px_42px_rgba(43,115,255,0.32)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 motion-reduce:transition-none motion-reduce:transform-none"
+              className="group inline-flex h-11 min-w-[96px] cursor-pointer items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-4 text-sm font-medium text-white shadow-[0_16px_36px_rgba(43,115,255,0.22)] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:bg-[linear-gradient(135deg,#4A86FF,#275FE8)] hover:shadow-[0_20px_42px_rgba(43,115,255,0.32)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 motion-reduce:transition-none motion-reduce:transform-none"
             >
               筛选
             </button>
-            <ActionButton variant="secondary">
+            <button
+              type="button"
+              disabled
+              className="inline-flex h-11 min-w-[132px] items-center justify-center gap-2 rounded-2xl border border-[#DCE5F2] bg-white px-4 text-sm font-medium text-slate-400"
+            >
               <MiniIcon name="prompt" className="h-4 w-4" />
               批量生成
-            </ActionButton>
+            </button>
           </div>
         </form>
       </FilterBar>
@@ -130,7 +142,7 @@ export default async function PromptTasksPage({
       {"readError" in pageData ? <PageNote>{pageData.readError}</PageNote> : null}
       {runtimeNotice ? <PageNote>{runtimeNotice}</PageNote> : null}
 
-      <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.82fr)]">
+      <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)]">
         <DashboardCard>
           <DashboardCardHeader title="任务列表" description="任务、商品、平台、尺寸、状态与回传入口。" />
           <div className="px-4 py-4">
@@ -155,7 +167,7 @@ export default async function PromptTasksPage({
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                               <Link
-                                href={`/prompt-tasks?taskCode=${encodeURIComponent(task.taskCode)}`}
+                                href={buildTaskHref(task.taskCode)}
                                 className="break-all text-sm font-semibold leading-5 text-slate-900 hover:text-[#2563EB]"
                               >
                                 {task.taskCode}
@@ -167,7 +179,7 @@ export default async function PromptTasksPage({
                         </div>
 
                         <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
-                          <TableActionLink href={`/prompt-tasks?taskCode=${encodeURIComponent(task.taskCode)}`}>查看</TableActionLink>
+                          <TableActionLink href={buildTaskHref(task.taskCode)}>查看</TableActionLink>
                           <TableActionLink href={`/prompt-tasks/${encodeURIComponent(task.taskCode)}/upload`}>上传</TableActionLink>
                         </div>
                       </div>
@@ -218,12 +230,12 @@ export default async function PromptTasksPage({
                   <div className="border-b border-[#EEF2F8] px-4 py-3">
                     <p className="text-sm font-medium text-slate-900">Prompt 内容</p>
                   </div>
-                  <pre className="max-h-[380px] overflow-y-auto whitespace-pre-wrap bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+                  <pre className="max-h-[360px] overflow-y-auto whitespace-pre-wrap bg-white px-4 py-4 text-sm leading-7 text-slate-600">
                     {activeTask.promptText}
                   </pre>
                 </div>
 
-                <div className="flex flex-wrap items-start gap-3 rounded-2xl border border-[#EEF2F8] bg-white px-4 py-3">
+                <div className="sticky bottom-4 z-10 flex flex-wrap items-start gap-3 rounded-2xl border border-[#EEF2F8] bg-white/95 px-4 py-3 shadow-[0_14px_30px_rgba(15,23,42,0.08)] backdrop-blur">
                   <PromptTaskCopyButton
                     taskCode={activeTask.taskCode}
                     promptText={activeTask.promptText ?? ""}
@@ -261,7 +273,13 @@ export default async function PromptTasksPage({
                   </div>
                   {imageGenerationPanel?.previewMessage ? <PageNote>{imageGenerationPanel.previewMessage}</PageNote> : null}
                   {imageGenerationPanel && !imageGenerationPanel.isConfigured ? (
-                    <PageNote>请在 AI 设置中启用 API 生图，并配置用途为 API 生图的默认 Provider。</PageNote>
+                    <PageNote>
+                      {!imageGenerationPanel.settings.enabled
+                        ? "API 生图当前未启用。请在 AI 设置中启用后，再配置用途为 API 生图的默认 Provider。"
+                        : !imageGenerationPanel.provider
+                          ? "API 生图已启用，但未配置可用的 API 生图 Provider。请在 AI 设置中新增或设为默认。"
+                          : "API 生图 Provider 缺少 Base URL、API Key 或模型名，请先补齐配置。"}
+                    </PageNote>
                   ) : null}
                   {imageGenerationPanel?.recentJobs.length ? (
                     <div className="space-y-2 border-t border-[#EEF2F8] pt-3">

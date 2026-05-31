@@ -227,9 +227,10 @@ function SidebarIcon({ icon }: { icon: NavigationIcon | "bag" }) {
     case "aiSettings":
       return (
         <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-          <path d="M12 4.5v3M12 16.5v3M4.5 12h3M16.5 12h3" stroke="currentColor" strokeLinecap="round" />
-          <circle cx="12" cy="12" r="3.25" stroke="currentColor" />
-          <path d="M6.7 6.7l2.1 2.1M15.2 15.2l2.1 2.1M17.3 6.7l-2.1 2.1M8.8 15.2l-2.1 2.1" stroke="currentColor" strokeLinecap="round" />
+          <rect x="6" y="7.5" width="12" height="10" rx="3" stroke="currentColor" />
+          <path d="M12 7.5V5M9.2 12h.1M14.7 12h.1" stroke="currentColor" strokeLinecap="round" />
+          <path d="M9.5 15c1.4.8 3.6.8 5 0" stroke="currentColor" strokeLinecap="round" />
+          <path d="M4.8 11.2v2.6M19.2 11.2v2.6" stroke="currentColor" strokeLinecap="round" />
         </svg>
       );
     case "bannedWords":

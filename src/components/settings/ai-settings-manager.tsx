@@ -113,6 +113,18 @@ export function AISettingsManager({
     () => providers.find((provider) => provider.id === editingProviderId) ?? null,
     [editingProviderId, providers],
   );
+  const defaultImageProvider = useMemo(
+    () =>
+      providers.find((provider) => provider.purpose === "image" && provider.enabled && provider.isDefault) ??
+      providers.find((provider) => provider.purpose === "image" && provider.enabled) ??
+      null,
+    [providers],
+  );
+  const imageProviderStatus = defaultImageProvider
+    ? `当前生图 Provider：${defaultImageProvider.name} / ${defaultImageProvider.modelName ?? "--"}`
+    : imageSettings.enabled
+      ? "已启用 API 生图，但未配置可用的 API 生图 Provider。请新增或切换一个用途为 API 生图的默认 Provider。"
+      : "API 生图当前未启用。启用后仍需要配置用途为 API 生图的 Provider。";
 
   function selectProvider(provider: ProviderView) {
     setConnectionResult(null);
@@ -418,6 +430,18 @@ export function AISettingsManager({
             </p>
             <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-700">
               {imageSettings.costHint}
+            </p>
+            <p
+              className={[
+                "mt-3 rounded-2xl border px-4 py-3 text-sm leading-6",
+                defaultImageProvider
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : imageSettings.enabled
+                    ? "border-rose-200 bg-rose-50 text-rose-700"
+                    : "border-[#E4EAF3] bg-white text-slate-500",
+              ].join(" ")}
+            >
+              {imageProviderStatus}
             </p>
           </div>
 

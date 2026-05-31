@@ -57,6 +57,10 @@ const promptTaskSelect = {
       spu: true,
       categoryLevel1: true,
       categoryLevel2: true,
+      sellingPoints: true,
+      painPoints: true,
+      usageScenes: true,
+      targetUser: true,
       mainImagePath: true,
     },
   },
@@ -112,7 +116,11 @@ function buildPromptTaskWhere(filters?: PromptTaskListFilters): Prisma.PromptTas
   if (filters?.platform) andConditions.push({ platform: filters.platform });
   if (filters?.imageType) andConditions.push({ imageType: filters.imageType });
   if (filters?.recommendedSize) andConditions.push({ recommendedSize: filters.recommendedSize });
-  if (filters?.status) andConditions.push({ status: filters.status });
+  if (filters?.status) {
+    andConditions.push({ status: filters.status });
+  } else {
+    andConditions.push({ status: { not: PROMPT_TASK_STATUS.CANCELLED } });
+  }
   if (filters?.keyword) {
     andConditions.push({
       OR: [
@@ -152,9 +160,21 @@ async function buildUniqueTaskCode(input: {
 
 function mapPromptTask(task: PromptTaskRecord) {
   const latestMaterial = task.materials[0] ?? null;
+  const platform = task.platform ?? "xiaohongshu";
+  const imageType = task.imageType ?? "cover";
+  const promptText =
+    task.promptText?.includes("未填写")
+      ? buildPromptText({
+          product: task.product,
+          platform,
+          imageType,
+          recommendedSize: task.recommendedSize ?? getRecommendedSize(platform, imageType),
+        })
+      : task.promptText;
 
   return {
     ...task,
+    promptText,
     platformLabel: getPlatformLabel(task.platform),
     imageTypeLabel: getImageTypeLabel(task.imageType),
     formattedUpdatedAt: formatDateTime(task.updatedAt),

@@ -172,6 +172,24 @@ export default async function MaterialsPage({
         <StatCard label="待修改" value={String(pageData?.stats.needsEdit ?? 0)} delta="真实统计" tone="amber" icon={<MiniIcon name="spark" className="h-7 w-7" />} />
       </section>
 
+      {pageData && pageData.stats.total === 0 ? (
+        <DashboardCard className="px-5 py-5">
+          <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">素材库当前为空</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                素材会从 Prompt 任务回传、商品详情素材上传、API 生图成功结果进入素材库。这里不新增第二套上传入口，避免和商品素材管理分叉。
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <TableActionLink href="/prompt-tasks">去创建 Prompt 任务</TableActionLink>
+              <TableActionLink href="/products">去商品池选择商品</TableActionLink>
+              <TableActionLink href="/settings/ai">检查 API 生图设置</TableActionLink>
+            </div>
+          </div>
+        </DashboardCard>
+      ) : null}
+
       {pageData?.stats.orphanedCount ? (
         <PageNote>
           检测到 {pageData.stats.orphanedCount} 条素材关联到已删除商品。本线程只做数据库关联提示，不做真实文件扫描、移动或删除。
@@ -288,7 +306,7 @@ export default async function MaterialsPage({
               </TableScrollArea>
             )
           ) : (
-            <PageNote>当前筛选条件下暂无素材记录。</PageNote>
+            <PageNote>当前筛选条件下暂无素材记录。可清空筛选，或从 Prompt 任务回传、商品详情素材上传、API 生图结果进入素材库。</PageNote>
           )}
         </DashboardCard>
         </BatchOperationForm>

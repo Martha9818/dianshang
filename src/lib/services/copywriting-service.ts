@@ -690,7 +690,7 @@ export async function getCopywritingPageData(filters?: {
 
   async function loadProviders() {
     return prisma.aIProvider.findMany({
-      where: { enabled: true },
+      where: { enabled: true, purpose: "text" },
       orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
       select: {
         id: true,
@@ -736,6 +736,10 @@ export async function getCopywritingPageData(filters?: {
       andConditions.push({ riskWords: { not: null } });
     } else if (query.hasViolation === "false") {
       andConditions.push({ riskWords: null });
+    }
+
+    if (query.providerId) {
+      andConditions.push({ providerId: query.providerId });
     }
 
     return prisma.copywriting.findMany({
@@ -1371,6 +1375,46 @@ export async function clearCopywritingUsedMark(copywritingId: number) {
     });
 
     return mapCopywritingRecord(record);
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}
+
+export async function deleteCopywriting(copywritingId: number, productId: number) {
+  ensureProductWritesAllowed();
+
+  try {
+    const existing = await prisma.copywriting.findUnique({
+      where: { id: copywritingId },
+      select: {
+        id: true,
+        productId: true,
+        platform: true,
+        versionLabel: true,
+        version: true,
+        title: true,
+      },
+    });
+
+    if (!existing || existing.productId !== productId) {
+      throw createNotFoundError();
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.copywriting.delete({
+        where: { id: copywritingId },
+      });
+
+      await tx.operationLog.create({
+        data: {
+          productId,
+          action: OPERATION_LOG_ACTIONS.UPDATE_COPYWRITING,
+          detail: `删除文案记录 ${existing.platform ?? ""} ${existing.versionLabel ?? existing.version ?? ""} ${existing.title ?? ""}`.trim(),
+        },
+      });
+    });
+
+    return { id: copywritingId, productId };
   } catch (error) {
     throw normalizeProductWriteError(error);
   }

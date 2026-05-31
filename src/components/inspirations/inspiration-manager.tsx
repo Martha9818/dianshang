@@ -160,6 +160,7 @@ type TaskSummary = {
   sourceRelativePath: string;
   status: string;
   failureReasonSummary: string | null;
+  rawResponseSummary?: string | null;
   needsUserConfirmation: boolean;
   retryCount: number;
   formattedCreatedAt: string;
@@ -274,6 +275,30 @@ function getTaskTone(status: string): Tone {
   if (status === "processing") return "blue";
   if (status === "skipped") return "slate";
   return "amber";
+}
+
+function looksLikeRawAiResponse(summary: string) {
+  const normalized = summary.trim();
+  return (
+    normalized.startsWith("{") ||
+    normalized.startsWith("[") ||
+    normalized.includes("\"error\"") ||
+    normalized.includes("\"message\"") ||
+    normalized.includes("invalid_request_error") ||
+    normalized.includes("Request id:")
+  );
+}
+
+function getAiTaskSummary(failureReasonSummary: string | null, rawResponseSummary: string | null | undefined, fallback: string | null = null) {
+  if (failureReasonSummary) {
+    return looksLikeRawAiResponse(failureReasonSummary) ? "AI 原始响应已隐藏，仅保留任务状态。" : failureReasonSummary;
+  }
+
+  if (rawResponseSummary) {
+    return "AI 原始响应已隐藏，仅保留任务状态。";
+  }
+
+  return fallback;
 }
 
 export function InspirationManager({ data, readonlyNotice }: { data: InspirationsPageData; readonlyNotice: string | null }) {
@@ -469,13 +494,16 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
               />
             </Field>
             <div className="flex flex-wrap gap-2">
+              <button formAction={scanAction} type="submit" className={primaryButtonClassName} disabled={scanPending || !data.runtime.isWritable}>
+                <MiniIcon name="spark" className="h-4 w-4" />
+                {scanPending ? "扫描中..." : "立即扫描"}
+              </button>
               <ActionButton type="submit" variant="secondary">
                 {folderPending ? "保存中..." : "保存目录"}
               </ActionButton>
-              <button formAction={scanAction} type="submit" className={primaryButtonClassName} disabled={scanPending || !data.runtime.isWritable}>
-                <MiniIcon name="spark" className="h-4 w-4" />
-                {scanPending ? "扫描中..." : "立即扫描并生成 AI 草稿"}
-              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 border-t border-[#EEF2F8] pt-3">
+              <span className="inline-flex h-12 items-center text-sm text-slate-400">维护入口</span>
               <button formAction={dedupLibraryAction} type="submit" className={secondaryButtonClassName} disabled={dedupLibraryPending || !data.runtime.isWritable}>
                 {dedupLibraryPending ? "补建中..." : "补建灵感箱指纹"}
               </button>
@@ -503,9 +531,14 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                 className={inputClassName}
                 disabled={!data.runtime.isWritable || scanConfigPending}
               >
+                <option value="5">5 分钟</option>
                 <option value="10">10 分钟</option>
+                <option value="15">15 分钟</option>
                 <option value="30">30 分钟</option>
                 <option value="60">1 小时</option>
+                <option value="120">2 小时</option>
+                <option value="240">4 小时</option>
+                <option value="1440">每天</option>
               </select>
             </Field>
             <button type="submit" className={secondaryButtonClassName} disabled={!data.runtime.isWritable || scanConfigPending}>
@@ -608,7 +641,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                         </div>
                         <p className="line-clamp-2 min-h-[48px] text-sm font-medium text-slate-900">{item.title ?? item.fileName}</p>
                         <p className="line-clamp-2 text-xs leading-5 text-slate-500">{item.note ?? "尚未应用 AI 草稿。"}</p>
-                        <p className="text-xs text-slate-400">{item.fileHashShort} · {item.formattedImportedAt}</p>
+                        <p className="text-xs text-slate-400">{item.sourceTypeLabel} · {item.formattedImportedAt}</p>
                       </div>
                     </button>
                   </div>
@@ -770,7 +803,9 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                           <span>确认：{job.needsUserConfirmation ? "需要" : "已处理"}</span>
                           <span>重试 {job.retryCount}</span>
                         </div>
-                        <p className="mt-1 text-slate-500">{job.rawResponseSummary ?? job.failureReasonSummary ?? "无摘要"}</p>
+                        <p className="mt-1 text-slate-500">
+                          {getAiTaskSummary(job.failureReasonSummary, job.rawResponseSummary, "无摘要")}
+                        </p>
                       </div>
                     ))
                   ) : (
@@ -859,6 +894,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           retryAction={retryAiAction}
           retryPending={retryAiPending}
           retryFieldName="aiDraftJobId"
+          redactAiFailureDetails
         />
       </section>
 
@@ -1017,6 +1053,7 @@ function TaskTable({
   retryAction,
   retryPending,
   retryFieldName,
+  redactAiFailureDetails = false,
 }: {
   title: string;
   empty: string;
@@ -1024,29 +1061,36 @@ function TaskTable({
   retryAction: (payload: FormData) => void;
   retryPending: boolean;
   retryFieldName: string;
+  redactAiFailureDetails?: boolean;
 }) {
   return (
     <DashboardCard>
       <DashboardCardHeader title={title} description="失败任务支持手动重试，不做无限自动重试。" />
       <div className="space-y-3 px-5 py-4">
         {tasks.length > 0 ? (
-          tasks.map((task) => (
-            <form key={task.id} action={retryAction} className="rounded-2xl border border-[#EEF2F8] bg-white px-4 py-4 text-sm text-slate-600">
-              <input type="hidden" name={retryFieldName} value={task.id} />
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusBadge label={task.status} tone={getTaskTone(task.status)} />
-                  <span>#{task.id}</span>
-                  <span className="break-all">{task.sourceRelativePath}</span>
+          tasks.map((task) => {
+            const summary = redactAiFailureDetails
+              ? getAiTaskSummary(task.failureReasonSummary, task.rawResponseSummary)
+              : task.failureReasonSummary;
+
+            return (
+              <form key={task.id} action={retryAction} className="rounded-2xl border border-[#EEF2F8] bg-white px-4 py-4 text-sm text-slate-600">
+                <input type="hidden" name={retryFieldName} value={task.id} />
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge label={task.status} tone={getTaskTone(task.status)} />
+                    <span>#{task.id}</span>
+                    <span className="break-all">{task.sourceRelativePath}</span>
+                  </div>
+                  <button type="submit" className={secondaryButtonClassName} disabled={retryPending || task.status !== "failed"}>
+                    重试
+                  </button>
                 </div>
-                <button type="submit" className={secondaryButtonClassName} disabled={retryPending || task.status !== "failed"}>
-                  重试
-                </button>
-              </div>
-              <p className="mt-2 text-slate-400">创建 {task.formattedCreatedAt}，更新 {task.formattedUpdatedAt}，重试 {task.retryCount}</p>
-              {task.failureReasonSummary ? <p className="mt-2 text-rose-600">{task.failureReasonSummary}</p> : null}
-            </form>
-          ))
+                <p className="mt-2 text-slate-400">创建 {task.formattedCreatedAt}，更新 {task.formattedUpdatedAt}，重试 {task.retryCount}</p>
+                {summary ? <p className="mt-2 text-rose-600">{summary}</p> : null}
+              </form>
+            );
+          })
         ) : (
           <PageNote>{empty}</PageNote>
         )}

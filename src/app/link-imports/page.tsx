@@ -3,16 +3,9 @@ import {
   ActionButton,
   DashboardCard,
   DashboardCardHeader,
-  DataTable,
-  DataTableBody,
-  DataTableCell,
-  DataTableHead,
-  DataTableHeaderCell,
-  DataTableRow,
   MiniIcon,
   PageNote,
   StatusBadge,
-  TableScrollArea,
 } from "@/components/dashboard/primitives";
 import { ProductImage } from "@/components/products/product-image";
 import { WorkspacePage } from "@/components/ui/workspace-page";
@@ -55,6 +48,37 @@ const dangerButtonClassName =
 function parseDraftId(value?: string) {
   const id = Number(value ?? "");
   return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+function isPrivateHostname(hostname: string) {
+  const normalized = hostname.toLowerCase();
+  if (["localhost", "127.0.0.1", "::1"].includes(normalized)) return true;
+  if (normalized.startsWith("10.")) return true;
+  if (normalized.startsWith("192.168.")) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(normalized)) return true;
+  return false;
+}
+
+function getSafeLinkImportDisplayUrl(value: string | null | undefined) {
+  if (!value) return "--";
+
+  if (/^[a-zA-Z]:[\\/]/.test(value)) {
+    return "本地路径已隐藏";
+  }
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol === "file:") {
+      return "本地文件 URL 已隐藏";
+    }
+    if (isPrivateHostname(parsed.hostname)) {
+      return "本地/内网 URL 已隐藏";
+    }
+  } catch {
+    return value;
+  }
+
+  return value;
 }
 
 export default async function LinkImportsPage({
@@ -166,8 +190,8 @@ export default async function LinkImportsPage({
                 <DetailRow label="状态" value={selectedDraft.status} badgeTone={selectedDraft.statusTone} />
                 <DetailRow label="质量" value={selectedDraft.qualityLevel} badgeTone={selectedDraft.qualityTone} />
                 <DetailRow label="平台" value={selectedDraft.sourcePlatform} />
-                <DetailRow label="原链接" value={selectedDraft.url} />
-                <DetailRow label="规范化" value={selectedDraft.normalizedUrl ?? "--"} />
+                <DetailRow label="原链接" value={getSafeLinkImportDisplayUrl(selectedDraft.url)} />
+                <DetailRow label="规范化" value={getSafeLinkImportDisplayUrl(selectedDraft.normalizedUrl)} />
                 <DetailRow label="公开标题" value={selectedDraft.metaTitle ?? "--"} />
                 <DetailRow label="公开描述" value={selectedDraft.metaDescription ?? "--"} />
                 <DetailRow label="转化" value={selectedDraft.conversionLabel} />
@@ -206,46 +230,34 @@ export default async function LinkImportsPage({
               <button type="submit" className={secondaryButtonClassName}>筛选</button>
             </form>
           </div>
-          <TableScrollArea>
-            <DataTable className="min-w-[900px]">
-              <DataTableHead>
-                <tr>
-                  <DataTableHeaderCell className="w-[12%]">草稿</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[16%]">用途</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[16%]">平台</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[14%]">状态</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[14%]">质量</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[18%]">时间</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[10%]">操作</DataTableHeaderCell>
-                </tr>
-              </DataTableHead>
-              <DataTableBody>
-                {pageResult.drafts.length > 0 ? (
-                  pageResult.drafts.map((draft) => (
-                    <DataTableRow key={draft.id}>
-                      <DataTableCell>#{draft.id}</DataTableCell>
-                      <DataTableCell>{draft.purposeLabel}</DataTableCell>
-                      <DataTableCell>{draft.sourcePlatform}</DataTableCell>
-                      <DataTableCell><StatusBadge label={draft.status} tone={draft.statusTone} /></DataTableCell>
-                      <DataTableCell><StatusBadge label={draft.qualityLevel} tone={draft.qualityTone} /></DataTableCell>
-                      <DataTableCell>{draft.formattedCreatedAt}</DataTableCell>
-                      <DataTableCell>
-                        <Link href={`/link-imports?draftId=${draft.id}`} className="text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8]">
-                          查看
-                        </Link>
-                      </DataTableCell>
-                    </DataTableRow>
-                  ))
-                ) : (
-                  <DataTableRow>
-                    <DataTableCell colSpan={7} className="py-10 text-center text-sm text-slate-400">
-                      暂无链接导入草稿。
-                    </DataTableCell>
-                  </DataTableRow>
-                )}
-              </DataTableBody>
-            </DataTable>
-          </TableScrollArea>
+          <div className="space-y-3 px-5 py-4">
+            {pageResult.drafts.length > 0 ? (
+              pageResult.drafts.map((draft) => (
+                <Link
+                  key={draft.id}
+                  href={`/link-imports?draftId=${draft.id}`}
+                  className={[
+                    "block rounded-2xl border px-4 py-4 transition hover:-translate-y-[1px] hover:border-blue-100 hover:bg-[#FBFDFF] hover:shadow-[0_14px_30px_rgba(59,130,246,0.08)]",
+                    selectedDraft?.id === draft.id ? "border-blue-200 bg-[#F8FBFF]" : "border-[#EEF2F8] bg-white",
+                  ].join(" ")}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-slate-900">草稿 #{draft.id}</span>
+                    <span className="text-xs text-slate-400">{draft.formattedCreatedAt}</span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <StatusBadge label={draft.purposeLabel} tone="blue" />
+                    <StatusBadge label={draft.sourcePlatform} tone="violet" />
+                    <StatusBadge label={draft.status} tone={draft.statusTone} />
+                    <StatusBadge label={draft.qualityLevel} tone={draft.qualityTone} />
+                  </div>
+                  <p className="mt-3 line-clamp-2 break-all text-xs leading-5 text-slate-500">{getSafeLinkImportDisplayUrl(draft.normalizedUrl ?? draft.url)}</p>
+                </Link>
+              ))
+            ) : (
+              <PageNote>暂无链接导入草稿。</PageNote>
+            )}
+          </div>
         </DashboardCard>
 
         <DashboardCard>

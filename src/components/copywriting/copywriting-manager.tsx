@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ActionButton,
   DashboardCard,
@@ -12,6 +12,7 @@ import {
 } from "@/components/dashboard/primitives";
 import {
   clearCopywritingUsedAction,
+  deleteCopywritingAction,
   generateCopywritingAction,
   generateMultiPlatformCopywritingAction,
   markCopywritingUsedAction,
@@ -98,11 +99,6 @@ type CopywritingView = {
   } | null;
 };
 
-type GroupedCopywritingView = {
-  platform: string;
-  records: CopywritingView[];
-};
-
 type EditableDraftState = {
   title: string;
   body: string;
@@ -117,7 +113,11 @@ const inputClassName =
 const textareaClassName =
   "min-h-[120px] w-full resize-y rounded-2xl border border-[#E4EAF3] bg-white px-4 py-3 text-sm leading-6 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] outline-none transition-all duration-200 ease-out hover:border-blue-200 hover:shadow-[0_10px_22px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] focus:border-blue-300 focus:ring-4 focus:ring-blue-50 motion-reduce:transition-none";
 const actionButtonClassName =
-  "inline-flex h-10 items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:bg-blue-50 disabled:opacity-70";
+  "inline-flex h-12 min-w-[148px] items-center justify-center rounded-2xl border border-[#DCE5F2] bg-white px-4 text-sm font-medium text-[#2563EB] shadow-[0_10px_22px_rgba(59,130,246,0.08)] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-[#1D4ED8] hover:shadow-[0_16px_30px_rgba(59,130,246,0.12)] disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transition-none motion-reduce:transform-none";
+const dangerButtonClassName =
+  "inline-flex h-12 min-w-[112px] items-center justify-center rounded-2xl border border-rose-200 bg-white px-4 text-sm font-medium text-rose-600 shadow-[0_10px_22px_rgba(244,63,94,0.08)] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transition-none motion-reduce:transform-none";
+const primaryActionButtonClassName =
+  "group inline-flex h-12 min-w-[190px] cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-5 text-sm font-medium text-white shadow-[0_16px_36px_rgba(43,115,255,0.24)] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:bg-[linear-gradient(135deg,#4A86FF,#275FE8)] hover:shadow-[0_20px_42px_rgba(43,115,255,0.32)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transition-none motion-reduce:transform-none";
 
 function getStatusTone(status: string | null | undefined) {
   if (status === COPYWRITING_AUDIT_STATUS.NEEDS_EDIT) return "red" as const;
@@ -148,20 +148,46 @@ function buildDraftMap(records: CopywritingView[]) {
 }
 
 function groupRecords(records: CopywritingView[]) {
-  return COPYWRITING_PLATFORMS.map((platform) => ({
-    platform,
-    records: records
-      .filter((record) => record.platform === platform)
-      .sort((left, right) => {
+  const groups = new Map<string, CopywritingView[]>();
+
+  for (const record of records) {
+    const key = record.aiJobId ? `job:${record.aiJobId}` : `manual:${record.id}`;
+    groups.set(key, [...(groups.get(key) ?? []), record]);
+  }
+
+  return Array.from(groups.entries())
+    .map(([key, groupRecords]) => {
+      const sortedRecords = groupRecords.toSorted((left, right) => {
         if (left.isUsedInListing !== right.isUsedInListing) {
           return left.isUsedInListing ? -1 : 1;
         }
-        if ((left.versionLabel ?? left.version ?? "") !== (right.versionLabel ?? right.version ?? "")) {
-          return String(left.versionLabel ?? left.version ?? "").localeCompare(String(right.versionLabel ?? right.version ?? ""), "en");
-        }
+
+        const platformDiff =
+          COPYWRITING_PLATFORMS.indexOf((left.platform ?? "") as (typeof COPYWRITING_PLATFORMS)[number]) -
+          COPYWRITING_PLATFORMS.indexOf((right.platform ?? "") as (typeof COPYWRITING_PLATFORMS)[number]);
+        if (platformDiff !== 0) return platformDiff;
+
+        const versionDiff = String(left.versionLabel ?? left.version ?? "").localeCompare(String(right.versionLabel ?? right.version ?? ""), "en");
+        if (versionDiff !== 0) return versionDiff;
+
         return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
-      }),
-  })).filter((group) => group.records.length > 0);
+      });
+      const first = sortedRecords[0];
+      const newestTime = Math.max(...sortedRecords.map((record) => new Date(record.createdAt).getTime()));
+      const platformCount = new Set(sortedRecords.map((record) => record.platform).filter(Boolean)).size;
+
+      return {
+        key,
+        title: first?.aiJobId ? `生成批次 #${first.aiJobId}` : `${first?.platform ?? "手动"} ${first?.versionLabel ?? first?.version ?? ""} 版`,
+        description: `${sortedRecords.length} 条文案 / ${platformCount || 1} 个平台 / ${new Date(newestTime).toLocaleString("zh-CN")}`,
+        records: sortedRecords,
+      };
+    })
+    .toSorted((left, right) => {
+      const leftTime = Math.max(...left.records.map((record) => new Date(record.createdAt).getTime()));
+      const rightTime = Math.max(...right.records.map((record) => new Date(record.createdAt).getTime()));
+      return rightTime - leftTime;
+    });
 }
 
 export function CopywritingManager({
@@ -170,8 +196,8 @@ export function CopywritingManager({
   defaultProviderId,
   initialProductId,
   initialPlatform,
+  initialProviderId,
   initialCopywritings,
-  initialGroupedCopywritings,
   runtimeNotice,
   dataNotice,
 }: {
@@ -180,21 +206,24 @@ export function CopywritingManager({
   defaultProviderId: number | null;
   initialProductId: number | null;
   initialPlatform: string | null;
+  initialProviderId: number | null;
   initialCopywritings: CopywritingView[];
-  initialGroupedCopywritings?: GroupedCopywritingView[];
   runtimeNotice?: string | null;
   dataNotice?: string | null;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [productId, setProductId] = useState<number | "">(initialProductId ?? "");
   const [platform, setPlatform] = useState<string>(initialPlatform ?? "");
-  const initialProviderId =
+  const selectedInitialProviderId =
+    providers.find((provider) => provider.id === initialProviderId && provider.enabled)?.id ??
     providers.find((provider) => provider.id === defaultProviderId && provider.enabled)?.id ??
     providers.find((provider) => provider.isDefault && provider.enabled)?.id ??
+    providers.find((provider) => provider.enabled)?.id ??
     "";
-  const [providerId, setProviderId] = useState<number | "">(initialProviderId);
+  const [providerId, setProviderId] = useState<number | "">(selectedInitialProviderId);
   const [records, setRecords] = useState<CopywritingView[]>(() => initialCopywritings);
   const [drafts, setDrafts] = useState<Record<string, EditableDraftState>>(() => buildDraftMap(initialCopywritings));
 
@@ -219,6 +248,7 @@ export function CopywritingManager({
     () =>
       providers.find((provider) => provider.id === defaultProviderId && provider.enabled)?.id ??
       providers.find((provider) => provider.isDefault && provider.enabled)?.id ??
+      providers.find((provider) => provider.enabled)?.id ??
       null,
     [defaultProviderId, providers],
   );
@@ -229,35 +259,45 @@ export function CopywritingManager({
       : defaultEnabledProviderId ?? "";
 
   const groupedRecords = useMemo(() => {
-    if (records.length === 0 && initialGroupedCopywritings) {
-      return initialGroupedCopywritings;
-    }
     return groupRecords(records);
-  }, [initialGroupedCopywritings, records]);
+  }, [records]);
 
-  function buildRoute(nextProductId: number | "", nextPlatform: string) {
-    const params = new URLSearchParams();
+  function buildRoute(nextProductId: number | "", nextPlatform: string, nextProviderId: number | "" = activeProviderId) {
+    const params = new URLSearchParams(searchParams.toString());
     if (nextProductId) {
       params.set("productId", String(nextProductId));
+    } else {
+      params.delete("productId");
     }
     if (nextPlatform) {
       params.set("platform", nextPlatform);
+    } else {
+      params.delete("platform");
+    }
+    if (nextProviderId) {
+      params.set("providerId", String(nextProviderId));
+    } else {
+      params.delete("providerId");
     }
     return `/copywriting${params.toString() ? `?${params.toString()}` : ""}`;
   }
 
-  function syncRoute(nextProductId: number | "", nextPlatform: string) {
-    router.push(buildRoute(nextProductId, nextPlatform));
+  function syncRoute(nextProductId: number | "", nextPlatform: string, nextProviderId: number | "" = activeProviderId) {
+    router.push(buildRoute(nextProductId, nextPlatform, nextProviderId));
   }
 
   function handleProductChange(nextProductId: number | "") {
     setMessage(null);
     setProductId(nextProductId);
     const nextProduct = products.find((product) => product.id === nextProductId) ?? null;
-    const nextPlatform =
-      nextProduct?.targetPlatformList.find((item): item is (typeof COPYWRITING_PLATFORMS)[number] =>
+    const productPlatforms =
+      nextProduct?.targetPlatformList.filter((item): item is (typeof COPYWRITING_PLATFORMS)[number] =>
         COPYWRITING_PLATFORMS.includes(item as (typeof COPYWRITING_PLATFORMS)[number]),
-      ) ?? platform;
+      ) ?? [];
+    const nextPlatform =
+      !platform || productPlatforms.length === 0 || productPlatforms.includes(platform as (typeof COPYWRITING_PLATFORMS)[number])
+        ? platform
+        : productPlatforms[0];
     setPlatform(nextPlatform);
     syncRoute(nextProductId, nextPlatform);
   }
@@ -426,6 +466,33 @@ export function CopywritingManager({
     });
   }
 
+  function handleDelete(record: CopywritingView) {
+    if (!window.confirm("确认删除这条文案记录？只会删除当前文案，不会删除商品、AIJob 或素材文件。")) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await deleteCopywritingAction({
+        copywritingId: record.id,
+        productId: record.productId,
+      });
+
+      if (!result.success) {
+        setMessage(result.error);
+        return;
+      }
+
+      setRecords((current) => current.filter((item) => item.id !== record.id));
+      setDrafts((current) => {
+        const next = { ...current };
+        delete next[String(record.id)];
+        return next;
+      });
+      setMessage("文案记录已删除。");
+      router.refresh();
+    });
+  }
+
   return (
     <div className="space-y-5">
       {runtimeNotice ? (
@@ -474,7 +541,9 @@ export function CopywritingManager({
             value={activeProviderId}
             onChange={(event) => {
               setMessage(null);
-              setProviderId(event.target.value ? Number(event.target.value) : "");
+              const nextProviderId = event.target.value ? Number(event.target.value) : "";
+              setProviderId(nextProviderId);
+              syncRoute(productId, platform, nextProviderId);
             }}
           >
             {defaultEnabledProviderId ? null : <option value="">请选择 Provider</option>}
@@ -486,7 +555,7 @@ export function CopywritingManager({
             ))}
           </select>
         </div>
-        <div className="flex flex-wrap gap-3 xl:ml-auto">
+        <div className="grid w-full gap-3 sm:grid-cols-3 xl:ml-auto xl:w-auto">
           <ActionButton variant="secondary" href={productId ? `/products/${productId}?tab=copywriting` : "/products"}>
             商品详情文案
           </ActionButton>
@@ -502,7 +571,7 @@ export function CopywritingManager({
             type="button"
             disabled={isPending || Boolean(runtimeNotice)}
             onClick={handleGeneratePackage}
-            className="group inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-5 text-sm font-medium text-white shadow-[0_16px_36px_rgba(43,115,255,0.24)] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:bg-[linear-gradient(135deg,#4A86FF,#275FE8)] hover:shadow-[0_20px_42px_rgba(43,115,255,0.32)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transition-none motion-reduce:transform-none"
+            className={primaryActionButtonClassName}
           >
             <MiniIcon name="spark" className="h-4 w-4" />
             {isPending ? "生成中..." : "生成多平台文案包"}
@@ -542,12 +611,16 @@ export function CopywritingManager({
 
       {groupedRecords.length > 0 ? (
         groupedRecords
-          .filter((group) => !platform || group.platform === platform)
+          .map((group) => ({
+            ...group,
+            records: platform ? group.records.filter((record) => record.platform === platform) : group.records,
+          }))
+          .filter((group) => group.records.length > 0)
           .map((group) => (
-            <DashboardCard key={group.platform}>
+            <DashboardCard key={group.key}>
               <DashboardCardHeader
-                title={group.platform}
-                description={`${group.records.length} 条历史文案记录，按版本和创建时间保留`}
+                title={group.title}
+                description={group.description}
               />
               <div className="space-y-4 px-5 py-5">
                 {group.records.map((record) => {
@@ -560,7 +633,7 @@ export function CopywritingManager({
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="text-base font-semibold text-slate-900">
-                              {group.platform} {versionLabel} 版
+                              {record.platform ?? "文案"} {versionLabel} 版
                             </h3>
                             <StatusBadge label={record.auditStatus ?? "待生成"} tone={getStatusTone(record.auditStatus)} />
                             {record.isUsedInListing ? <StatusBadge label="实际使用中" tone="green" /> : null}
@@ -678,6 +751,9 @@ export function CopywritingManager({
                                 标记为实际使用
                               </button>
                             )}
+                            <button type="button" disabled={isPending} onClick={() => handleDelete(record)} className={dangerButtonClassName}>
+                              删除
+                            </button>
                           </div>
                         </div>
                       ) : null}

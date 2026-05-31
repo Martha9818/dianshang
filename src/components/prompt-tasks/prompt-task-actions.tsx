@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { cancelPromptTaskAction, generatePromptTaskImageAction, markPromptTaskCopiedAction } from "@/app/prompt-tasks/actions";
 
 const buttonClassName =
-  "group inline-flex h-9 cursor-pointer items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-[#1D4ED8] hover:shadow-[0_12px_24px_rgba(59,130,246,0.10)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none motion-reduce:transform-none";
+  "group inline-flex h-11 min-w-[128px] cursor-pointer items-center justify-center rounded-2xl border border-[#DCE5F2] bg-white px-4 text-sm font-medium text-[#2563EB] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-[#1D4ED8] hover:shadow-[0_12px_24px_rgba(59,130,246,0.10)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none motion-reduce:transform-none";
 
 export function PromptTaskCopyButton({
   taskCode,
@@ -160,7 +160,7 @@ export function PromptTaskImageGenerationButton({
           value={selectedPromptVersion}
           onChange={(event) => setSelectedPromptVersion(event.target.value)}
           disabled={disabled || isPending}
-          className="h-9 rounded-xl border border-[#DCE5F2] bg-white px-2 text-xs text-slate-600 outline-none disabled:opacity-60"
+          className="h-11 rounded-2xl border border-[#DCE5F2] bg-white px-3 text-xs text-slate-600 outline-none disabled:opacity-60"
         >
           {Array.from(new Set(promptVersionOptions.filter(Boolean))).map((item) => (
             <option key={item} value={item}>
@@ -172,7 +172,7 @@ export function PromptTaskImageGenerationButton({
           value={selectedPromptUse}
           onChange={(event) => setSelectedPromptUse(event.target.value)}
           disabled={disabled || isPending}
-          className="h-9 rounded-xl border border-[#DCE5F2] bg-white px-2 text-xs text-slate-600 outline-none disabled:opacity-60"
+          className="h-11 rounded-2xl border border-[#DCE5F2] bg-white px-3 text-xs text-slate-600 outline-none disabled:opacity-60"
         >
           {Array.from(new Set(promptUseOptions.filter(Boolean))).map((item) => (
             <option key={item} value={item}>

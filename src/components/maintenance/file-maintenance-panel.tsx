@@ -181,7 +181,14 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
           action={
             <button
               type="button"
-              onClick={() => setSelectedFiles(movableFilteredItems.map((item) => item.relativePath))}
+              onClick={() => {
+                if (movableFilteredItems.length === 0) {
+                  window.alert("当前筛选结果中没有可清理项。已保护的商品主图、素材、竞品截图和灵感图片不能被勾选。");
+                  return;
+                }
+
+                setSelectedFiles(movableFilteredItems.map((item) => item.relativePath));
+              }}
               className="inline-flex h-10 cursor-pointer items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:bg-blue-50"
             >
               选择可清理项
@@ -255,14 +262,18 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
                   filteredItems.map((item) => (
                     <DataTableRow key={item.relativePath}>
                       <DataTableCell>
-                        <input
-                          type="checkbox"
-                          checked={selectedFiles.includes(item.relativePath)}
-                          disabled={!item.canMoveToTrash}
-                          onChange={(event) => toggleSelected(item.relativePath, event.target.checked)}
-                          aria-label={`选择 ${item.relativePath}`}
-                          className="h-4 w-4 rounded border-slate-300 text-blue-600 disabled:opacity-40"
-                        />
+                        <div className="space-y-1">
+                          <input
+                            type="checkbox"
+                            checked={selectedFiles.includes(item.relativePath)}
+                            disabled={!item.canMoveToTrash}
+                            onChange={(event) => toggleSelected(item.relativePath, event.target.checked)}
+                            aria-label={`选择 ${item.relativePath}`}
+                            title={item.canMoveToTrash ? "可移入应用内回收站" : item.reason}
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600 disabled:cursor-not-allowed disabled:opacity-30"
+                          />
+                          {!item.canMoveToTrash ? <p className="text-[11px] leading-4 text-slate-400">已保护</p> : null}
+                        </div>
                       </DataTableCell>
                       <DataTableCell>
                         <div className="min-w-0">

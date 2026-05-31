@@ -59,6 +59,7 @@ export default async function CopywritingPage({
         <FilterBar>
           <form action="/copywriting" method="get" className="grid w-full gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_180px_140px_140px_150px_160px_auto] xl:items-end">
             <FilterField label="商品关键词">
+              {query.providerId ? <input type="hidden" name="providerId" value={query.providerId} /> : null}
               <input name="q" defaultValue={query.keyword ?? ""} placeholder="搜索商品 / 标题 / 正文" className={inputClassName} />
             </FilterField>
             <FilterField label="商品">
@@ -112,14 +113,14 @@ export default async function CopywritingPage({
       </DashboardCard>
 
       <CopywritingManager
-        key={`${pageData.selectedProductId ?? "none"}:${pageData.selectedPlatform ?? "none"}:${pageData.defaultProviderId ?? "none"}:${query.keyword ?? ""}:${query.version ?? ""}:${query.hasViolation ?? ""}`}
+        key={`${pageData.selectedProductId ?? "none"}:${pageData.selectedPlatform ?? "none"}:${query.providerId ?? pageData.defaultProviderId ?? "none"}:${query.keyword ?? ""}:${query.version ?? ""}:${query.hasViolation ?? ""}`}
         products={pageData.products}
         providers={pageData.providers}
         defaultProviderId={pageData.defaultProviderId}
         initialProductId={pageData.selectedProductId}
         initialPlatform={pageData.selectedPlatform}
+        initialProviderId={query.providerId}
         initialCopywritings={pageData.copywritings}
-        initialGroupedCopywritings={pageData.groupedCopywritings}
         runtimeNotice={runtime.isWritable ? null : "预览环境只读，请在 Windows 本地验收。"}
         dataNotice={pageData.readNotice}
       />
