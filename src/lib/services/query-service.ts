@@ -232,3 +232,80 @@ export function normalizeInspirationListQuery(input: QueryInput = {}): Inspirati
     sort: normalizeCreatedAtSort(input.sort),
   };
 }
+
+function appendQueryParam(params: URLSearchParams, key: string, value: string | number | null) {
+  if (value === null) {
+    return;
+  }
+
+  params.set(key, String(value));
+}
+
+function buildQueryString(params: URLSearchParams) {
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+export function serializeProductPoolQuery(query: ProductPoolQuery) {
+  const params = new URLSearchParams();
+  appendQueryParam(params, "q", query.keyword);
+  appendQueryParam(params, "status", query.status);
+  appendQueryParam(params, "recommendation", query.recommendation);
+  appendQueryParam(params, "platform", query.platform);
+  appendQueryParam(params, "minScore", query.minScore);
+  appendQueryParam(params, "maxScore", query.maxScore);
+  appendQueryParam(params, "missingCompetitor", query.missingCompetitor);
+  appendQueryParam(params, "missingCost", query.missingCost);
+  appendQueryParam(params, "hasMaterial", query.hasMaterial);
+  appendQueryParam(params, "hasCopywriting", query.hasCopywriting);
+  appendQueryParam(params, "needsRescore", query.needsRescore);
+  appendQueryParam(params, "sort", query.sort);
+  return buildQueryString(params);
+}
+
+export function serializeMaterialLibraryQuery(query: MaterialLibraryQuery) {
+  const params = new URLSearchParams();
+  appendQueryParam(params, "query", query.keyword);
+  appendQueryParam(params, "productId", query.productId);
+  appendQueryParam(params, "platform", query.platform);
+  appendQueryParam(params, "materialType", query.materialType);
+  appendQueryParam(params, "status", query.status);
+  appendQueryParam(params, "sort", query.sort);
+  appendQueryParam(params, "materialId", query.materialId);
+  return buildQueryString(params);
+}
+
+export function serializeCopywritingListQuery(query: CopywritingListQuery) {
+  const params = new URLSearchParams();
+  appendQueryParam(params, "productId", query.productId);
+  appendQueryParam(params, "q", query.keyword);
+  appendQueryParam(params, "platform", query.platform);
+  appendQueryParam(params, "version", query.version);
+  appendQueryParam(params, "hasViolation", query.hasViolation);
+  appendQueryParam(params, "sort", query.sort);
+  appendQueryParam(params, "providerId", query.providerId);
+  return buildQueryString(params);
+}
+
+export function serializePromptTaskQuery(query: PromptTaskQuery) {
+  const params = new URLSearchParams();
+  appendQueryParam(params, "productId", query.productId);
+  appendQueryParam(params, "q", query.keyword);
+  appendQueryParam(params, "platform", query.platform);
+  appendQueryParam(params, "imageType", query.imageType);
+  appendQueryParam(params, "recommendedSize", query.recommendedSize);
+  appendQueryParam(params, "status", query.status);
+  appendQueryParam(params, "sort", query.sort);
+  return buildQueryString(params);
+}
+
+export function serializeInspirationListQuery(query: InspirationListQuery) {
+  const params = new URLSearchParams();
+  appendQueryParam(params, "q", query.keyword);
+  appendQueryParam(params, "sourceType", query.sourceType);
+  appendQueryParam(params, "status", query.status);
+  appendQueryParam(params, "converted", query.converted);
+  appendQueryParam(params, "hasImage", query.hasImage);
+  appendQueryParam(params, "sort", query.sort);
+  return buildQueryString(params);
+}

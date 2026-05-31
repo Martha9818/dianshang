@@ -8,6 +8,18 @@ import {
   type LocalAssistantSuggestionSource,
   type LocalAssistantTone,
 } from "@/lib/modules/local-assistant/localAssistantTypes";
+import {
+  normalizeCopywritingListQuery,
+  normalizeInspirationListQuery,
+  normalizeMaterialLibraryQuery,
+  normalizeProductPoolQuery,
+  normalizePromptTaskQuery,
+  serializeCopywritingListQuery,
+  serializeInspirationListQuery,
+  serializeMaterialLibraryQuery,
+  serializeProductPoolQuery,
+  serializePromptTaskQuery,
+} from "@/lib/services/query-service";
 
 const SAFE_ROUTE_PREFIXES = [
   "/assistant",
@@ -65,6 +77,10 @@ function buildAssistantHref(pathname: string, params?: Record<string, string | n
 
   const query = search.toString();
   return query ? `${pathname}?${query}` : pathname;
+}
+
+function buildSerializedAssistantHref(pathname: string, queryString: string) {
+  return `${pathname}${queryString}`;
 }
 
 function isAllowedActionType(actionType: string): actionType is LocalAssistantActionType {
@@ -159,11 +175,13 @@ function buildProductSuggestion(question: string, source: LocalAssistantSuggesti
     reasons.push("需要人工复核评分");
   }
 
+  const query = normalizeProductPoolQuery(params);
+
   return createSuggestion({
     id: "product-filter",
     title: "查看商品筛选结果",
     description: reasons.length > 0 ? `按本地商品数据生成筛选条件：${reasons.join("、")}。` : "按本地商品数据提供筛选入口。",
-    href: buildAssistantHref("/products", params),
+    href: buildSerializedAssistantHref("/products", serializeProductPoolQuery(query)),
     actionType: Object.keys(params).length > 1 ? "filter" : "search",
     scope: "product",
     source,
@@ -177,11 +195,13 @@ function buildCompetitorSuggestion(question: string, source: LocalAssistantSugge
     return null;
   }
 
+  const query = normalizeProductPoolQuery({ missingCompetitor: "false", sort: "updatedAt_desc" });
+
   return createSuggestion({
     id: "competitor-navigate",
     title: "从商品列表进入竞品详情",
     description: "当前没有独立竞品总表，建议先打开含竞品商品，再进入商品详情页的竞品或竞品分析标签。",
-    href: buildAssistantHref("/products", { missingCompetitor: "false", sort: "updatedAt_desc" }),
+    href: buildSerializedAssistantHref("/products", serializeProductPoolQuery(query)),
     actionType: "navigate",
     scope: "competitor",
     source,
@@ -215,11 +235,13 @@ function buildMaterialSuggestion(question: string, source: LocalAssistantSuggest
     reasons.push("待修改素材");
   }
 
+  const query = normalizeMaterialLibraryQuery(params);
+
   return createSuggestion({
     id: "material-search",
     title: "查看素材库建议筛选",
     description: reasons.length > 0 ? `已根据问题聚焦素材条件：${reasons.join("、")}。` : "打开素材库并保留本地只读筛选建议。",
-    href: buildAssistantHref("/materials", params),
+    href: buildSerializedAssistantHref("/materials", serializeMaterialLibraryQuery(query)),
     actionType: Object.keys(params).length > 1 ? "filter" : "search",
     scope: "material",
     source,
@@ -243,11 +265,13 @@ function buildCopywritingSuggestion(question: string, source: LocalAssistantSugg
     reasons.push("有违禁或风险提示的文案");
   }
 
+  const query = normalizeCopywritingListQuery(params);
+
   return createSuggestion({
     id: "copywriting-search",
     title: "查看文案列表建议筛选",
     description: reasons.length > 0 ? `按本地文案记录筛选：${reasons.join("、")}。` : "打开本地文案列表，进一步手动查看或筛选。",
-    href: buildAssistantHref("/copywriting", params),
+    href: buildSerializedAssistantHref("/copywriting", serializeCopywritingListQuery(query)),
     actionType: Object.keys(params).length > 1 ? "filter" : "search",
     scope: "copywriting",
     source,
@@ -261,11 +285,13 @@ function buildPromptTaskSuggestion(question: string, source: LocalAssistantSugge
     return null;
   }
 
+  const query = normalizePromptTaskQuery({ sort: "createdAt_desc" });
+
   return createSuggestion({
     id: "prompt-task-search",
     title: "查看 Prompt 任务列表",
     description: "打开本地 Prompt 任务页后可继续按状态、平台或图类型手动筛选。",
-    href: buildAssistantHref("/prompt-tasks", { sort: "createdAt_desc" }),
+    href: buildSerializedAssistantHref("/prompt-tasks", serializePromptTaskQuery(query)),
     actionType: "navigate",
     scope: "prompt_task",
     source,
@@ -299,11 +325,13 @@ function buildInspirationSuggestion(question: string, source: LocalAssistantSugg
     reasons.push("有图片灵感");
   }
 
+  const query = normalizeInspirationListQuery(params);
+
   return createSuggestion({
     id: "inspiration-search",
     title: "查看灵感箱建议筛选",
     description: reasons.length > 0 ? `按本地灵感记录筛选：${reasons.join("、")}。` : "打开灵感箱查看当前记录。",
-    href: buildAssistantHref("/inspirations", params),
+    href: buildSerializedAssistantHref("/inspirations", serializeInspirationListQuery(query)),
     actionType: Object.keys(params).length > 1 ? "filter" : "search",
     scope: "inspiration",
     source,

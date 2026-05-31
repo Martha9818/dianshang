@@ -42,6 +42,7 @@
 - Thread 07 root verification passed encoding check, lint, build, Prisma validate, and typecheck; `npm test` was attempted and reported no `test` script.
 - Thread 08 verification passed encoding check, lint, build, Prisma validate, typecheck, and lightweight `npm run thread08:verify`; `npm test` was attempted and reported no `test` script.
 - Thread 08 assistant search is rules-first. AI only helps infer intent locally when a default text provider exists, and every final link still comes from a service-side allowlist.
+- Thread 08 follow-up now reuses `src/lib/services/query-service.ts` normalization and serialization helpers when building assistant filter links for products, materials, copywriting, prompt tasks, and inspirations.
 - Thread 08 competitor search remains a guided jump into existing product detail / competitor views; there is still no standalone competitor list route.
 - Explicit `attach` mode can still target a user-run Next.js dev server for diagnostics, and that dev target may still show the expected Electron development CSP warning.
 - POC Electron install may need a reachable Electron binary mirror in restricted networks; this remains POC-only and does not affect root app install.

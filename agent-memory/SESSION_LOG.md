@@ -4,6 +4,12 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 
 ## 2026-05-31
 
+### V1.5 Thread 08 Follow-Up - Query Service Reuse For Assistant Filters
+
+- Changed: Reworked local-assistant filter-link generation to reuse `src/lib/services/query-service.ts` normalization and new serialization helpers instead of manually composing product/material/copywriting/prompt/inspiration query strings.
+- Result: `/assistant` now stays aligned with existing page query contracts while keeping the same read-only action boundary and allowlisted destinations.
+- Verification: Encoding check, lint, build, Prisma validate, typecheck, and `npm run thread08:verify` passed; `npm test` is still not available in the current scripts.
+
 ### V1.5 Thread 08 - Site-Search Assistant And Notification-Summary Assistant
 
 - Changed: Added `/assistant` as a lightweight local-only assistant page with two read-only sections: site-search assistant and notification-summary assistant.
