@@ -4,6 +4,15 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 
 ## 2026-05-31
 
+### V1.5 Thread 04 - Competitor Intelligent Analysis And Differentiation Suggestions
+
+- Changed: Added `CompetitorAnalysisSnapshot`, local-only competitor analysis service, centralized prompt template, product-detail analysis tab, competitor-tab entry, competitor selection, history, regeneration, reference-version marking, and archive with double confirmation.
+- Safety: Analysis uses only local product, manually entered competitor, screenshot-draft, and link-import-draft summaries; it does not open links, crawl platforms, auto-collect competitors, overwrite scoring, update recommendations, update product status, or mutate competitor facts.
+- Acceptance fix: AI error summaries now redact local-path-like provider error details before being saved to failed snapshots, AI jobs, or AI request logs.
+- Verification fix: Replaced the legacy `thread04:verify` / `thread04:preview` copywriting-provider scripts with competitor-analysis-specific local and preview acceptance scripts.
+- Runtime: Vercel/read-only write attempts return `预览环境只读，请在 Windows 本地验收竞品智能分析。`; preview does not call AI or save analysis snapshots.
+- Verification: Encoding check, lint, build, Prisma validate, typecheck, mock-provider local acceptance, Vercel read-only simulation, and HTTP page smoke checks passed; Codex Browser tool timed out, so browser inspection fell back to HTTP smoke; no `test` script exists.
+
 ### V1.5 Thread 03 - Link Import Attempts And Quality Grading
 
 - Changed: Added `LinkImportDraft`, `/link-imports`, single pasted-link draft creation, URL normalization, source-platform labels, public OpenGraph/title/description attempts, quality grading, auxiliary screenshot/text/note input, draft list/detail, reject/archive, and explicit conversion actions.

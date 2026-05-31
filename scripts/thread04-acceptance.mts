@@ -1,11 +1,12 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { once } from "node:events";
 import { prisma } from "../src/lib/prisma";
-import { OPERATION_LOG_ACTIONS } from "../src/lib/modules/products/constants";
-import { testAIProviderConnectionWithConfigAction } from "../src/app/settings/actions";
-import { createAIProvider, deleteAIProvider, disableAIProvider, enableAIProvider, updateAIProvider } from "../src/lib/services/ai-provider-service";
-import { createBannedWord, deleteBannedWord, updateBannedWord } from "../src/lib/services/banned-word-service";
-import { generatePlatformCopywriting, saveManualCopywriting } from "../src/lib/services/copywriting-service";
+import {
+  archiveCompetitorAnalysisSnapshot,
+  generateCompetitorAnalysisSnapshot,
+  getCompetitorAnalysisSnapshots,
+  markCompetitorAnalysisReference,
+} from "../src/lib/services/competitor-analysis/competitorAnalysisService";
 
 type Check = {
   name: string;
@@ -13,7 +14,16 @@ type Check = {
   detail?: string;
 };
 
+type EnvSnapshot = {
+  ECOMPILOT_RUNTIME_MODE?: string;
+  VERCEL?: string;
+  VERCEL_ENV?: string;
+};
+
 const checks: Check[] = [];
+const insufficientDataNeedle = "\u5efa\u8bae\u5148\u8865\u5145\u7ade\u54c1\u6570\u636e";
+const rescoreNeedle = "\u5efa\u8bae\u91cd\u65b0\u8bc4\u5206";
+const fullLocalPathPattern = new RegExp("[A-Za-z]:\\\\\\\\|E:\\\\\\\\|file://");
 
 function pass(name: string, detail?: string) {
   checks.push({ name, status: "PASS", detail });
@@ -29,9 +39,22 @@ function assert(condition: unknown, message: string) {
   }
 }
 
+function restoreEnvValue(key: keyof EnvSnapshot, value: string | undefined) {
+  if (value === undefined) {
+    delete process.env[key];
+  } else {
+    process.env[key] = value;
+  }
+}
+
+function restoreEnv(snapshot: EnvSnapshot) {
+  restoreEnvValue("ECOMPILOT_RUNTIME_MODE", snapshot.ECOMPILOT_RUNTIME_MODE);
+  restoreEnvValue("VERCEL", snapshot.VERCEL);
+  restoreEnvValue("VERCEL_ENV", snapshot.VERCEL_ENV);
+}
+
 async function readRequestJson(req: IncomingMessage) {
   const chunks: Buffer[] = [];
-
   for await (const chunk of req) {
     chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
   }
@@ -40,68 +63,8 @@ async function readRequestJson(req: IncomingMessage) {
   return body ? JSON.parse(body) : {};
 }
 
-function buildThreeVersionResponse() {
-  return {
-    platform: "闲鱼",
-    versions: [
-      {
-        version: "A",
-        style: "稳妥真实版",
-        title: "A 版标题",
-        main_copy: "A 版正文",
-        selling_points: ["真实描述", "适合自用"],
-        faq: ["可以议价吗？可以小刀。"],
-        risk_notes: ["按实际库存发货。"],
-      },
-      {
-        version: "B",
-        style: "强卖点转化版",
-        title: "B 版标题",
-        main_copy: "B 版正文",
-        selling_points: ["重点卖点"],
-        faq: ["什么时候发货？当天可安排。"],
-        risk_notes: ["避免夸大承诺。"],
-      },
-      {
-        version: "C",
-        style: "种草内容版",
-        title: "C 版标题",
-        main_copy: "C 版正文",
-        selling_points: ["生活化场景"],
-        faq: ["适合谁？适合日常使用。"],
-        risk_notes: ["不虚构效果。"],
-      },
-    ],
-  };
-}
-
-function buildPartialResponse() {
-  return {
-    platform: "闲鱼",
-    versions: [
-      {
-        version: "A",
-        style: "稳妥真实版",
-        title: "只有 A",
-        main_copy: "只有 A 的正文",
-        selling_points: ["A 卖点"],
-        faq: [],
-        risk_notes: [],
-      },
-      {
-        version: "B",
-        style: "强卖点转化版",
-        title: "只有 B",
-        main_copy: "只有 B 的正文",
-        selling_points: ["B 卖点"],
-        faq: [],
-        risk_notes: [],
-      },
-    ],
-  };
-}
-
 async function createMockServer() {
+  const calls: unknown[] = [];
   const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     if (req.method !== "POST" || req.url !== "/v1/chat/completions") {
       res.writeHead(404, { "Content-Type": "application/json" });
@@ -109,59 +72,36 @@ async function createMockServer() {
       return;
     }
 
-    const authorization = req.headers.authorization ?? "";
     const request = await readRequestJson(req);
-    const model = String(request.model ?? "");
-    const prompt = String(request.messages?.[0]?.content ?? "");
-    const wantsStructured = Boolean(request.response_format);
+    calls.push(request);
 
-    if (authorization === "Bearer bad-key") {
-      res.writeHead(401, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: { message: "Invalid API key bad-key" } }));
+    if (String(request.model ?? "") === "thread04-fail-model") {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: { message: "mock provider failure at /secret/local/path" } }));
       return;
-    }
-
-    if (model === "bad-model") {
-      res.writeHead(404, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: { message: "model not found" } }));
-      return;
-    }
-
-    if (model === "rate-limited") {
-      res.writeHead(429, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: { message: "rate limit exceeded" } }));
-      return;
-    }
-
-    if (model === "quota-model") {
-      res.writeHead(429, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: { message: "insufficient quota balance" } }));
-      return;
-    }
-
-    if (wantsStructured && model === "no-schema") {
-      res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: { message: "response_format json_schema unsupported" } }));
-      return;
-    }
-
-    let content = JSON.stringify({ ok: true });
-    if (prompt.includes("生成 3 个版本")) {
-      content = JSON.stringify(buildThreeVersionResponse());
-    }
-
-    if (model === "non-json") {
-      content = "这不是 JSON";
-    }
-
-    if (model === "missing-version") {
-      content = JSON.stringify(buildPartialResponse());
     }
 
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
-        choices: [{ message: { content } }],
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                summary: "3 selected local competitors share compact storage, easy cleaning, and rental-home positioning.",
+                priceBandSummary: "Prices cluster from 79 to 129, with a practical test anchor around 99.",
+                sellingPointSummary: "Common selling points are compact size, durability, and easy setup.",
+                imageStyleSummary: "Images lean toward bright home scenes with detail and size-comparison shots.",
+                copywritingStyleSummary: "Copy usually opens with storage pain points and then gives a scene-based solution.",
+                differentiationAdvice: "Differentiate with small-home routines, replaceable parts, and measured load claims.",
+                riskTips: "Do not overstate load bearing or material quality; manually review platform and after-sales risks.",
+                nextStepAdvice: "Run a 20-50 unit small batch test and observe clicks, saves, questions, and returns. \u5efa\u8bae\u91cd\u65b0\u8bc4\u5206.",
+                dataGapAdvice: "Add negative reviews, local screenshots, recent heat data, and after-sales questions.",
+                uncertaintyNotes: "This is AI-assisted advice based only on local records; sample size and heat metrics remain uncertain.",
+              }),
+            },
+          },
+        ],
       }),
     );
   });
@@ -176,6 +116,7 @@ async function createMockServer() {
 
   return {
     baseUrl: `http://127.0.0.1:${address.port}/v1`,
+    calls,
     close: async () => {
       server.close();
       await once(server, "close");
@@ -183,331 +124,286 @@ async function createMockServer() {
   };
 }
 
+async function cleanupAcceptanceData(input: {
+  productId: number | null;
+  providerId: number | null;
+  previousDefaultProviderIds: number[];
+}) {
+  const aiJobIds =
+    input.productId === null
+      ? []
+      : (
+          await prisma.competitorAnalysisSnapshot.findMany({
+            where: { productId: input.productId, aiJobId: { not: null } },
+            select: { aiJobId: true },
+          })
+        )
+          .map((snapshot) => snapshot.aiJobId)
+          .filter((id): id is number => typeof id === "number");
+
+  if (input.productId !== null) {
+    await prisma.aIRequestLog.deleteMany({
+      where: {
+        OR: [{ relatedProductId: input.productId }, { relatedTaskId: { in: aiJobIds } }],
+      },
+    });
+    await prisma.competitorAnalysisSnapshot.deleteMany({ where: { productId: input.productId } });
+    await prisma.screenshotRecognitionJob.deleteMany({ where: { productId: input.productId } });
+    await prisma.linkImportDraft.deleteMany({ where: { productId: input.productId } });
+    await prisma.operationLog.deleteMany({ where: { productId: input.productId } });
+    await prisma.product.delete({ where: { id: input.productId } }).catch(() => undefined);
+  }
+
+  if (aiJobIds.length > 0) {
+    await prisma.aIJob.deleteMany({ where: { id: { in: aiJobIds } } });
+  }
+
+  if (input.providerId !== null) {
+    await prisma.aIProvider.delete({ where: { id: input.providerId } }).catch(() => undefined);
+  }
+
+  await prisma.aIProvider.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
+  for (const providerId of input.previousDefaultProviderIds) {
+    await prisma.aIProvider.update({ where: { id: providerId }, data: { isDefault: true } }).catch(() => undefined);
+  }
+}
+
 async function main() {
+  const envSnapshot: EnvSnapshot = {
+    ECOMPILOT_RUNTIME_MODE: process.env.ECOMPILOT_RUNTIME_MODE,
+    VERCEL: process.env.VERCEL,
+    VERCEL_ENV: process.env.VERCEL_ENV,
+  };
   const mock = await createMockServer();
   const runId = Date.now();
-  const cleanup = {
-    productIds: [] as number[],
-    providerIds: [] as number[],
-    bannedWordIds: [] as number[],
-  };
+  const previousDefaultProviders = await prisma.aIProvider.findMany({ where: { isDefault: true }, select: { id: true } });
+  let providerId: number | null = null;
+  let productId: number | null = null;
 
   try {
+    delete process.env.VERCEL;
+    delete process.env.VERCEL_ENV;
+    process.env.ECOMPILOT_RUNTIME_MODE = "local";
+
+    await prisma.aIProvider.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
+    const provider = await prisma.aIProvider.create({
+      data: {
+        name: `thread04-competitor-mock-${runId}`,
+        providerType: "openai-compatible",
+        baseUrl: mock.baseUrl,
+        apiKey: "thread04-secret-key-should-not-leak",
+        modelName: "thread04-ok-model",
+        purpose: "text",
+        enabled: true,
+        isDefault: true,
+      },
+    });
+    providerId = provider.id;
+
     const product = await prisma.product.create({
       data: {
-        spu: `SPU-THREAD04-${runId}`,
-        name: `Thread04 验收商品 ${runId}`,
-        status: "待分析",
-        categoryLevel1: "家居",
-        categoryLevel2: "收纳",
-        tags: JSON.stringify(["收纳", "日常"]),
-        targetUser: "租房用户",
-        targetPlatforms: JSON.stringify(["闲鱼", "淘宝", "小红书", "抖音"]),
+        spu: `THREAD04-COMP-${runId}`,
+        name: `Thread04 competitor analysis acceptance ${runId}`,
+        status: "pending-analysis",
+        categoryLevel1: "home",
+        categoryLevel2: "storage",
+        tags: JSON.stringify(["storage", "rental"]),
+        targetUser: "rental users",
+        targetPlatforms: JSON.stringify(["manual-platform-a", "manual-platform-b"]),
         estimatedPrice: 99,
-        sellingPoints: "好清理\n耐用",
-        painPoints: "怕脏难清理",
-        usageScenes: "日常使用场景",
+        sellingPoints: "easy clean\ncompact",
+        painPoints: "small home storage shortage",
+        usageScenes: "bedroom, entryway, kitchen",
+        notes: "local acceptance only; no full local path should be sent",
       },
     });
-    cleanup.productIds.push(product.id);
+    productId = product.id;
 
-    const provider = await createAIProvider({
-      name: `thread04-mock-${runId}`,
-      providerType: "openai-compatible",
-      baseUrl: mock.baseUrl,
-      apiKey: "ok-key",
-      modelName: "ok-model",
-      purpose: "text",
-      enabled: true,
-      isDefault: true,
-    });
-    cleanup.providerIds.push(provider.id);
-
-    const riskyWord = await createBannedWord({
-      word: `验收风险词${runId}`,
-      category: "验收分类",
-      riskLevel: "high",
-    });
-    cleanup.bannedWordIds.push(riskyWord.id);
-
-    await updateBannedWord(riskyWord.id, {
-      word: riskyWord.word,
-      category: "验收分类更新",
-      riskLevel: "high",
-    });
-
-    await updateAIProvider(provider.id, {
-      id: String(provider.id),
-      name: provider.name,
-      providerType: "openai-compatible",
-      baseUrl: mock.baseUrl,
-      apiKey: "",
-      modelName: "ok-model",
-      purpose: "text",
-      enabled: true,
-      isDefault: true,
-    });
-
-    try {
-      const disabled = await disableAIProvider(provider.id);
-      assert(disabled.enabled === false, "禁用后 enabled 应为 false");
-      assert(disabled.isDefault === false, "禁用后 isDefault 应为 false");
-      const enabled = await enableAIProvider(provider.id);
-      assert(enabled.enabled === true, "启用后 enabled 应为 true");
-      pass("AI Provider 禁用后可重新启用", `provider=${enabled.name}`);
-    } catch (error) {
-      fail("AI Provider 禁用后可重新启用", error instanceof Error ? error.message : String(error));
-    }
-
-    try {
-      const result = await testAIProviderConnectionWithConfigAction({
-        baseUrl: mock.baseUrl,
-        apiKey: "ok-key",
-        modelName: `ok-model-${runId}`,
-        providerType: "openai-compatible",
+    const competitors = [] as Array<{ id: number }>;
+    for (let index = 0; index < 3; index += 1) {
+      const competitor = await prisma.competitor.create({
+        data: {
+          productId: product.id,
+          platform: ["manual-a", "manual-b", "manual-c"][index],
+          title: `manual-competitor-${index + 1}`,
+          price: [79, 99, 129][index],
+          heatMetricType: "favorites",
+          heatMetricValue: [120, 200, 160][index],
+          sellerName: `local-seller-${index + 1}`,
+          sellingPoint: ["compact", "durable", "easy setup"][index],
+          painPoint: ["unclear size", "load dispute", "support questions"][index],
+          imageStyle: ["bright home", "white detail", "real scene"][index],
+          dataDate: new Date("2026-05-31T00:00:00.000Z"),
+          notes: "user-confirmed local competitor record",
+        },
       });
-      if (!result.success || !result.data) {
-        throw new Error(result.success ? "测试连接未返回数据" : result.error);
-      }
-      assert(result.data.latencyMs >= 0, "测试连接应返回耗时");
-      pass("未保存表单测试连接", `model=${result.data.modelName}`);
-    } catch (error) {
-      fail("未保存表单测试连接", error instanceof Error ? error.message : String(error));
+      competitors.push(competitor);
     }
 
-    const errorCases = [
-      {
-        name: "API Key 错误提示",
-        apiKey: "bad-key",
-        modelName: "ok-model",
-        expected: "认证失败，请检查 API Key",
-      },
-      {
-        name: "模型名错误提示",
-        apiKey: "ok-key",
-        modelName: "bad-model",
-        expected: "模型不可用，请检查模型名",
-      },
-      {
-        name: "限流错误提示",
-        apiKey: "ok-key",
-        modelName: "rate-limited",
-        expected: "请求过于频繁",
-      },
-      {
-        name: "余额不足错误提示",
-        apiKey: "ok-key",
-        modelName: "quota-model",
-        expected: "余额不足",
-      },
-    ];
-
-    for (const item of errorCases) {
-      const result = await testAIProviderConnectionWithConfigAction({
-        baseUrl: mock.baseUrl,
-        apiKey: item.apiKey,
-        modelName: item.modelName,
-        providerType: "openai-compatible",
-      });
-
-      if (!result.success && result.error.includes(item.expected) && !result.error.includes(item.apiKey)) {
-        pass(item.name, result.error);
-      } else {
-        fail(item.name, JSON.stringify(result));
-      }
-    }
-
-    try {
-      const saved = await generatePlatformCopywriting({ productId: product.id, platform: "闲鱼", providerId: provider.id });
-      assert(saved.length === 3, "生成应保存 A/B/C 三版");
-      assert(saved.every((record) => record.generationStatus === "success"), "A/B/C 均应 success");
-      const count = await prisma.copywriting.count({ where: { productId: product.id, platform: "闲鱼" } });
-      assert(count === 3, "生成后应只有三条平台文案");
-      pass("真实 mock AI 文案生成与 A/B/C 保存", `records=${count}`);
-    } catch (error) {
-      fail("真实 mock AI 文案生成与 A/B/C 保存", error instanceof Error ? error.message : String(error));
-    }
-
-    try {
-      await generatePlatformCopywriting({ productId: product.id, platform: "闲鱼", providerId: provider.id });
-      fail("重复生成保护", "重复生成未被阻止");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      const count = await prisma.copywriting.count({ where: { productId: product.id, platform: "闲鱼" } });
-      if (message.includes("短时间内已有相同 AI 任务") && count === 3) {
-        pass("重复生成保护", `records=${count}`);
-      } else {
-        fail("重复生成保护", message);
-      }
-    }
-
-    const noSchemaProvider = await createAIProvider({
-      name: `thread04-no-schema-${runId}`,
-      providerType: "openai-compatible",
-      baseUrl: mock.baseUrl,
-      apiKey: "ok-key",
-      modelName: "no-schema",
-      purpose: "text",
-      enabled: true,
-      isDefault: false,
-    });
-    cleanup.providerIds.push(noSchemaProvider.id);
-
-    try {
-      const saved = await generatePlatformCopywriting({ productId: product.id, platform: "淘宝", providerId: noSchemaProvider.id });
-      assert(saved.length === 3, "结构化输出降级后也应保存三版");
-      pass("结构化输出失败后普通 JSON Prompt 降级", `records=${saved.length}`);
-    } catch (error) {
-      fail("结构化输出失败后普通 JSON Prompt 降级", error instanceof Error ? error.message : String(error));
-    }
-
-    const nonJsonProvider = await createAIProvider({
-      name: `thread04-non-json-${runId}`,
-      providerType: "openai-compatible",
-      baseUrl: mock.baseUrl,
-      apiKey: "ok-key",
-      modelName: "non-json",
-      purpose: "text",
-      enabled: true,
-      isDefault: false,
-    });
-    cleanup.providerIds.push(nonJsonProvider.id);
-
-    try {
-      await generatePlatformCopywriting({ productId: product.id, platform: "小红书", providerId: nonJsonProvider.id });
-      fail("非 JSON 返回阻止保存", "非 JSON 返回未被阻止");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      const count = await prisma.copywriting.count({ where: { productId: product.id, platform: "小红书" } });
-      if (message.includes("AI 返回格式不是有效 JSON") && count === 0) {
-        pass("非 JSON 返回阻止保存", `records=${count}`);
-      } else {
-        fail("非 JSON 返回阻止保存", message);
-      }
-    }
-
-    const missingVersionProvider = await createAIProvider({
-      name: `thread04-missing-version-${runId}`,
-      providerType: "openai-compatible",
-      baseUrl: mock.baseUrl,
-      apiKey: "ok-key",
-      modelName: "missing-version",
-      purpose: "text",
-      enabled: true,
-      isDefault: false,
-    });
-    cleanup.providerIds.push(missingVersionProvider.id);
-
-    try {
-      await generatePlatformCopywriting({ productId: product.id, platform: "抖音", providerId: missingVersionProvider.id });
-      fail("JSON 缺版阻止保存", "缺版 JSON 未被阻止");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      const count = await prisma.copywriting.count({ where: { productId: product.id, platform: "抖音" } });
-      if (message.includes("AI 输出不符合 copywriting_response 结构要求") && count === 0) {
-        pass("JSON 缺版阻止保存", `records=${count}`);
-      } else {
-        fail("JSON 缺版阻止保存", message);
-      }
-    }
-
-    try {
-      const saved = await saveManualCopywriting({
+    await prisma.screenshotRecognitionJob.create({
+      data: {
+        sourceType: "competitor",
+        sourceId: String(competitors[0].id),
         productId: product.id,
-        providerId: null,
-        platform: "闲鱼",
-        version: "A",
-        style: "稳妥真实版",
-        title: `手动标题 ${riskyWord.word}`,
-        mainCopy: "手动正文",
-        sellingPointsText: "手动卖点",
-        faqText: "手动 FAQ",
-        riskNotesText: "手动风险提示",
-      });
-      assert(saved.providerId === null, "手动保存 providerId 应为 null");
-      assert(saved.generationStatus === "success", "手动保存应 success");
-      assert(saved.auditStatus === "待修改", "高风险命中应待修改");
-      pass("手动填写保存与重新审核", `auditStatus=${saved.auditStatus}`);
-    } catch (error) {
-      fail("手动填写保存与重新审核", error instanceof Error ? error.message : String(error));
-    }
-
-    await deleteBannedWord(riskyWord.id);
-    cleanup.bannedWordIds = cleanup.bannedWordIds.filter((id) => id !== riskyWord.id);
-
-    const throwawayProvider = await createAIProvider({
-      name: `thread04-delete-log-${runId}`,
-      providerType: "openai-compatible",
-      baseUrl: mock.baseUrl,
-      apiKey: "ok-key",
-      modelName: "ok-model",
-      purpose: "text",
-      enabled: true,
-      isDefault: false,
-    });
-    cleanup.providerIds.push(throwawayProvider.id);
-    await deleteAIProvider(throwawayProvider.id);
-    cleanup.providerIds = cleanup.providerIds.filter((id) => id !== throwawayProvider.id);
-
-    const logActions = await prisma.operationLog.findMany({
-      where: {
-        detail: {
-          contains: String(runId),
-        },
-        action: {
-          in: [
-            OPERATION_LOG_ACTIONS.CREATE_AI_PROVIDER,
-            OPERATION_LOG_ACTIONS.UPDATE_AI_PROVIDER,
-            OPERATION_LOG_ACTIONS.DELETE_AI_PROVIDER,
-            OPERATION_LOG_ACTIONS.TEST_AI_PROVIDER,
-            OPERATION_LOG_ACTIONS.CREATE_BANNED_WORD,
-            OPERATION_LOG_ACTIONS.UPDATE_BANNED_WORD,
-            OPERATION_LOG_ACTIONS.DELETE_BANNED_WORD,
-            OPERATION_LOG_ACTIONS.GENERATE_COPYWRITING,
-            OPERATION_LOG_ACTIONS.UPDATE_COPYWRITING,
-          ],
-        },
+        competitorId: competitors[0].id,
+        imagePath: "uploads/screenshots/thread04-local-fixture.png",
+        status: "confirmed",
+        structuredDraft: JSON.stringify({ draftLabel: "screenshot-draft", sellingPoints: ["detail view"] }),
+        confirmedDraft: JSON.stringify({
+          draftLabel: "confirmed-screenshot-draft",
+          imageDescription: "bright home storage image",
+          copywritingMaterialSummary: "size and detail emphasis",
+        }),
+        qualityLevel: "high",
       },
-      select: { action: true, detail: true },
     });
-    const actionSet = new Set(logActions.map((item) => item.action));
+
+    await prisma.linkImportDraft.create({
+      data: {
+        url: "https://example.invalid/local-confirmed",
+        normalizedUrl: "https://example.invalid/local-confirmed",
+        sourcePlatform: "manual",
+        purpose: "competitor_reference",
+        status: "confirmed",
+        qualityLevel: "medium",
+        manualText: "local-confirmed-link-draft; no automatic link fetching",
+        note: "local acceptance draft",
+        metaTitle: "local confirmed title",
+        metaDescription: "local confirmed description",
+        productId: product.id,
+        competitorId: competitors[1].id,
+      },
+    });
+
+    const beforeProduct = await prisma.product.findUniqueOrThrow({
+      where: { id: product.id },
+      select: { status: true, updatedAt: true },
+    });
+    const beforeScoreCount = await prisma.scoreSnapshot.count({ where: { productId: product.id } });
 
     try {
-      assert(actionSet.has(OPERATION_LOG_ACTIONS.CREATE_AI_PROVIDER), "缺少 CREATE_AI_PROVIDER 日志");
-      assert(actionSet.has(OPERATION_LOG_ACTIONS.UPDATE_AI_PROVIDER), "缺少 UPDATE_AI_PROVIDER 日志");
-      assert(actionSet.has(OPERATION_LOG_ACTIONS.DELETE_AI_PROVIDER), "缺少 DELETE_AI_PROVIDER 日志");
-      assert(actionSet.has(OPERATION_LOG_ACTIONS.TEST_AI_PROVIDER), "缺少 TEST_AI_PROVIDER 日志");
-      assert(actionSet.has(OPERATION_LOG_ACTIONS.CREATE_BANNED_WORD), "缺少 CREATE_BANNED_WORD 日志");
-      assert(actionSet.has(OPERATION_LOG_ACTIONS.UPDATE_BANNED_WORD), "缺少 UPDATE_BANNED_WORD 日志");
-      assert(actionSet.has(OPERATION_LOG_ACTIONS.DELETE_BANNED_WORD), "缺少 DELETE_BANNED_WORD 日志");
-      assert(actionSet.has(OPERATION_LOG_ACTIONS.GENERATE_COPYWRITING), "缺少 GENERATE_COPYWRITING 日志");
-      assert(actionSet.has(OPERATION_LOG_ACTIONS.UPDATE_COPYWRITING), "缺少 UPDATE_COPYWRITING 日志");
-      assert(logActions.every((item) => !String(item.detail ?? "").includes("ok-key")), "日志不得包含 API Key");
-      pass("Thread 04 操作日志", Array.from(actionSet).join(", "));
+      await generateCompetitorAnalysisSnapshot({
+        productId: product.id,
+        competitorIds: competitors.slice(0, 2).map((competitor) => competitor.id),
+      });
+      fail("insufficient data guard", "generation unexpectedly succeeded with fewer than 3 competitors");
     } catch (error) {
-      fail("Thread 04 操作日志", error instanceof Error ? error.message : String(error));
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes(insufficientDataNeedle)) {
+        pass("insufficient data guard", message);
+      } else {
+        fail("insufficient data guard", message);
+      }
+    }
+
+    const selectedCompetitorIds = competitors.map((competitor) => competitor.id);
+    const firstSnapshot = await generateCompetitorAnalysisSnapshot({
+      productId: product.id,
+      competitorIds: selectedCompetitorIds,
+    });
+    const secondSnapshot = await generateCompetitorAnalysisSnapshot({
+      productId: product.id,
+      competitorIds: selectedCompetitorIds,
+    });
+
+    try {
+      assert(firstSnapshot.id !== secondSnapshot.id, "regeneration overwrote the previous snapshot");
+      assert(secondSnapshot.competitorIdList.length === 3, "snapshot should record 3 competitor ids");
+      assert(Boolean(secondSnapshot.summary), "summary should be saved");
+      assert(Boolean(secondSnapshot.priceBandSummary), "priceBandSummary should be saved");
+      assert(Boolean(secondSnapshot.sellingPointSummary), "sellingPointSummary should be saved");
+      assert(Boolean(secondSnapshot.imageStyleSummary), "imageStyleSummary should be saved");
+      assert(Boolean(secondSnapshot.copywritingStyleSummary), "copywritingStyleSummary should be saved");
+      assert(Boolean(secondSnapshot.differentiationAdvice), "differentiationAdvice should be saved");
+      assert(Boolean(secondSnapshot.riskTips), "riskTips should be saved");
+      assert(Boolean(secondSnapshot.nextStepAdvice), "nextStepAdvice should be saved");
+      assert(Boolean(secondSnapshot.dataGapAdvice), "dataGapAdvice should be saved");
+      assert(Boolean(secondSnapshot.uncertaintyNotes), "uncertaintyNotes should be saved");
+      assert(String(secondSnapshot.nextStepAdvice).includes(rescoreNeedle), "rescore advice should remain advisory");
+      assert(typeof secondSnapshot.riskHitCount === "number", "risk scan count should be present");
+      pass("analysis snapshot generation", `first=${firstSnapshot.id}, second=${secondSnapshot.id}`);
+    } catch (error) {
+      fail("analysis snapshot generation", error instanceof Error ? error.message : String(error));
+    }
+
+    try {
+      await markCompetitorAnalysisReference({ productId: product.id, snapshotId: secondSnapshot.id });
+      const afterReference = await getCompetitorAnalysisSnapshots(product.id);
+      assert(
+        afterReference.snapshots.find((snapshot) => snapshot.id === secondSnapshot.id)?.isReference === true,
+        "second snapshot should be reference version",
+      );
+      pass("reference snapshot marking", `snapshot=${secondSnapshot.id}`);
+    } catch (error) {
+      fail("reference snapshot marking", error instanceof Error ? error.message : String(error));
+    }
+
+    try {
+      await archiveCompetitorAnalysisSnapshot({ productId: product.id, snapshotId: firstSnapshot.id });
+      const afterArchive = await getCompetitorAnalysisSnapshots(product.id);
+      assert(
+        afterArchive.snapshots.find((snapshot) => snapshot.id === firstSnapshot.id)?.status === "archived",
+        "first snapshot should be archived",
+      );
+      pass("snapshot archive", `snapshot=${firstSnapshot.id}`);
+    } catch (error) {
+      fail("snapshot archive", error instanceof Error ? error.message : String(error));
+    }
+
+    await prisma.aIProvider.update({ where: { id: provider.id }, data: { modelName: "thread04-fail-model" } });
+    try {
+      await generateCompetitorAnalysisSnapshot({ productId: product.id, competitorIds: selectedCompetitorIds });
+      fail("AI failure isolation", "provider failure unexpectedly succeeded");
+    } catch (error) {
+      const failedSnapshot = await prisma.competitorAnalysisSnapshot.findFirst({
+        where: { productId: product.id, status: "failed" },
+        orderBy: { id: "desc" },
+      });
+      const errorSummary = failedSnapshot?.errorSummary ?? "";
+      if (failedSnapshot && errorSummary.includes("[local-path-redacted]") && !errorSummary.includes("/secret/local/path")) {
+        pass("AI failure isolation", error instanceof Error ? error.message : String(error));
+      } else {
+        fail("AI failure isolation", errorSummary || "failed snapshot was not saved");
+      }
+    }
+
+    const afterProduct = await prisma.product.findUniqueOrThrow({
+      where: { id: product.id },
+      select: { status: true, updatedAt: true },
+    });
+    const afterScoreCount = await prisma.scoreSnapshot.count({ where: { productId: product.id } });
+    try {
+      assert(afterProduct.status === beforeProduct.status, "product status changed");
+      assert(afterProduct.updatedAt.getTime() === beforeProduct.updatedAt.getTime(), "product updatedAt changed");
+      assert(afterScoreCount === beforeScoreCount, "score snapshot count changed");
+      pass("scoring and product boundary", `scoreSnapshots=${afterScoreCount}`);
+    } catch (error) {
+      fail("scoring and product boundary", error instanceof Error ? error.message : String(error));
+    }
+
+    const promptText = JSON.stringify(mock.calls);
+    try {
+      assert(!promptText.includes("thread04-secret-key-should-not-leak"), "prompt leaked API key");
+      assert(!fullLocalPathPattern.test(promptText), "prompt included a full local path");
+      assert(!promptText.includes("example.invalid/local-confirmed"), "prompt included source URL");
+      assert(promptText.includes("manual-competitor-1"), "prompt did not include local competitor records");
+      assert(promptText.includes("local-confirmed-link-draft"), "prompt did not include confirmed local link draft summary");
+      pass("prompt privacy boundary", `aiCalls=${mock.calls.length}`);
+    } catch (error) {
+      fail("prompt privacy boundary", error instanceof Error ? error.message : String(error));
     }
   } finally {
-    for (const id of cleanup.bannedWordIds.reverse()) {
-      await deleteBannedWord(id).catch(() => prisma.bannedWord.delete({ where: { id } }).catch(() => {}));
-    }
-
-    await prisma.operationLog.deleteMany({ where: { productId: { in: cleanup.productIds } } }).catch(() => {});
-    await prisma.copywriting.deleteMany({ where: { productId: { in: cleanup.productIds } } }).catch(() => {});
-
-    for (const id of cleanup.providerIds.reverse()) {
-      await deleteAIProvider(id).catch(() => prisma.aIProvider.delete({ where: { id } }).catch(() => {}));
-    }
-
-    for (const id of cleanup.productIds.reverse()) {
-      await prisma.product.delete({ where: { id } }).catch(() => {});
-    }
-
+    restoreEnv(envSnapshot);
+    await cleanupAcceptanceData({
+      productId,
+      providerId,
+      previousDefaultProviderIds: previousDefaultProviders.map((provider) => provider.id),
+    });
     await mock.close();
     await prisma.$disconnect();
   }
 
-  const failed = checks.filter((item) => item.status === "FAIL");
+  const failed = checks.filter((check) => check.status === "FAIL");
   for (const check of checks) {
     console.log(`${check.status} ${check.name}${check.detail ? ` - ${check.detail}` : ""}`);
   }

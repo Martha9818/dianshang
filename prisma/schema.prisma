@@ -51,6 +51,7 @@ model Product {
   convertedInspirations Inspiration[]  @relation("InspirationConvertedProduct")
   screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobProduct")
   linkImportDrafts    LinkImportDraft[] @relation("LinkImportDraftProduct")
+  competitorAnalysisSnapshots CompetitorAnalysisSnapshot[] @relation("CompetitorAnalysisSnapshotProduct")
 
   @@index([deletedAt])
   @@index([updatedAt])
@@ -286,6 +287,7 @@ model AIJob {
   inspirationSuggestions Inspiration[] @relation("InspirationSuggestionJob")
   inspirationAiDraftJobs InspirationAiDraftJob[] @relation("InspirationAiDraftJobAIJob")
   screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobAIJob")
+  competitorAnalysisSnapshots CompetitorAnalysisSnapshot[] @relation("CompetitorAnalysisSnapshotAIJob")
 
   @@index([jobType])
   @@index([status])
@@ -494,6 +496,40 @@ model LinkImportDraft {
   @@index([competitorId])
   @@index([convertedInspirationId])
   @@index([screenshotMaterialId])
+  @@index([createdAt])
+}
+
+model CompetitorAnalysisSnapshot {
+  id                       Int       @id @default(autoincrement())
+  productId                Int
+  aiJobId                  Int?
+  competitorIds            String
+  summary                  String?
+  differentiationAdvice    String?
+  priceBandSummary         String?
+  sellingPointSummary      String?
+  imageStyleSummary        String?
+  copywritingStyleSummary  String?
+  riskTips                 String?
+  nextStepAdvice           String?
+  dataGapAdvice            String?
+  uncertaintyNotes         String?
+  riskScanResultJson       String?
+  model                    String?
+  provider                 String?
+  status                   String      @default("success")
+  errorSummary             String?
+  isReference              Boolean     @default(false)
+  archivedAt               DateTime?
+  createdAt                DateTime    @default(now())
+  product                  Product     @relation("CompetitorAnalysisSnapshotProduct", fields: [productId], references: [id], onDelete: Cascade)
+  aiJob                    AIJob?      @relation("CompetitorAnalysisSnapshotAIJob", fields: [aiJobId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([aiJobId])
+  @@index([status])
+  @@index([isReference])
+  @@index([archivedAt])
   @@index([createdAt])
 }
 

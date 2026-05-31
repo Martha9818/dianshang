@@ -15,6 +15,18 @@ This file records active V1-Core schema changes. Add new entries when `prisma/sc
 - If a migration fails, stop and document the cause plus the safe next step instead of forcing progress with a reset.
 - If old data is incomplete, prefer `nullable`, `legacy`, `unknown`, or an explicit repair script over invented values.
 
+## 2026-05-31 - V1.5 Thread 04 Competitor Analysis Snapshots
+
+- Added migration `prisma/migrations/20260531042549_v15_thread04_competitor_analysis/migration.sql`.
+- Added `CompetitorAnalysisSnapshot` for AI-assisted competitor analysis history:
+  - `productId`, optional `aiJobId`, `competitorIds`
+  - analysis sections: `summary`, `differentiationAdvice`, `priceBandSummary`, `sellingPointSummary`, `imageStyleSummary`, `copywritingStyleSummary`, `riskTips`, `nextStepAdvice`, `dataGapAdvice`, `uncertaintyNotes`
+  - AI/runtime metadata: `model`, `provider`, `status`, `errorSummary`, `riskScanResultJson`
+  - history controls: `isReference`, `archivedAt`, `createdAt`
+- Added relations from Product and AIJob to competitor analysis snapshots.
+- Migration is additive; old migrations were not edited and no database reset was used.
+- A local SQLite backup was created before applying the migration under `backups/v15_thread04_migration_*/`.
+
 ## 2026-05-31 - V1.5 Thread 03 Link Import Drafts
 
 - Added migration `prisma/migrations/20260531034342_v15_thread03_link_import_drafts/migration.sql`.

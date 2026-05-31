@@ -15,6 +15,11 @@ import {
   normalizeCompetitorMutationInput,
   updateCompetitor,
 } from "@/lib/services/competitor-service";
+import {
+  archiveCompetitorAnalysisSnapshot,
+  generateCompetitorAnalysisSnapshot,
+  markCompetitorAnalysisReference,
+} from "@/lib/services/competitor-analysis";
 import { createProduct, softDeleteProduct, updateProduct } from "@/lib/services/product-mutation-service";
 import { type BatchOperationResult } from "@/lib/modules/batch/rules";
 import { runBatchOperation } from "@/lib/services/batchOperationService";
@@ -56,11 +61,28 @@ function revalidateProductScopes(productId: number) {
   revalidatePath(`/products/${productId}`);
 }
 
+function buildProductAnalysisRedirectUrl(productId: number, error?: string | null) {
+  const params = new URLSearchParams();
+  params.set("tab", "competitor-analysis");
+  if (error) {
+    params.set("analysisError", error);
+  }
+  return `/products/${productId}?${params.toString()}`;
+}
+
 function parseBatchIds(formData: FormData) {
   return formData
     .getAll("ids")
     .map((value) => Number(value))
     .filter((id) => Number.isInteger(id) && id > 0);
+}
+
+function parsePositiveActionId(value: FormDataEntryValue | null, label: string) {
+  const id = Number(value ?? "");
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error(`${label}无效。`);
+  }
+  return id;
 }
 
 function revalidateProductBatchScopes() {
@@ -199,6 +221,69 @@ export async function deleteCompetitorAction(productId: number, competitorId: nu
       error: getProductErrorMessage(error, "删除竞品失败，请稍后重试。"),
     };
   }
+}
+
+export async function generateCompetitorAnalysisAction(productId: number, formData: FormData) {
+  let redirectUrl: string;
+
+  try {
+    await generateCompetitorAnalysisSnapshot({
+      productId,
+      competitorIds: formData.getAll("competitorIds").map((value) => String(value)),
+    });
+    revalidateProductScopes(productId);
+    revalidatePath("/system/diagnostics");
+    redirectUrl = buildProductAnalysisRedirectUrl(productId);
+  } catch (error) {
+    revalidateProductScopes(productId);
+    revalidatePath("/system/diagnostics");
+    redirectUrl = buildProductAnalysisRedirectUrl(
+      productId,
+      getProductErrorMessage(error, "生成竞品智能分析失败，请稍后重试。"),
+    );
+  }
+
+  redirect(redirectUrl);
+}
+
+export async function markCompetitorAnalysisReferenceAction(productId: number, formData: FormData) {
+  let redirectUrl: string;
+
+  try {
+    await markCompetitorAnalysisReference({
+      productId,
+      snapshotId: parsePositiveActionId(formData.get("snapshotId"), "分析快照"),
+    });
+    revalidateProductScopes(productId);
+    redirectUrl = buildProductAnalysisRedirectUrl(productId);
+  } catch (error) {
+    redirectUrl = buildProductAnalysisRedirectUrl(
+      productId,
+      getProductErrorMessage(error, "标记参考版本失败，请稍后重试。"),
+    );
+  }
+
+  redirect(redirectUrl);
+}
+
+export async function archiveCompetitorAnalysisAction(productId: number, formData: FormData) {
+  let redirectUrl: string;
+
+  try {
+    await archiveCompetitorAnalysisSnapshot({
+      productId,
+      snapshotId: parsePositiveActionId(formData.get("snapshotId"), "分析快照"),
+    });
+    revalidateProductScopes(productId);
+    redirectUrl = buildProductAnalysisRedirectUrl(productId);
+  } catch (error) {
+    redirectUrl = buildProductAnalysisRedirectUrl(
+      productId,
+      getProductErrorMessage(error, "归档分析快照失败，请稍后重试。"),
+    );
+  }
+
+  redirect(redirectUrl);
 }
 
 export async function saveProfitAction(

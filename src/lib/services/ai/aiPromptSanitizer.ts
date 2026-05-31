@@ -5,12 +5,14 @@ const SECRET_PATTERNS = [
 ];
 
 const WINDOWS_ABSOLUTE_PATH_PATTERN = /[A-Za-z]:\\[^\r\n\t*?"<>|]+/g;
+const POSIX_ABSOLUTE_PATH_PATTERN = /(^|[\s("'=])\/(?!\/)[^\s,;)"']+/g;
 const FILE_URL_PATTERN = /file:[^\s)]+/g;
 const LONG_COST_FORMULA_PATTERN = /(cost|成本|利润|profit)[^\r\n]{120,}/gi;
 
 export function sanitizePromptForAI(prompt: string) {
   return SECRET_PATTERNS.reduce((text, pattern) => text.replace(pattern, "[redacted]"), prompt)
     .replace(WINDOWS_ABSOLUTE_PATH_PATTERN, "[local-path-redacted]")
+    .replace(POSIX_ABSOLUTE_PATH_PATTERN, "$1[local-path-redacted]")
     .replace(FILE_URL_PATTERN, "file:[path-redacted]")
     .replace(LONG_COST_FORMULA_PATTERN, "[business-summary-redacted]");
 }

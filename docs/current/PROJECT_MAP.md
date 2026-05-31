@@ -23,6 +23,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 | `/inspirations` | Manual inspiration inbox, review states, and confirm-then-convert flow. |
 | `/screenshots` | V1.5 Thread 02 user-initiated screenshot recognition, structured drafts, quality grading, and manual confirmation history. |
 | `/link-imports` | V1.5 Thread 03 single-link import drafts, public meta attempts, quality grading, and manual conversion links. |
+| `/products/[id]?tab=competitor-analysis` | V1.5 Thread 04 competitor intelligent analysis snapshots, local competitor selection, history, reference marking, and archive confirmation. |
 | `/notifications` | Lightweight in-app notification center for important operation results. |
 | `/settings/ai`, `/settings/banned-words` | Local settings. |
 | `/export`, `/backup` | Local export and manual backup. |
@@ -44,6 +45,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 | Inspirations | Folder setting, manual/app-runtime scheduled scan, dedupe, scan/AI draft task states, review states, optional AI draft, conversion. | `src/lib/services/inspirations/README.md` |
 | Screenshots | User-initiated screenshot/local-image import, AI structured draft recognition, quality grading, edit/ignore/confirm flow, and conservative source links. | `src/lib/services/screenshot/README.md` |
 | Link imports | Single pasted-link draft creation, URL normalization, SSRF-guarded public meta attempts, quality grading, auxiliary screenshot upload, and manual conversion to inspiration or existing product/competitor links. | `src/lib/services/link-import/README.md` |
+| Competitor analysis | AI-assisted competitor analysis snapshots from local product, competitor, screenshot-draft, and link-import-draft data; no link fetching, scoring overwrite, product-status overwrite, or competitor fact mutation. | `src/lib/services/competitor-analysis/README.md` |
 | Notifications | Sanitized in-app operation notifications, read state, filtering, safe action URLs, and local-only writes. | `src/lib/services/notifications/README.md` |
 | File cleanup | V1-Plus Thread 06 manual local maintenance for uploads/exports/backups, cleanup log, app trash, Vercel no-real-scan/delete guard, path safety, and active-file protection. V1.5 must not add a second cleanup system. | `src/lib/services/cleanup/README.md` |
 | Products/scoring | Product CRUD, formatting, scoring, and status summaries. | Source modules under `src/lib/services/` and `src/lib/modules/` |
@@ -53,7 +55,7 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 
 ## Data Models
 
-Main Prisma model groups: products, variants, competitors, scoring, copywriting, prompt tasks, materials, inspirations, scan logs, AI providers/logs/jobs, app notifications, banned words, operation logs, export logs, backup logs, and app settings. Schema changes require a new migration and `DATABASE_CHANGELOG.md` update.
+Main Prisma model groups: products, variants, competitors, competitor analysis snapshots, scoring, copywriting, prompt tasks, materials, inspirations, scan logs, AI providers/logs/jobs, app notifications, banned words, operation logs, export logs, backup logs, and app settings. Schema changes require a new migration and `DATABASE_CHANGELOG.md` update.
 
 ## Side-Effect Ownership
 

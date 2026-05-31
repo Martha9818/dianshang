@@ -6,6 +6,7 @@ export type AIRequestType =
   | "copywriting"
   | "inspiration_vision"
   | "screenshot_recognition"
+  | "competitor_analysis"
   | "provider-test"
   | "vision-preview"
   | "image-preview"

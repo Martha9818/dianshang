@@ -1,4 +1,5 @@
 import { ActionButton, DashboardCard, PageNote, SectionTabs, StatusBadge } from "@/components/dashboard/primitives";
+import { CompetitorAnalysisTab } from "@/components/products/competitor-analysis-tab";
 import { CompetitorTab } from "@/components/products/competitor-tab";
 import { CopywritingTab } from "@/components/products/copywriting-tab";
 import { ProductMaterialsTab } from "@/components/products/materials-tab";
@@ -9,10 +10,19 @@ import { ProductPromptTasksTab } from "@/components/products/prompt-tasks-tab";
 import { ProductRuntimeUnavailableState } from "@/components/products/runtime-unavailable-state";
 import { ScoreTab } from "@/components/products/score-tab";
 import { WorkspacePage } from "@/components/ui/workspace-page";
-import { deleteCompetitorAction, saveCompetitorAction, saveProfitAction, saveScoreAction } from "@/app/products/actions";
+import {
+  archiveCompetitorAnalysisAction,
+  deleteCompetitorAction,
+  generateCompetitorAnalysisAction,
+  markCompetitorAnalysisReferenceAction,
+  saveCompetitorAction,
+  saveProfitAction,
+  saveScoreAction,
+} from "@/app/products/actions";
 import { COMPETITOR_HEAT_METRIC_VALUES, COMPETITOR_PLATFORM_VALUES, formatCurrency } from "@/lib/modules/products";
 import { PRODUCT_STATUS_TONE } from "@/lib/modules/products/constants";
 import { buildCompetitorFormValues, getEmptyCompetitorFormValues } from "@/lib/services/competitor-service";
+import { COMPETITOR_ANALYSIS_READONLY_MESSAGE, getCompetitorAnalysisSnapshots } from "@/lib/services/competitor-analysis";
 import { buildProfitFormValues } from "@/lib/services/profit-service";
 import { getProductDetailPageData } from "@/lib/services/product-service";
 import { buildReadonlyRuntimeMessage, getRuntimeModeSummary } from "@/lib/services/product-runtime-service";
@@ -23,6 +33,7 @@ export const dynamic = "force-dynamic";
 const tabs = [
   { key: "basic", label: "基础信息" },
   { key: "competitors", label: "竞品数据" },
+  { key: "competitor-analysis", label: "竞品智能分析" },
   { key: "profit", label: "利润测算" },
   { key: "scoring", label: "商品评分" },
   { key: "copywriting", label: "平台文案" },
@@ -32,6 +43,7 @@ const tabs = [
 ];
 
 const legacyTabMap: Record<string, string> = {
+  竞品智能分析: "competitor-analysis",
   基础信息: "basic",
   竞品数据: "competitors",
   利润测算: "profit",
@@ -69,10 +81,11 @@ export default async function ProductDetailPage({
     platform?: string;
     materialType?: string;
     status?: string;
+    analysisError?: string;
   }>;
 }) {
   const { id } = await params;
-  const { tab, editCompetitorId, copyPlatform, copyVersion, platform, materialType, status } = await searchParams;
+  const { tab, editCompetitorId, copyPlatform, copyVersion, platform, materialType, status, analysisError } = await searchParams;
   const productId = Number(id);
   const activeTab = normalizeTab(tab);
   const runtime = getRuntimeModeSummary();
@@ -122,6 +135,20 @@ export default async function ProductDetailPage({
   const competitorInitialValues = competitorToEdit ? buildCompetitorFormValues(competitorToEdit) : getEmptyCompetitorFormValues();
   const runtimeNotice = runtime.isWritable ? null : buildReadonlyRuntimeMessage(runtime.mode);
   const activeTabLabel = tabs.find((item) => item.key === activeTab)?.label ?? tabs[0].label;
+  const competitorAnalysisData =
+    activeTab === "competitor-analysis"
+      ? await getCompetitorAnalysisSnapshots(product.id).catch((error) => ({
+          runtime,
+          snapshots: [],
+          minCompetitorCount: 3,
+          readonlyNotice: runtime.isWritable ? null : COMPETITOR_ANALYSIS_READONLY_MESSAGE,
+          readError: error instanceof Error ? error.message : "当前无法读取竞品智能分析历史，请稍后重试。",
+        }))
+      : null;
+  const competitorAnalysisReadError =
+    competitorAnalysisData && "readError" in competitorAnalysisData && competitorAnalysisData.readError
+      ? String(competitorAnalysisData.readError)
+      : null;
 
   return (
     <WorkspacePage
@@ -153,6 +180,9 @@ export default async function ProductDetailPage({
             </ActionButton>
             <ActionButton href={`/screenshots?sourceType=product&sourceId=${product.id}&productId=${product.id}`} variant="secondary">
               截图识别
+            </ActionButton>
+            <ActionButton href={`/products/${product.id}?tab=competitor-analysis`} variant="secondary">
+              竞品智能分析
             </ActionButton>
             <ActionButton href={`/products/${product.id}/edit`} variant="secondary">
               编辑商品
@@ -223,6 +253,28 @@ export default async function ProductDetailPage({
             platformOptions={COMPETITOR_PLATFORM_VALUES}
             heatMetricOptions={COMPETITOR_HEAT_METRIC_VALUES}
           />
+        ) : null}
+
+        {activeTab === "competitor-analysis" && competitorAnalysisData ? (
+          <>
+            {competitorAnalysisReadError ? (
+              <div className="px-5 py-5">
+                <PageNote>{competitorAnalysisReadError}</PageNote>
+              </div>
+            ) : null}
+            <CompetitorAnalysisTab
+              productId={product.id}
+              competitors={pageData.data.competitors}
+              stats={pageData.data.competitorStats}
+              snapshots={competitorAnalysisData.snapshots}
+              minCompetitorCount={competitorAnalysisData.minCompetitorCount}
+              runtimeNotice={competitorAnalysisData.readonlyNotice}
+              analysisError={analysisError ?? null}
+              onGenerate={generateCompetitorAnalysisAction.bind(null, product.id)}
+              onMarkReference={markCompetitorAnalysisReferenceAction.bind(null, product.id)}
+              onArchive={archiveCompetitorAnalysisAction.bind(null, product.id)}
+            />
+          </>
         ) : null}
 
         {activeTab === "profit" && pageData.data.profitView ? (

@@ -31,7 +31,7 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 ### Remaining V1.5 Threads Are Not Implemented Yet
 
 - Status: DEFERRED / PLANNED SCOPE
-- Impact: V1.5 Thread 01, Thread 02, and Thread 03 are implemented, but Thread 04-09 still require separately approved threads.
+- Impact: V1.5 Thread 01, Thread 02, Thread 03, and Thread 04 are implemented, but Thread 05-09 still require separately approved threads.
 - Mitigation: Do not imply these are available until their thread ships and is verified locally.
 
 ### Screenshot Recognition Depends On Vision-Capable AI Credentials
@@ -39,6 +39,12 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 - Status: OPEN
 - Impact: Screenshot upload and draft history can work locally, but AI recognition can fail if no valid vision-capable provider is configured.
 - Mitigation: AI failure is isolated to `ScreenshotRecognitionJob`; users can keep/upload screenshots and manually edit or retry drafts.
+
+### Competitor Intelligent Analysis Depends On Text-Capable AI Credentials
+
+- Status: OPEN
+- Impact: Competitor analysis history can be viewed locally, but generating a new analysis can fail if no valid default AI provider is configured.
+- Mitigation: AI failure is isolated to `CompetitorAnalysisSnapshot` / `AIJob`; product, competitor, scoring, export, backup, and cleanup data are not modified.
 
 ### V1-Plus File Cleanup Must Not Be Rebuilt In V1.5
 

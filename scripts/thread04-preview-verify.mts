@@ -1,8 +1,11 @@
-import { spawn } from "node:child_process";
-import { once } from "node:events";
-import { setTimeout as delay } from "node:timers/promises";
-import { saveAIProviderAction, saveBannedWordAction, testAIProviderConnectionWithConfigAction } from "../src/app/settings/actions";
-import { generateCopywritingAction, saveManualCopywritingAction } from "../src/app/copywriting/actions";
+import { prisma } from "../src/lib/prisma";
+import {
+  archiveCompetitorAnalysisSnapshot,
+  generateCompetitorAnalysisSnapshot,
+  getCompetitorAnalysisSnapshots,
+  markCompetitorAnalysisReference,
+} from "../src/lib/services/competitor-analysis/competitorAnalysisService";
+import { COMPETITOR_ANALYSIS_READONLY_MESSAGE } from "../src/lib/services/competitor-analysis/competitorAnalysisTypes";
 
 type Check = {
   name: string;
@@ -10,10 +13,13 @@ type Check = {
   detail?: string;
 };
 
+type EnvSnapshot = {
+  ECOMPILOT_RUNTIME_MODE?: string;
+  VERCEL?: string;
+  VERCEL_ENV?: string;
+};
+
 const checks: Check[] = [];
-const port = Number(process.env.THREAD04_PREVIEW_PORT ?? "3310");
-const baseUrl = `http://127.0.0.1:${port}`;
-process.env.ECOMPILOT_RUNTIME_MODE = "preview";
 
 function pass(name: string, detail?: string) {
   checks.push({ name, status: "PASS", detail });
@@ -23,164 +29,94 @@ function fail(name: string, detail: string) {
   checks.push({ name, status: "FAIL", detail });
 }
 
-async function waitForServer(timeoutMs = 30_000) {
-  const startedAt = Date.now();
-  let lastError = "";
-
-  while (Date.now() - startedAt < timeoutMs) {
-    try {
-      const response = await fetch(baseUrl, { cache: "no-store" });
-      if (response.ok) {
-        return;
-      }
-      lastError = `HTTP ${response.status}`;
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-    }
-
-    await delay(500);
+function restoreEnvValue(key: keyof EnvSnapshot, value: string | undefined) {
+  if (value === undefined) {
+    delete process.env[key];
+  } else {
+    process.env[key] = value;
   }
-
-  throw new Error(`Preview server did not become ready: ${lastError}`);
 }
 
-async function verifyPage(path: string) {
+function restoreEnv(snapshot: EnvSnapshot) {
+  restoreEnvValue("ECOMPILOT_RUNTIME_MODE", snapshot.ECOMPILOT_RUNTIME_MODE);
+  restoreEnvValue("VERCEL", snapshot.VERCEL);
+  restoreEnvValue("VERCEL_ENV", snapshot.VERCEL_ENV);
+}
+
+async function expectReadonly(name: string, run: () => Promise<unknown>) {
   try {
-    const response = await fetch(`${baseUrl}${path}`, { cache: "no-store" });
-    const text = await response.text();
-
-    if (!response.ok) {
-      fail(`preview 页面 ${path}`, `HTTP ${response.status}`);
-      return;
-    }
-
-    if (text.includes("Failed to fetch") || text.includes("PrismaClient") || text.includes("ENOENT")) {
-      fail(`preview 页面 ${path}`, "页面包含原始错误文本");
-      return;
-    }
-
-    pass(`preview 页面 ${path}`, `HTTP ${response.status}`);
+    await run();
+    fail(name, "write unexpectedly succeeded in preview runtime");
   } catch (error) {
-    fail(`preview 页面 ${path}`, error instanceof Error ? error.message : String(error));
-  }
-}
-
-async function verifyReadonlyActions() {
-  const providerForm = new FormData();
-  providerForm.set("name", "preview-provider");
-  providerForm.set("providerType", "openai-compatible");
-  providerForm.set("baseUrl", "http://127.0.0.1:1/v1");
-  providerForm.set("apiKey", "preview-key");
-  providerForm.set("modelName", "preview-model");
-  providerForm.set("purpose", "text");
-  providerForm.set("enabled", "on");
-
-  const bannedWordForm = new FormData();
-  bannedWordForm.set("word", "preview-risk-word");
-  bannedWordForm.set("category", "preview");
-  bannedWordForm.set("riskLevel", "high");
-
-  const cases = [
-    {
-      name: "preview 禁止保存 AI Provider",
-      run: () => saveAIProviderAction(providerForm),
-      expected: "预览环境只读",
-    },
-    {
-      name: "preview 禁止新增违规词",
-      run: () => saveBannedWordAction(bannedWordForm),
-      expected: "预览环境只读",
-    },
-    {
-      name: "preview 禁止测试连接",
-      run: () =>
-        testAIProviderConnectionWithConfigAction({
-          baseUrl: "http://127.0.0.1:1/v1",
-          apiKey: "preview-key",
-          modelName: "preview-model",
-          providerType: "openai-compatible",
-        }),
-      expected: "预览环境只读",
-    },
-    {
-      name: "preview 禁止生成文案",
-      run: () => generateCopywritingAction({ productId: 1, platform: "闲鱼", providerId: 1 }),
-      expected: "预览环境只读",
-    },
-    {
-      name: "preview 禁止保存文案",
-      run: () =>
-        saveManualCopywritingAction({
-          productId: 1,
-          providerId: null,
-          platform: "闲鱼",
-          version: "A",
-          style: "稳妥真实版",
-          title: "preview",
-          mainCopy: "preview",
-          sellingPointsText: "",
-          faqText: "",
-          riskNotesText: "",
-        }),
-      expected: "预览环境只读",
-    },
-  ];
-
-  for (const item of cases) {
-    const result = await item.run();
-    if (!result.success && result.error.includes(item.expected)) {
-      pass(item.name, result.error);
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes(COMPETITOR_ANALYSIS_READONLY_MESSAGE)) {
+      pass(name, message);
     } else {
-      fail(item.name, JSON.stringify(result));
+      fail(name, message);
     }
   }
 }
 
 async function main() {
-  const child = spawn("cmd.exe", ["/d", "/s", "/c", `npx.cmd next start --hostname 127.0.0.1 --port ${port}`], {
-    cwd: process.cwd(),
-    env: {
-      ...process.env,
-      ECOMPILOT_RUNTIME_MODE: "preview",
-      NEXT_TELEMETRY_DISABLED: "1",
-    },
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-
-  let output = "";
-  child.stdout?.on("data", (chunk) => {
-    output += String(chunk);
-  });
-  child.stderr?.on("data", (chunk) => {
-    output += String(chunk);
-  });
+  const envSnapshot: EnvSnapshot = {
+    ECOMPILOT_RUNTIME_MODE: process.env.ECOMPILOT_RUNTIME_MODE,
+    VERCEL: process.env.VERCEL,
+    VERCEL_ENV: process.env.VERCEL_ENV,
+  };
 
   try {
-    await waitForServer();
-    await verifyPage("/settings/ai");
-    await verifyPage("/settings/banned-words");
-    await verifyPage("/copywriting");
-    await verifyPage("/products/1?tab=%E5%B9%B3%E5%8F%B0%E6%96%87%E6%A1%88");
-    await verifyReadonlyActions();
-  } catch (error) {
-    fail("preview server 启动", error instanceof Error ? error.message : String(error));
+    process.env.ECOMPILOT_RUNTIME_MODE = "preview";
+    process.env.VERCEL = "1";
+
+    const beforeSnapshotCount = await prisma.competitorAnalysisSnapshot.count();
+    const beforeRequestLogCount = await prisma.aIRequestLog.count();
+
+    const readResult = await getCompetitorAnalysisSnapshots(1);
+    if (readResult.readonlyNotice === COMPETITOR_ANALYSIS_READONLY_MESSAGE) {
+      pass("preview can read existing analysis list", `snapshots=${readResult.snapshots.length}`);
+    } else {
+      fail("preview can read existing analysis list", `readonlyNotice=${readResult.readonlyNotice ?? "null"}`);
+    }
+
+    await expectReadonly("preview blocks analysis generation", () =>
+      generateCompetitorAnalysisSnapshot({ productId: 1, competitorIds: [1, 2, 3] }),
+    );
+    await expectReadonly("preview blocks reference marking", () =>
+      markCompetitorAnalysisReference({ productId: 1, snapshotId: 1 }),
+    );
+    await expectReadonly("preview blocks archive", () => archiveCompetitorAnalysisSnapshot({ productId: 1, snapshotId: 1 }));
+
+    const afterSnapshotCount = await prisma.competitorAnalysisSnapshot.count();
+    const afterRequestLogCount = await prisma.aIRequestLog.count();
+
+    if (afterSnapshotCount === beforeSnapshotCount) {
+      pass("preview does not save analysis snapshots", `snapshots=${afterSnapshotCount}`);
+    } else {
+      fail("preview does not save analysis snapshots", `${beforeSnapshotCount} -> ${afterSnapshotCount}`);
+    }
+
+    if (afterRequestLogCount === beforeRequestLogCount) {
+      pass("preview does not call AI", `aiRequestLogs=${afterRequestLogCount}`);
+    } else {
+      fail("preview does not call AI", `${beforeRequestLogCount} -> ${afterRequestLogCount}`);
+    }
   } finally {
-    child.kill();
-    await Promise.race([once(child, "exit"), delay(5_000)]);
+    restoreEnv(envSnapshot);
+    await prisma.$disconnect();
   }
 
-  const failed = checks.filter((item) => item.status === "FAIL");
+  const failed = checks.filter((check) => check.status === "FAIL");
   for (const check of checks) {
     console.log(`${check.status} ${check.name}${check.detail ? ` - ${check.detail}` : ""}`);
   }
 
   if (failed.length > 0) {
-    console.error(output.slice(-4000));
     process.exitCode = 1;
   }
 }
 
-main().catch((error) => {
+main().catch(async (error) => {
   console.error(error);
+  await prisma.$disconnect();
   process.exit(1);
 });
