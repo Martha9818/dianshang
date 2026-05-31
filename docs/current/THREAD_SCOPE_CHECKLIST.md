@@ -4,12 +4,12 @@ Use this file as the short frozen boundary and status record for the current mai
 
 ## Thread
 
-- Name: V1.5 Thread 09 - Final Integration Acceptance, README, And V2 Preparation
+- Name: V1.5 Stabilization Thread 01 - Issue Triage And Ordered Hardening
 - Date: 2026-05-31
 - Status: COMPLETE
-- Type: final acceptance / scoped bug fix / README closeout / archive slimming / baseline freeze
-- Approved scope: regression, scoped bug fixes, README updates, risk closeout, current-doc slimming, archive updates, and V2 prerequisite notes only
-- Existing working-tree changes belong to: Thread 09 closeout work; untracked `tmp/` remains outside product scope
+- Type: post-V1.5 stabilization / safety hardening / read-only consistency / docs status refresh
+- Approved scope: triage and small fixes for V1.5 stability, consistency, Vercel read-only behavior, sensitive-output reduction, file-cleanup boundary hardening, and status docs only
+- Existing working-tree changes belong to: Stabilization Thread 01 hardening work; untracked `tmp/` remains outside product scope
 
 ## Safety
 
@@ -43,6 +43,12 @@ Use this file as the short frozen boundary and status record for the current mai
 - Keep assistant behavior reminder-only and link-only; no cleanup execution, no batch execution, no real multi-agent behavior.
 - Keep Electron as POC-only and isolated under `experiments/electron-poc/`.
 
+## Stabilization Boundary
+
+- Allowed: small bug fixes, guard hardening, UI disabled-state consistency, documentation/status corrections, and verification.
+- Not allowed: V2 behavior, schema changes, migrations, dependency changes, new pages, new workflows, second cleanup logic, formal Electron release, platform crawlers, automatic publishing, inventory, supplier management, PDF reports, or real multi-agent orchestration.
+- External action still required: historical Vercel recovery codes must be rotated or revoked provider-side; the repository cannot complete that account operation.
+
 ## File Cleanup Boundary
 
 - Existing owner: V1-Plus Thread 06 already owns manual scans, orphan/old-file detection, app trash, confirmed permanent delete, `CleanupLog`, Vercel no-real-scan/delete, path sanitization, path traversal protection, and active-file protection.
@@ -53,7 +59,8 @@ Use this file as the short frozen boundary and status record for the current mai
 
 ## Verification
 
-- Required commands passed: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, `npm run typecheck`
+- Required commands before current hardening passed during Thread 01 triage: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, `npm run typecheck`
+- Current hardening verification passed: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, `npm run typecheck`, `npm run thread09:verify`
 - Root `npm test` is not available; the project still has no `test` script
 - Final acceptance entry passed: `npm run thread09:verify`
 - Electron POC smoke passed: `experiments/electron-poc -> npm run smoke`

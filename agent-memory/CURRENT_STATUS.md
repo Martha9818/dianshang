@@ -2,9 +2,9 @@
 
 ## Current Progress
 
-- Current stage: V1.5 completed and frozen after Thread 09 closeout.
-- Current task state: V1.5 Thread 09 finished locally with final regression, README closeout, archive slimming, and V2 precondition notes.
-- Next stage: V2 planning only after an explicitly approved new thread.
+- Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
+- Current task state: Stabilization Thread 01 issue triage and first ordered hardening pass are complete locally.
+- Next stage: Continue only approved Stabilization follow-up threads before any V2 planning thread.
 
 ## Product Direction
 
@@ -22,10 +22,10 @@
 
 - Vercel remains preview-only and read-only.
 - Root `npm test` does not exist in the current scripts.
-- Provider-side rotation or revocation is still required for the historical Vercel recovery-code exposure.
+- Provider-side rotation or revocation is still required for the historical Vercel recovery-code exposure; this must be completed outside the repository.
 - Manual backup exists, but in-app restore remains V2 scope.
 - Electron remains POC-only and is not a formal desktop runtime.
 
 ## Next Recommended Step
 
-- Open the first approved V2 planning thread instead of adding more behavior directly onto the frozen V1.5 baseline.
+- Open the next approved V1.5 Stabilization follow-up thread if more cleanup is desired. Do not enter V2 until explicitly approved.

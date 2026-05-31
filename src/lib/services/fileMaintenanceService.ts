@@ -1048,6 +1048,10 @@ export async function permanentlyDeleteTrashFiles(input: {
 export async function clearAcceptanceFiles(relativePaths: string[]) {
   for (const relativePath of relativePaths) {
     try {
+      if (!relativePath.includes("thread06-acceptance")) {
+        throw new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, "验收清理只允许删除 thread06-acceptance 临时文件。");
+      }
+
       if (relativePath.startsWith("trash/")) {
         const trash = resolveTrashPath(relativePath);
         await rm(trash.absolutePath, { force: true, recursive: true });

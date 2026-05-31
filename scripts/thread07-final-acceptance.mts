@@ -197,7 +197,7 @@ async function main() {
   const taskRowNumber = taskRows.find((row) => row.getCell(1).value === taskCode)?.number;
   assert(taskRowNumber, "PromptTask row missing");
   const taskRow = readRowObject(promptTasksSheet, taskRowNumber);
-  assert(taskRow["Prompt 内容"] === "Prompt 内容 T07", "Prompt text mismatch");
+  assert(taskRow["Prompt 摘要"] === "已生成 Prompt（完整内容请在本地 Prompt 任务页查看）", "Prompt summary mismatch");
   assert(taskRow["推荐尺寸"] === "3:4", "Prompt size mismatch");
 
   const materialRows = materialsSheet.getRows(2, materialsSheet.rowCount - 1) ?? [];

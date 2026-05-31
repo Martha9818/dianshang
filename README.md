@@ -1,4 +1,4 @@
-# EcomPilot V1.5
+# EcomPilot V1.5 Stabilization
 
 EcomPilot 是一个 Windows 本地优先的电商选品与运营工作台。正式数据以本机 SQLite、`uploads/`、`exports/`、`backups/`、`logs/` 和应用内 `trash/` 为准；Vercel 仅用于只读预览。
 
@@ -9,7 +9,7 @@ EcomPilot 是一个 Windows 本地优先的电商选品与运营工作台。正�
 - V1-Plus：全局搜索与筛选、灵感箱管理增强、首页待办、应用内通知中心、批量操作安全机制、文件清理与应用内回收站。
 - V1.5：灵感文件夹定时扫描、自动 AI 识图草稿、截图识别、图片导入结构化、链接导入尝试、导入质量分级、竞品智能分析、差异化建议、图片去重、轻量原创性风险提示、API 生图轻量版、Electron 技术验证、站内搜索助手、通知摘要助手。
 
-V1.5 只做轻量智能与技术验证，不提前实现 V2，不新增第二套文件清理系统，不实现正式桌面端、SKU、供应商、库存、试销复盘、PDF 报告或真正多 Agent 调度。
+V1.5 Stabilization 只处理 V1.5 完成后的稳定性、一致性和安全边界问题，不提前实现 V2，不新增第二套文件清理系统，不实现正式桌面端、SKU、供应商、库存、试销复盘、PDF 报告或真正多 Agent 调度。
 
 ## Windows 本地运行
 
@@ -138,7 +138,7 @@ V1.5 Thread 07 仅新增 `experiments/electron-poc/` 作为 Electron 技术验�
 - 搜索助手只返回本地规则生成的安全跳转、筛选、搜索或导航建议。
 - 摘要助手只基于首页待办、通知、AI 失败提醒、备份状态和已有 CleanupLog 生成摘要。
 - 它不会自动修改、删除、归档、清理、批量执行、标记通知已读、生成图片或修改商品状态。
-- 它只会提醒并跳转到 ` /maintenance/files `，不会自动执行文件清理。
+- 它只会提醒并跳转到 `/maintenance/files`，不会自动执行文件清理。
 - Vercel 预览显示：`预览环境只读，请在 Windows 本地验收站内助手。`
 
 ## 验证命令
@@ -158,9 +158,9 @@ npm run thread09:verify
 - Electron POC 验证使用 `experiments/electron-poc` 下的 `npm run smoke`。
 - Thread 09 不新增 Prisma migration；现有 migration 用途见 `docs/current/DATABASE_CHANGELOG.md`。
 
-## V2 规划入口
+## 后续规划入口
 
-V2 只做规划，不在 V1.5 直接实现。下一阶段可讨论的主题：
+当前先处理 V1.5 Stabilization。V2 只做规划，不在 V1.5 直接实现。后续经明确批准后可讨论的主题：
 
 - 正式 Windows 桌面端
 - 数据恢复

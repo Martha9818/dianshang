@@ -219,15 +219,18 @@ export function ActionButton({
   variant = "primary",
   href,
   type = "button",
+  disabled = false,
 }: {
   children: ReactNode;
   variant?: "primary" | "secondary" | "ghost";
   href?: string;
   type?: "button" | "submit";
+  disabled?: boolean;
 }) {
   const className = cn(
     "inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-medium",
     interactiveBaseClassName,
+    disabled && "pointer-events-none opacity-50",
     variant === "primary" &&
       "bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] text-white shadow-[0_16px_36px_rgba(43,115,255,0.28)] hover:-translate-y-[1px] hover:bg-[linear-gradient(135deg,#4A86FF,#275FE8)] hover:shadow-[0_20px_42px_rgba(43,115,255,0.34)]",
     variant === "secondary" &&
@@ -245,7 +248,7 @@ export function ActionButton({
   }
 
   return (
-    <button type={type} className={className}>
+    <button type={type} className={className} disabled={disabled}>
       {children}
     </button>
   );

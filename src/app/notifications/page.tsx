@@ -181,7 +181,7 @@ export default async function NotificationsPage({
           </form>
           <div className="flex flex-1 flex-col gap-3 xl:flex-row xl:items-start xl:justify-end">
             <MarkAllNotificationsReadForm type={activeType} disabled={!isWritable} />
-            <CleanupOldNotificationsForm />
+            <CleanupOldNotificationsForm disabled={!isWritable} />
           </div>
         </div>
       </FilterBar>
@@ -263,7 +263,7 @@ export default async function NotificationsPage({
                         {item.status === "unread" ? (
                           <MarkNotificationReadForm notificationId={item.id} disabled={!isWritable} />
                         ) : null}
-                        <DeleteNotificationForm notificationId={item.id} />
+                        <DeleteNotificationForm notificationId={item.id} disabled={!isWritable} />
                       </div>
                     </DataTableCell>
                   </DataTableRow>

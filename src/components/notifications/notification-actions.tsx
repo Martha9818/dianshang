@@ -27,7 +27,7 @@ function ActionMessage({ state }: { state: ActionState }) {
   );
 }
 
-export function MarkNotificationReadForm({ notificationId }: { notificationId: number; disabled?: boolean }) {
+export function MarkNotificationReadForm({ notificationId, disabled = false }: { notificationId: number; disabled?: boolean }) {
   const [state, formAction, isPending] = useActionState(markNotificationReadAction, {});
 
   return (
@@ -35,7 +35,7 @@ export function MarkNotificationReadForm({ notificationId }: { notificationId: n
       <input type="hidden" name="notificationId" value={notificationId} />
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || disabled}
         className="inline-flex h-9 cursor-pointer items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] transition hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isPending ? "处理中..." : "标记已读"}
@@ -57,7 +57,7 @@ export function MarkAllNotificationsReadForm({
   return (
     <form action={formAction}>
       <input type="hidden" name="type" value={type} />
-      <ActionButton type="submit" variant="secondary">
+      <ActionButton type="submit" variant="secondary" disabled={isPending || disabled}>
         <MiniIcon name="bell" className="h-4 w-4" />
         {isPending ? "处理中..." : "全部标记已读"}
       </ActionButton>
@@ -67,13 +67,18 @@ export function MarkAllNotificationsReadForm({
   );
 }
 
-export function DeleteNotificationForm({ notificationId }: { notificationId: number }) {
+export function DeleteNotificationForm({ notificationId, disabled = false }: { notificationId: number; disabled?: boolean }) {
   const [state, formAction, isPending] = useActionState(deleteNotificationAction, {});
 
   return (
     <form
       action={formAction}
       onSubmit={(event) => {
+        if (disabled) {
+          event.preventDefault();
+          return;
+        }
+
         if (!window.confirm("确定删除这条通知吗？删除后不可恢复。")) {
           event.preventDefault();
         }
@@ -82,7 +87,7 @@ export function DeleteNotificationForm({ notificationId }: { notificationId: num
       <input type="hidden" name="notificationId" value={notificationId} />
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || disabled}
         className="inline-flex h-9 cursor-pointer items-center rounded-xl border border-rose-200/80 px-3 text-sm font-medium text-rose-600 transition hover:-translate-y-[1px] hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isPending ? "删除中..." : "删除"}
@@ -92,20 +97,25 @@ export function DeleteNotificationForm({ notificationId }: { notificationId: num
   );
 }
 
-export function CleanupOldNotificationsForm() {
+export function CleanupOldNotificationsForm({ disabled = false }: { disabled?: boolean }) {
   const [state, formAction, isPending] = useActionState(cleanupOldNotificationsAction, {});
 
   return (
     <form
       action={formAction}
       onSubmit={(event) => {
+        if (disabled) {
+          event.preventDefault();
+          return;
+        }
+
         if (!window.confirm("确定清理 30 天前的已读通知吗？此操作不可恢复。")) {
           event.preventDefault();
         }
       }}
     >
       <input type="hidden" name="daysToKeep" value="30" />
-      <ActionButton type="submit" variant="ghost">
+      <ActionButton type="submit" variant="ghost" disabled={isPending || disabled}>
         <MiniIcon name="ban" className="h-4 w-4" />
         {isPending ? "清理中..." : "清理旧通知"}
       </ActionButton>

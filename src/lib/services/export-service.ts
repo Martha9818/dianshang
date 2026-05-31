@@ -57,6 +57,10 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error && error.message.trim() ? error.message : "未知错误";
 }
 
+function buildPromptExportSummary(promptText: string | null | undefined) {
+  return promptText?.trim() ? "已生成 Prompt（完整内容请在本地 Prompt 任务页查看）" : "";
+}
+
 function addSheet<T extends Record<string, unknown>>(workbook: ExcelJS.Workbook, name: string, columns: SheetColumn<T>[], rows: T[]) {
   const worksheet = workbook.addWorksheet(name);
   worksheet.columns = columns.map((column) => ({
@@ -297,7 +301,7 @@ export async function createExcelExport(settings: ExportSettings = {}) {
         { header: "平台", key: "platform", width: 14 },
         { header: "图片类型", key: "imageType", width: 16 },
         { header: "推荐尺寸", key: "recommendedSize", width: 16 },
-        { header: "Prompt 内容", key: "promptText", width: 52 },
+        { header: "Prompt 摘要", key: "promptText", width: 52 },
         { header: "任务状态", key: "status", width: 16 },
         { header: "版本", key: "version", width: 12 },
         { header: "创建时间", key: "createdAt", width: 20 },
@@ -309,7 +313,7 @@ export async function createExcelExport(settings: ExportSettings = {}) {
         platform: task.platform ?? "",
         imageType: task.imageType ?? "",
         recommendedSize: task.recommendedSize ?? "",
-        promptText: task.promptText ?? "",
+        promptText: buildPromptExportSummary(task.promptText),
         status: task.status,
         version: task.version ?? "",
         createdAt: formatDateTime(task.createdAt),

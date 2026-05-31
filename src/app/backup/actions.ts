@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { BackupReadonlyError } from "@/lib/services/thread07-errors";
 import { getRuntimeModeSummary } from "@/lib/services/product-runtime-service";
+import { sanitizeLogMessage } from "@/lib/services/logging";
 
 const PREVIEW_READONLY_MESSAGE = "预览环境只读，请在 Windows 本地验收。";
 
@@ -28,7 +29,7 @@ export async function createManualBackupAction() {
       return { ok: false, message: PREVIEW_READONLY_MESSAGE };
     }
 
-    console.error("Manual backup failed", error);
+    console.error("Manual backup failed", sanitizeLogMessage(error));
     return { ok: false, message: "手动备份失败，请查看最近备份历史中的错误原因。" };
   }
 }

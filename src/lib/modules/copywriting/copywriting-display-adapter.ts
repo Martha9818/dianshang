@@ -122,7 +122,7 @@ export function buildCopywritingDisplayView(record: CopywritingRecordLike): Copy
     sellingPoints.length > 0 ? `卖点：\n- ${sellingPoints.join("\n- ")}` : null,
     faqItems.length > 0 ? `FAQ：\n- ${faqItems.join("\n- ")}` : null,
     riskNotes.length > 0 ? `风险提示：\n- ${riskNotes.join("\n- ")}` : null,
-    !record.title && !record.mainCopy && record.rawResponseText ? `原始返回：\n${record.rawResponseText}` : null,
+    !record.title && !record.mainCopy && record.rawResponseText ? "AI 返回未通过结构化展示，请重新生成或手动编辑。" : null,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -134,6 +134,6 @@ export function buildCopywritingDisplayView(record: CopywritingRecordLike): Copy
     sellingPoints,
     faqItems,
     riskNotes,
-    copyText: copyText || record.rawResponseText || "--",
+    copyText: copyText || "--",
   };
 }

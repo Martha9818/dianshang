@@ -676,7 +676,7 @@ export async function getScreenshotRecognitionPageData(input?: {
     const querySourceType = input?.sourceType && isScreenshotSourceType(input.sourceType) ? input.sourceType : SCREENSHOT_SOURCE_TYPES.MANUAL;
     const queryProductId = parsePositiveId(input?.productId);
 
-    if (!runtime.isWritable && runtime.mode === "cloud") {
+    if (!runtime.isWritable) {
       return {
         runtime,
         jobs: [],
