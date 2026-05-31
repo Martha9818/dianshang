@@ -187,9 +187,9 @@ export default async function LinkImportsPage({
               <div className="grid gap-3 text-sm text-slate-600">
                 <DetailRow label="草稿" value={`#${selectedDraft.id}`} />
                 <DetailRow label="用途" value={selectedDraft.purposeLabel} />
-                <DetailRow label="状态" value={selectedDraft.status} badgeTone={selectedDraft.statusTone} />
-                <DetailRow label="质量" value={selectedDraft.qualityLevel} badgeTone={selectedDraft.qualityTone} />
-                <DetailRow label="平台" value={selectedDraft.sourcePlatform} />
+                <DetailRow label="状态" value={selectedDraft.statusLabel} badgeTone={selectedDraft.statusTone} />
+                <DetailRow label="质量" value={selectedDraft.qualityLabel} badgeTone={selectedDraft.qualityTone} />
+                <DetailRow label="平台" value={selectedDraft.sourcePlatformLabel} />
                 <DetailRow label="原链接" value={getSafeLinkImportDisplayUrl(selectedDraft.url)} />
                 <DetailRow label="规范化" value={getSafeLinkImportDisplayUrl(selectedDraft.normalizedUrl)} />
                 <DetailRow label="公开标题" value={selectedDraft.metaTitle ?? "--"} />
@@ -247,9 +247,9 @@ export default async function LinkImportsPage({
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <StatusBadge label={draft.purposeLabel} tone="blue" />
-                    <StatusBadge label={draft.sourcePlatform} tone="violet" />
-                    <StatusBadge label={draft.status} tone={draft.statusTone} />
-                    <StatusBadge label={draft.qualityLevel} tone={draft.qualityTone} />
+                    <StatusBadge label={draft.sourcePlatformLabel} tone="violet" />
+                    <StatusBadge label={draft.statusLabel} tone={draft.statusTone} />
+                    <StatusBadge label={draft.qualityLabel} tone={draft.qualityTone} />
                   </div>
                   <p className="mt-3 line-clamp-2 break-all text-xs leading-5 text-slate-500">{getSafeLinkImportDisplayUrl(draft.normalizedUrl ?? draft.url)}</p>
                 </Link>

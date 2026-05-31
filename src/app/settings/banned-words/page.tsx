@@ -23,6 +23,11 @@ export default async function BannedWordsPage({
       totalCount: 0,
       categoryCount: 0,
       highRiskCount: 0,
+      deltas: {
+        totalCount: "0",
+        categoryCount: "0",
+        highRiskCount: "0",
+      },
     },
     filters: {
       categories: [],
@@ -43,21 +48,21 @@ export default async function BannedWordsPage({
         <StatCard
           label="违规词总数"
           value={String(pageData.stats.totalCount)}
-          delta="实时"
+          delta={pageData.stats.deltas.totalCount}
           tone="red"
           icon={<MiniIcon name="ban" className="h-7 w-7" />}
         />
         <StatCard
           label="分类数量"
           value={String(pageData.stats.categoryCount)}
-          delta="实时"
+          delta={pageData.stats.deltas.categoryCount}
           tone="blue"
           icon={<MiniIcon name="doc" className="h-7 w-7" />}
         />
         <StatCard
           label="高风险数量"
           value={String(pageData.stats.highRiskCount)}
-          delta="实时"
+          delta={pageData.stats.deltas.highRiskCount}
           tone="amber"
           icon={<MiniIcon name="shield" className="h-7 w-7" />}
         />

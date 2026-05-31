@@ -65,12 +65,13 @@ type SearchParams = {
   view?: string;
   materialId?: string;
   materialError?: string;
+  materialMessage?: string;
 };
 
 function buildSourceUrl(params: SearchParams) {
   const searchParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (value && key !== "materialError") {
+    if (value && key !== "materialError" && key !== "materialMessage") {
       searchParams.set(key, value);
     }
   }
@@ -81,7 +82,7 @@ function buildSourceUrl(params: SearchParams) {
 function buildUrl(params: SearchParams, patch: Record<string, string | null>) {
   const searchParams = new URLSearchParams();
   for (const [key, value] of Object.entries({ ...params, ...patch })) {
-    if (value && key !== "materialError") {
+    if (value && key !== "materialError" && key !== "materialMessage") {
       searchParams.set(key, value);
     }
   }
@@ -118,6 +119,7 @@ export default async function MaterialsPage({
     >
       {readonlyNotice ? <PageNote>预览环境只读，请在 Windows 本地验收。</PageNote> : null}
       {readUnavailableNotice ? <PageNote>{readUnavailableNotice}</PageNote> : null}
+      {params.materialMessage ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{params.materialMessage}</div> : null}
       {params.materialError ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{params.materialError}</div> : null}
 
       <DashboardCard className="px-4 py-4">
@@ -155,10 +157,11 @@ export default async function MaterialsPage({
             <button
               type="submit"
               disabled={Boolean(readonlyNotice)}
+              title="为已有素材生成图片特征，用于发现重复或相似素材。不会删除文件。"
               className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#E4EAF3] bg-white px-3 text-sm font-medium text-[#2563EB] disabled:opacity-50"
             >
               <MiniIcon name="spark" className="h-4 w-4" />
-              补建素材库指纹
+              检查素材相似度
             </button>
           </form>
           <TableActionLink href="/maintenance/files">文件清理与回收站</TableActionLink>
@@ -166,10 +169,10 @@ export default async function MaterialsPage({
       </DashboardCard>
 
       <section className="grid gap-4 xl:grid-cols-4">
-        <StatCard label="全部素材" value={String(pageData?.stats.total ?? 0)} delta="真实统计" tone="blue" icon={<MiniIcon name="image" className="h-7 w-7" />} />
-        <StatCard label="待审核" value={String(pageData?.stats.pendingReview ?? 0)} delta="真实统计" tone="amber" icon={<MiniIcon name="clock" className="h-7 w-7" />} />
-        <StatCard label="已采用" value={String(pageData?.stats.adopted ?? 0)} delta="真实统计" tone="green" icon={<MiniIcon name="shield" className="h-7 w-7" />} />
-        <StatCard label="待修改" value={String(pageData?.stats.needsEdit ?? 0)} delta="真实统计" tone="amber" icon={<MiniIcon name="spark" className="h-7 w-7" />} />
+        <StatCard label="全部素材" value={String(pageData?.stats.total ?? 0)} delta={pageData?.stats.deltas.total ?? "0"} tone="blue" icon={<MiniIcon name="image" className="h-7 w-7" />} />
+        <StatCard label="待审核" value={String(pageData?.stats.pendingReview ?? 0)} delta={pageData?.stats.deltas.pendingReview ?? "0"} tone="amber" icon={<MiniIcon name="clock" className="h-7 w-7" />} />
+        <StatCard label="已采用" value={String(pageData?.stats.adopted ?? 0)} delta={pageData?.stats.deltas.adopted ?? "0"} tone="green" icon={<MiniIcon name="shield" className="h-7 w-7" />} />
+        <StatCard label="待修改" value={String(pageData?.stats.needsEdit ?? 0)} delta={pageData?.stats.deltas.needsEdit ?? "0"} tone="amber" icon={<MiniIcon name="spark" className="h-7 w-7" />} />
       </section>
 
       {pageData && pageData.stats.total === 0 ? (

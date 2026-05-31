@@ -156,6 +156,16 @@ function validateProviderConfig(config: AIProviderConfig) {
   }
 }
 
+function validateImageProviderConfig(config: AIProviderConfig) {
+  if (config.providerType !== "openai-compatible") {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_CONFIG_INVALID, "V1-Core 当前仅支持 openai-compatible。");
+  }
+
+  if (!config.baseUrl.trim() || !config.apiKey.trim()) {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_CONFIG_INVALID, "请完整填写 Base URL 和 API Key。");
+  }
+}
+
 async function postChatCompletion(input: GenerateTextJsonInput & { structuredOutput: boolean }): Promise<AITextResult> {
   ensureAICallsAllowed();
   validateProviderConfig(input);
@@ -299,7 +309,7 @@ async function fetchGeneratedImage(url: string, signal: AbortSignal) {
 
 async function postImageGeneration(input: GenerateImageInput): Promise<AIImageResult> {
   ensureAICallsAllowed(PREVIEW_IMAGE_AI_MESSAGE);
-  validateProviderConfig(input);
+  validateImageProviderConfig(input);
 
   const startedAt = Date.now();
   const sanitizedPrompt = sanitizePromptForAI(input.prompt);
@@ -311,7 +321,7 @@ async function postImageGeneration(input: GenerateImageInput): Promise<AIImageRe
   try {
     const endpoint = `${normalizeBaseUrl(input.baseUrl)}/images/generations`;
     const body = {
-      model: input.modelName,
+      ...(input.modelName.trim() ? { model: input.modelName.trim() } : {}),
       prompt: sanitizedPrompt,
       n: 1,
       size: input.size,
@@ -353,7 +363,7 @@ async function postImageGeneration(input: GenerateImageInput): Promise<AIImageRe
 
     await createAIRequestLog({
       provider,
-      model: input.modelName,
+      model: input.modelName || "unknown",
       requestType: input.requestType,
       inputTokens: inputTokenEstimate,
       outputTokens: null,

@@ -220,10 +220,10 @@ export default async function ProductsPage({
       ) : (
         <>
           <section className="grid gap-4 xl:grid-cols-4">
-            <StatCard label="全部商品" value={String(pageData.data.stats.totalCount)} delta="实时" tone="blue" icon={<MiniIcon name="bag" className="h-7 w-7" />} />
-            <StatCard label="待分析" value={String(pageData.data.stats.pendingCount)} delta="Thread 01" tone="amber" icon={<MiniIcon name="clock" className="h-7 w-7" />} />
-            <StatCard label="分析中" value={String(pageData.data.stats.analyzingCount)} delta="Thread 01" tone="blue" icon={<MiniIcon name="spark" className="h-7 w-7" />} />
-            <StatCard label="建议测试" value={String(pageData.data.stats.suggestedCount)} delta="只展示" tone="green" icon={<MiniIcon name="thumb" className="h-7 w-7" />} />
+            <StatCard label="全部商品" value={String(pageData.data.stats.totalCount)} delta={pageData.data.stats.deltas.totalCount} tone="blue" icon={<MiniIcon name="bag" className="h-7 w-7" />} />
+            <StatCard label="待分析" value={String(pageData.data.stats.pendingCount)} delta={pageData.data.stats.deltas.pendingCount} tone="amber" icon={<MiniIcon name="clock" className="h-7 w-7" />} />
+            <StatCard label="分析中" value={String(pageData.data.stats.analyzingCount)} delta={pageData.data.stats.deltas.analyzingCount} tone="blue" icon={<MiniIcon name="spark" className="h-7 w-7" />} />
+            <StatCard label="建议测试" value={String(pageData.data.stats.suggestedCount)} delta={pageData.data.stats.deltas.suggestedCount} tone="green" icon={<MiniIcon name="thumb" className="h-7 w-7" />} />
           </section>
 
           <BatchOperationForm

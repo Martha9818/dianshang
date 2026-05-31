@@ -32,6 +32,7 @@ export async function saveAIProviderAction(formData: FormData) {
 
     revalidatePath("/settings/ai");
     revalidatePath("/copywriting");
+    revalidatePath("/prompt-tasks");
 
     return {
       success: true as const,
@@ -55,6 +56,7 @@ export async function deleteAIProviderAction(providerId: number) {
     await deleteAIProvider(providerId);
     revalidatePath("/settings/ai");
     revalidatePath("/copywriting");
+    revalidatePath("/prompt-tasks");
     return { success: true as const };
   } catch (error) {
     return {
@@ -69,6 +71,7 @@ export async function disableAIProviderAction(providerId: number) {
     await disableAIProvider(providerId);
     revalidatePath("/settings/ai");
     revalidatePath("/copywriting");
+    revalidatePath("/prompt-tasks");
     return { success: true as const };
   } catch (error) {
     return {
@@ -98,6 +101,7 @@ export async function enableAIProviderAction(providerId: number) {
     await enableAIProvider(providerId);
     revalidatePath("/settings/ai");
     revalidatePath("/copywriting");
+    revalidatePath("/prompt-tasks");
     return { success: true as const };
   } catch (error) {
     return {

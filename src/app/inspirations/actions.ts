@@ -367,7 +367,7 @@ export async function rebuildInspirationLibraryFingerprintsAction(_prevState: un
   } catch (error) {
     return {
       success: false as const,
-      error: getProductErrorMessage(error, "灵感箱图片指纹补建失败，请稍后重试。"),
+      error: getProductErrorMessage(error, "灵感相似度检查失败，请稍后重试。"),
     };
   }
 }

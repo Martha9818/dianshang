@@ -28,6 +28,7 @@ import {
   normalizePromptTaskQuery,
   type PromptTaskQuery,
 } from "@/lib/services/query-service";
+import { formatStatDelta, getTodayStart } from "@/lib/services/stat-delta-service";
 
 export const PROMPT_TASK_STATUS = {
   PENDING: "待生成",
@@ -472,7 +473,8 @@ export async function uploadManualMaterial(input: {
 
 export async function getHomePromptTaskStats() {
   try {
-    const [totalCount, pendingReturnCount, recentTasks] = await Promise.all([
+    const todayStart = getTodayStart();
+    const [totalCount, pendingReturnCount, previousTotalCount, recentTasks] = await Promise.all([
       prisma.promptTask.count({
         where: { product: { deletedAt: null } },
       }),
@@ -481,6 +483,9 @@ export async function getHomePromptTaskStats() {
           status: { in: [PROMPT_TASK_STATUS.PENDING, PROMPT_TASK_STATUS.COPIED] },
           product: { deletedAt: null },
         },
+      }),
+      prisma.promptTask.count({
+        where: { product: { deletedAt: null }, createdAt: { lt: todayStart } },
       }),
       prisma.promptTask.findMany({
         where: { product: { deletedAt: null } },
@@ -493,6 +498,9 @@ export async function getHomePromptTaskStats() {
     return {
       totalCount,
       pendingReturnCount,
+      deltas: {
+        totalCount: formatStatDelta(totalCount, previousTotalCount),
+      },
       recentTasks: recentTasks.map(mapPromptTask),
     };
   } catch (error) {

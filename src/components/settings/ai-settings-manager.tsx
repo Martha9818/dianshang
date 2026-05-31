@@ -121,10 +121,11 @@ export function AISettingsManager({
     [providers],
   );
   const imageProviderStatus = defaultImageProvider
-    ? `当前生图 Provider：${defaultImageProvider.name} / ${defaultImageProvider.modelName ?? "--"}`
+    ? `当前生图 Provider：${defaultImageProvider.name} / ${defaultImageProvider.modelName ?? "未指定模型"}`
     : imageSettings.enabled
       ? "已启用 API 生图，但未配置可用的 API 生图 Provider。请新增或切换一个用途为 API 生图的默认 Provider。"
       : "API 生图当前未启用。启用后仍需要配置用途为 API 生图的 Provider。";
+  const isImageProviderForm = form.purpose === "image";
 
   function selectProvider(provider: ProviderView) {
     setConnectionResult(null);
@@ -182,6 +183,19 @@ export function AISettingsManager({
 
   function handleTest() {
     startTransition(async () => {
+      if (isImageProviderForm) {
+        if (!form.baseUrl.trim() || (!form.apiKey.trim() && !form.hasApiKey)) {
+          setConnectionResult({ type: "error", text: "请先填写 Base URL 和 API Key。" });
+          return;
+        }
+
+        setConnectionResult({
+          type: "success",
+          text: "API 生图 Provider 基础配置已具备；实际接口会在手动生图时验证。",
+        });
+        return;
+      }
+
       const result =
         editingProviderId && !form.apiKey
           ? await testAIProviderConnectionAction(editingProviderId)
@@ -249,7 +263,7 @@ export function AISettingsManager({
                         <StatusBadge label={provider.enabled ? "已启用" : "已禁用"} tone={provider.enabled ? "green" : "slate"} />
                       </div>
                       <div className="mt-3 space-y-1 text-sm text-slate-500">
-                        <p>模型：{provider.modelName ?? "--"}</p>
+                        <p>模型：{provider.modelName ?? "未指定模型"}</p>
                         <p className="truncate">Base URL：{provider.baseUrl ?? "--"}</p>
                         <p>API Key：{provider.maskedApiKey}</p>
                       </div>
@@ -287,8 +301,13 @@ export function AISettingsManager({
                     onChange={(event) => setForm((current) => ({ ...current, apiKey: event.target.value }))}
                   />
                 </Field>
-                <Field label="模型名">
-                  <input className={inputClassName} value={form.modelName} onChange={(event) => setForm((current) => ({ ...current, modelName: event.target.value }))} />
+                <Field label={isImageProviderForm ? "模型名（可选）" : "模型名"}>
+                  <input
+                    className={inputClassName}
+                    placeholder={isImageProviderForm ? "第三方生图接口不需要模型名时可留空" : ""}
+                    value={form.modelName}
+                    onChange={(event) => setForm((current) => ({ ...current, modelName: event.target.value }))}
+                  />
                 </Field>
                 <Field label="用途">
                   <select
@@ -298,7 +317,6 @@ export function AISettingsManager({
                       setForm((current) => ({
                         ...current,
                         purpose: event.target.value,
-                        isDefault: false,
                       }))
                     }
                   >
@@ -550,7 +568,7 @@ export function AISettingsManager({
                 <DataTableRow key={provider.id}>
                   <DataTableCell>{provider.name}</DataTableCell>
                   <DataTableCell>{provider.providerType}</DataTableCell>
-                  <DataTableCell>{provider.modelName ?? "--"}</DataTableCell>
+                  <DataTableCell>{provider.modelName ?? "未指定模型"}</DataTableCell>
                   <DataTableCell>{provider.purpose ?? "--"}</DataTableCell>
                   <DataTableCell>
                     <StatusBadge label={provider.isDefault ? "默认" : "否"} tone={provider.isDefault ? "blue" : "slate"} />

@@ -71,12 +71,12 @@ export default async function PromptTasksPage({
       description="为商品生成可复制到网页版 ChatGPT 的生图 Prompt，并管理生成图回传状态。"
     >
       <FilterBar className="py-3">
-        <form className="grid w-full gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-[minmax(180px,1fr)_minmax(180px,1fr)_140px_140px_140px_140px_150px_auto] xl:items-end">
-          <label className="min-w-0">
+        <form action="/prompt-tasks" method="get" className="flex w-full flex-wrap items-end gap-3">
+          <label className="min-w-[220px] flex-[1_1_240px]">
             <span className="mb-1.5 block px-1 text-sm text-slate-500">商品关键词</span>
             <input name="q" defaultValue={query.keyword ?? ""} placeholder="搜索商品 / Task ID" className={selectClassName} />
           </label>
-          <FilterSelect label="商品" name="productId" defaultValue={params.productId ?? ""}>
+          <FilterSelect label="商品" name="productId" defaultValue={params.productId ?? ""} className="min-w-[190px] flex-[1_1_210px]">
             <option value="">全部商品</option>
             {pageData.products.map((product) => (
               <option key={product.id} value={product.id}>
@@ -84,7 +84,7 @@ export default async function PromptTasksPage({
               </option>
             ))}
           </FilterSelect>
-          <FilterSelect label="平台" name="platform" defaultValue={params.platform ?? ""}>
+          <FilterSelect label="平台" name="platform" defaultValue={params.platform ?? ""} className="min-w-[150px] flex-[0_1_170px]">
             <option value="">全部平台</option>
             {pageData.platforms.map((platform) => (
               <option key={platform.code} value={platform.code}>
@@ -92,7 +92,7 @@ export default async function PromptTasksPage({
               </option>
             ))}
           </FilterSelect>
-          <FilterSelect label="图片类型" name="imageType" defaultValue={params.imageType ?? ""}>
+          <FilterSelect label="图片类型" name="imageType" defaultValue={params.imageType ?? ""} className="min-w-[150px] flex-[0_1_170px]">
             <option value="">全部类型</option>
             {pageData.imageTypes.map((imageType) => (
               <option key={imageType.code} value={imageType.code}>
@@ -100,7 +100,7 @@ export default async function PromptTasksPage({
               </option>
             ))}
           </FilterSelect>
-          <FilterSelect label="推荐尺寸" name="recommendedSize" defaultValue={params.recommendedSize ?? ""}>
+          <FilterSelect label="推荐尺寸" name="recommendedSize" defaultValue={params.recommendedSize ?? ""} className="min-w-[160px] flex-[0_1_180px]">
             <option value="">全部尺寸</option>
             {pageData.recommendedSizes.map((size) => (
               <option key={size} value={size}>
@@ -108,7 +108,7 @@ export default async function PromptTasksPage({
               </option>
             ))}
           </FilterSelect>
-          <FilterSelect label="状态" name="status" defaultValue={params.status ?? ""}>
+          <FilterSelect label="状态" name="status" defaultValue={params.status ?? ""} className="min-w-[230px] flex-[0_1_250px]">
             <option value="">全部状态（不含已取消）</option>
             {pageData.statuses.map((status) => (
               <option key={status} value={status}>
@@ -116,11 +116,11 @@ export default async function PromptTasksPage({
               </option>
             ))}
           </FilterSelect>
-          <FilterSelect label="创建时间" name="sort" defaultValue={query.sort}>
+          <FilterSelect label="创建时间" name="sort" defaultValue={query.sort} className="min-w-[160px] flex-[0_1_180px]">
             <option value="createdAt_desc">从新到旧</option>
             <option value="createdAt_asc">从旧到新</option>
           </FilterSelect>
-          <div className="flex flex-wrap gap-2 md:col-span-2 xl:col-span-4 2xl:col-span-1">
+          <div className="ml-auto flex min-w-[240px] flex-wrap justify-end gap-2">
             <button
               type="submit"
               className="group inline-flex h-11 min-w-[96px] cursor-pointer items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-4 text-sm font-medium text-white shadow-[0_16px_36px_rgba(43,115,255,0.22)] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:bg-[linear-gradient(135deg,#4A86FF,#275FE8)] hover:shadow-[0_20px_42px_rgba(43,115,255,0.32)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 motion-reduce:transition-none motion-reduce:transform-none"
@@ -263,7 +263,7 @@ export default async function PromptTasksPage({
                         promptVersionOptions={[activeTask.version ?? "v1"]}
                         promptUseOptions={[activeTask.imageTypeLabel, `${activeTask.platformLabel} / ${activeTask.imageTypeLabel}`]}
                         costHint={imageGenerationPanel.settings.costHint}
-                        providerLabel={`${imageGenerationPanel.provider?.name ?? "Image Provider"} / ${imageGenerationPanel.provider?.modelName ?? "--"} / ${imageGenerationPanel.settings.defaultSize} / ${imageGenerationPanel.settings.defaultQuality}`}
+                        providerLabel={`${imageGenerationPanel.provider?.name ?? "Image Provider"} / ${imageGenerationPanel.provider?.modelName ?? "未指定模型"} / ${imageGenerationPanel.settings.defaultSize} / ${imageGenerationPanel.settings.defaultQuality}`}
                         disabled={Boolean(runtimeNotice) || activeTask.status === PROMPT_TASK_STATUS.CANCELLED}
                         highCost={imageGenerationPanel.isHighCost}
                       />
@@ -315,15 +315,17 @@ function FilterSelect({
   label,
   name,
   defaultValue,
+  className,
   children,
 }: {
   label: string;
   name: string;
   defaultValue: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <label className="min-w-0">
+    <label className={["min-w-0", className].filter(Boolean).join(" ")}>
       <span className="mb-1.5 block px-1 text-sm text-slate-500">{label}</span>
       <select name={name} defaultValue={defaultValue} className={selectClassName}>
         {children}

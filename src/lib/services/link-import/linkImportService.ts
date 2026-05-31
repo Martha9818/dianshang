@@ -373,6 +373,33 @@ function getStatusTone(status: string) {
   return "amber" as const;
 }
 
+export function getLinkImportStatusLabel(status: string | null | undefined) {
+  if (status === LINK_IMPORT_STATUSES.NEEDS_REVIEW) return "待确认";
+  if (status === LINK_IMPORT_STATUSES.DRAFT) return "草稿";
+  if (status === LINK_IMPORT_STATUSES.CONVERTED) return "已转化";
+  if (status === LINK_IMPORT_STATUSES.REJECTED) return "已放弃";
+  if (status === LINK_IMPORT_STATUSES.FAILED) return "失败";
+  return status ?? "--";
+}
+
+export function getLinkImportQualityLabel(qualityLevel: string | null | undefined) {
+  if (qualityLevel === LINK_IMPORT_QUALITY_LEVELS.HIGH) return "信息较完整";
+  if (qualityLevel === LINK_IMPORT_QUALITY_LEVELS.MEDIUM) return "信息一般";
+  if (qualityLevel === LINK_IMPORT_QUALITY_LEVELS.LOW) return "信息不足";
+  if (qualityLevel === LINK_IMPORT_QUALITY_LEVELS.FAILED) return "无法处理";
+  return qualityLevel ?? "--";
+}
+
+export function getLinkImportPlatformLabel(platform: string | null | undefined) {
+  if (platform === LINK_IMPORT_PLATFORMS.TAOBAO) return "淘宝";
+  if (platform === LINK_IMPORT_PLATFORMS.XIAN_YU) return "闲鱼";
+  if (platform === LINK_IMPORT_PLATFORMS.XIAO_HONG_SHU) return "小红书";
+  if (platform === LINK_IMPORT_PLATFORMS.DOU_YIN) return "抖音";
+  if (platform === LINK_IMPORT_PLATFORMS.ALIBABA_1688) return "1688";
+  if (platform === LINK_IMPORT_PLATFORMS.OTHER) return "其他";
+  return platform ?? "--";
+}
+
 function buildPurposeLabel(purpose: string) {
   if (purpose === LINK_IMPORT_PURPOSES.INSPIRATION) return "灵感";
   if (purpose === LINK_IMPORT_PURPOSES.PRODUCT_CANDIDATE) return "商品候选";
@@ -399,6 +426,9 @@ function mapLinkImportDraft(record: LinkImportDraftRecord) {
     displayScreenshotPath: record.screenshotThumbnailPath ?? record.screenshotPath,
     purposeLabel: buildPurposeLabel(record.purpose),
     conversionLabel: buildSourceLabel(record),
+    sourcePlatformLabel: getLinkImportPlatformLabel(record.sourcePlatform),
+    statusLabel: getLinkImportStatusLabel(record.status),
+    qualityLabel: getLinkImportQualityLabel(record.qualityLevel),
     statusTone: getStatusTone(record.status),
     qualityTone: getQualityTone(record.qualityLevel),
     formattedCreatedAt: formatDateTime(record.createdAt),
@@ -778,16 +808,16 @@ export const linkImportPurposeOptions = [
 
 export const linkImportStatusOptions = [
   { value: "", label: "全部状态" },
-  { value: LINK_IMPORT_STATUSES.NEEDS_REVIEW, label: "needs_review" },
-  { value: LINK_IMPORT_STATUSES.DRAFT, label: "draft" },
-  { value: LINK_IMPORT_STATUSES.CONVERTED, label: "converted" },
-  { value: LINK_IMPORT_STATUSES.REJECTED, label: "rejected" },
-  { value: LINK_IMPORT_STATUSES.FAILED, label: "failed" },
+  { value: LINK_IMPORT_STATUSES.NEEDS_REVIEW, label: getLinkImportStatusLabel(LINK_IMPORT_STATUSES.NEEDS_REVIEW) },
+  { value: LINK_IMPORT_STATUSES.DRAFT, label: getLinkImportStatusLabel(LINK_IMPORT_STATUSES.DRAFT) },
+  { value: LINK_IMPORT_STATUSES.CONVERTED, label: getLinkImportStatusLabel(LINK_IMPORT_STATUSES.CONVERTED) },
+  { value: LINK_IMPORT_STATUSES.REJECTED, label: getLinkImportStatusLabel(LINK_IMPORT_STATUSES.REJECTED) },
+  { value: LINK_IMPORT_STATUSES.FAILED, label: getLinkImportStatusLabel(LINK_IMPORT_STATUSES.FAILED) },
 ];
 
 export const linkImportQualityOptions = [
-  { value: LINK_IMPORT_QUALITY_LEVELS.HIGH, label: "high：截图或文本较完整" },
-  { value: LINK_IMPORT_QUALITY_LEVELS.MEDIUM, label: "medium：有部分元信息或备注" },
-  { value: LINK_IMPORT_QUALITY_LEVELS.LOW, label: "low：只有 URL，信息不足" },
-  { value: LINK_IMPORT_QUALITY_LEVELS.FAILED, label: "failed：链接无效或无法处理" },
+  { value: LINK_IMPORT_QUALITY_LEVELS.HIGH, label: getLinkImportQualityLabel(LINK_IMPORT_QUALITY_LEVELS.HIGH) },
+  { value: LINK_IMPORT_QUALITY_LEVELS.MEDIUM, label: getLinkImportQualityLabel(LINK_IMPORT_QUALITY_LEVELS.MEDIUM) },
+  { value: LINK_IMPORT_QUALITY_LEVELS.LOW, label: getLinkImportQualityLabel(LINK_IMPORT_QUALITY_LEVELS.LOW) },
+  { value: LINK_IMPORT_QUALITY_LEVELS.FAILED, label: getLinkImportQualityLabel(LINK_IMPORT_QUALITY_LEVELS.FAILED) },
 ];

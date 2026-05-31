@@ -504,8 +504,14 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
             </div>
             <div className="flex flex-wrap gap-2 border-t border-[#EEF2F8] pt-3">
               <span className="inline-flex h-12 items-center text-sm text-slate-400">维护入口</span>
-              <button formAction={dedupLibraryAction} type="submit" className={secondaryButtonClassName} disabled={dedupLibraryPending || !data.runtime.isWritable}>
-                {dedupLibraryPending ? "补建中..." : "补建灵感箱指纹"}
+              <button
+                formAction={dedupLibraryAction}
+                type="submit"
+                title="为已有灵感图片生成特征，用于发现重复或相似图片。不会删除文件。"
+                className={secondaryButtonClassName}
+                disabled={dedupLibraryPending || !data.runtime.isWritable}
+              >
+                {dedupLibraryPending ? "检查中..." : "检查灵感相似度"}
               </button>
               <Link href="/maintenance/files" className={secondaryButtonClassName}>
                 文件清理与回收站
@@ -568,7 +574,9 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
             ) : null}
             {dedupLibraryState.success ? (
               <p className="text-emerald-600">
-                指纹补建完成：处理 {dedupLibraryState.data?.total ?? 0}，疑似重复 {dedupLibraryState.data?.exactCount ?? 0}，高度相似 {dedupLibraryState.data?.similarCount ?? 0}，失败 {dedupLibraryState.data?.failedCount ?? 0}
+                {(dedupLibraryState.data?.total ?? 0) === 0
+                  ? "当前没有灵感图片可检查。"
+                  : `已检查 ${dedupLibraryState.data?.total ?? 0} 张灵感图片，疑似重复 ${dedupLibraryState.data?.exactCount ?? 0}，高度相似 ${dedupLibraryState.data?.similarCount ?? 0}，失败 ${dedupLibraryState.data?.failedCount ?? 0}。`}
               </p>
             ) : null}
           </div>

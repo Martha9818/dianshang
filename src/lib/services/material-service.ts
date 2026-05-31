@@ -34,6 +34,7 @@ import {
   normalizeMaterialLibraryQuery,
   type MaterialLibraryQuery,
 } from "@/lib/services/query-service";
+import { formatStatDelta, getTodayStart } from "@/lib/services/stat-delta-service";
 
 export type MaterialListFilters = MaterialLibraryQuery;
 
@@ -242,7 +243,8 @@ export async function getMaterialLibraryPageData(filters?: MaterialListFilters) 
   try {
     const query = normalizeMaterialLibraryQuery(filters);
     const where = buildMaterialWhere(query);
-    const [products, materials, groupedStats, orphanedCount, selectedMaterial] = await Promise.all([
+    const todayStart = getTodayStart();
+    const [products, materials, groupedStats, previousGroupedStats, orphanedCount, selectedMaterial] = await Promise.all([
       prisma.product.findMany({
         where: { deletedAt: null },
         orderBy: { updatedAt: "desc" },
@@ -259,6 +261,11 @@ export async function getMaterialLibraryPageData(filters?: MaterialListFilters) 
         where: { product: { deletedAt: null } },
         _count: { _all: true },
       }),
+      prisma.material.groupBy({
+        by: ["status"],
+        where: { product: { deletedAt: null }, createdAt: { lt: todayStart } },
+        _count: { _all: true },
+      }),
       prisma.material.count({
         where: { product: { deletedAt: { not: null } } },
       }),
@@ -268,6 +275,14 @@ export async function getMaterialLibraryPageData(filters?: MaterialListFilters) 
     const activeTotal = groupedStats
       .filter((item) => item.status !== MATERIAL_STATUS.DISCARDED)
       .reduce((sum, item) => sum + item._count._all, 0);
+    const previousActiveTotal = previousGroupedStats
+      .filter((item) => item.status !== MATERIAL_STATUS.DISCARDED)
+      .reduce((sum, item) => sum + item._count._all, 0);
+    const getCount = (status: string) => groupedStats.find((item) => item.status === status)?._count._all ?? 0;
+    const getPreviousCount = (status: string) => previousGroupedStats.find((item) => item.status === status)?._count._all ?? 0;
+    const pendingReview = getCount(MATERIAL_STATUS.PENDING_REVIEW);
+    const adopted = getCount(MATERIAL_STATUS.ADOPTED);
+    const needsEdit = getCount(MATERIAL_STATUS.NEEDS_EDIT);
 
     const mappedMaterials = await mapMaterials(materials);
     const dedupSummaries = await getImageDedupSummariesForTargets(
@@ -294,10 +309,16 @@ export async function getMaterialLibraryPageData(filters?: MaterialListFilters) 
       manualMaterialTypes: MANUAL_MATERIAL_TYPES,
       stats: {
         total: activeTotal,
-        pendingReview: groupedStats.find((item) => item.status === MATERIAL_STATUS.PENDING_REVIEW)?._count._all ?? 0,
-        adopted: groupedStats.find((item) => item.status === MATERIAL_STATUS.ADOPTED)?._count._all ?? 0,
-        needsEdit: groupedStats.find((item) => item.status === MATERIAL_STATUS.NEEDS_EDIT)?._count._all ?? 0,
+        pendingReview,
+        adopted,
+        needsEdit,
         orphanedCount,
+        deltas: {
+          total: formatStatDelta(activeTotal, previousActiveTotal),
+          pendingReview: formatStatDelta(pendingReview, getPreviousCount(MATERIAL_STATUS.PENDING_REVIEW)),
+          adopted: formatStatDelta(adopted, getPreviousCount(MATERIAL_STATUS.ADOPTED)),
+          needsEdit: formatStatDelta(needsEdit, getPreviousCount(MATERIAL_STATUS.NEEDS_EDIT)),
+        },
       },
       runtime: getRuntimeModeSummary(),
     };
@@ -463,7 +484,8 @@ export async function updateMaterialStatus(input: {
 
 export async function getHomeMaterialStats() {
   try {
-    const [activeCount, pendingReviewCount] = await Promise.all([
+    const todayStart = getTodayStart();
+    const [activeCount, pendingReviewCount, previousActiveCount] = await Promise.all([
       prisma.material.count({
         where: {
           product: { deletedAt: null },
@@ -476,11 +498,21 @@ export async function getHomeMaterialStats() {
           status: MATERIAL_STATUS.PENDING_REVIEW,
         },
       }),
+      prisma.material.count({
+        where: {
+          product: { deletedAt: null },
+          status: { not: MATERIAL_STATUS.DISCARDED },
+          createdAt: { lt: todayStart },
+        },
+      }),
     ]);
 
     return {
       activeCount,
       pendingReviewCount,
+      deltas: {
+        activeCount: formatStatDelta(activeCount, previousActiveCount),
+      },
     };
   } catch (error) {
     throw normalizeProductReadError(error);

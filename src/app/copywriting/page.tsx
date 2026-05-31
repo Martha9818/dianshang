@@ -56,10 +56,13 @@ export default async function CopywritingPage({
       description="管理商品文案历史，按商品、平台、版本、违规词结果和创建时间快速筛选。"
     >
       <DashboardCard className="px-4 py-4">
+        <div className="mb-3 px-1">
+          <h2 className="text-base font-semibold text-slate-900">历史文案筛选</h2>
+          <p className="mt-1 text-sm text-slate-500">这里只筛选下方历史文案，生成新文案请使用下一块控制区。</p>
+        </div>
         <FilterBar>
           <form action="/copywriting" method="get" className="grid w-full gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_180px_140px_140px_150px_160px_auto] xl:items-end">
             <FilterField label="商品关键词">
-              {query.providerId ? <input type="hidden" name="providerId" value={query.providerId} /> : null}
               <input name="q" defaultValue={query.keyword ?? ""} placeholder="搜索商品 / 标题 / 正文" className={inputClassName} />
             </FilterField>
             <FilterField label="商品">
@@ -113,7 +116,7 @@ export default async function CopywritingPage({
       </DashboardCard>
 
       <CopywritingManager
-        key={`${pageData.selectedProductId ?? "none"}:${pageData.selectedPlatform ?? "none"}:${query.providerId ?? pageData.defaultProviderId ?? "none"}:${query.keyword ?? ""}:${query.version ?? ""}:${query.hasViolation ?? ""}`}
+        key={`${pageData.selectedProductId ?? "none"}:${pageData.selectedPlatform ?? "none"}:${query.providerId ?? pageData.defaultProviderId ?? "none"}:${query.keyword ?? ""}:${query.version ?? ""}:${query.hasViolation ?? ""}:${query.sort}`}
         products={pageData.products}
         providers={pageData.providers}
         defaultProviderId={pageData.defaultProviderId}

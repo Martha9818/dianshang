@@ -176,7 +176,7 @@ export async function getImageGenerationPanelData(promptTaskId: number | null) {
             hasApiKey: Boolean(provider.apiKey),
           }
         : null,
-      isConfigured: settings.enabled && Boolean(provider?.apiKey && provider.modelName && provider.baseUrl),
+      isConfigured: settings.enabled && Boolean(provider?.apiKey && provider.baseUrl),
       isHighCost: isHighCostImageConfig({
         model: provider?.modelName,
         quality: settings.defaultQuality,
@@ -244,8 +244,8 @@ export async function generateImageForPromptTask(input: {
       throw createValidationError("请先配置并启用默认的 API 生图 Provider。");
     }
 
-    if (!provider.baseUrl || !provider.apiKey || !provider.modelName) {
-      throw createValidationError("API 生图 Provider 缺少 Base URL、API Key 或模型名。");
+    if (!provider.baseUrl || !provider.apiKey) {
+      throw createValidationError("API 生图 Provider 缺少 Base URL 或 API Key。");
     }
 
     const promptText = task.promptText?.trim();
@@ -260,9 +260,10 @@ export async function generateImageForPromptTask(input: {
 
     const promptVersion = input.promptVersion?.trim() || task.version || "v1";
     const promptUse = input.promptUse?.trim() || getImageTypeLabel(task.imageType);
+    const imageModelName = provider.modelName?.trim() || "未指定模型";
     const parameterSummaryJson = buildParameterSummary({
       provider: provider.name,
-      model: provider.modelName,
+      model: imageModelName,
       size: settings.defaultSize,
       quality: settings.defaultQuality,
       promptVersion,
@@ -283,7 +284,7 @@ export async function generateImageForPromptTask(input: {
         productId: task.productId,
         aiJobId,
         provider: provider.name,
-        model: provider.modelName,
+        model: imageModelName,
         size: settings.defaultSize,
         quality: settings.defaultQuality,
         promptVersion,
@@ -310,7 +311,7 @@ export async function generateImageForPromptTask(input: {
       providerName: provider.name,
       baseUrl: provider.baseUrl,
       apiKey: provider.apiKey,
-      modelName: provider.modelName,
+      modelName: provider.modelName?.trim() ?? "",
     });
     const result = await client.generateImage({
       prompt: promptText,

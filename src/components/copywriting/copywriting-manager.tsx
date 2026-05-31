@@ -6,7 +6,6 @@ import {
   ActionButton,
   DashboardCard,
   DashboardCardHeader,
-  FilterBar,
   MiniIcon,
   StatusBadge,
 } from "@/components/dashboard/primitives";
@@ -507,107 +506,100 @@ export function CopywritingManager({
         </div>
       ) : null}
 
-      <FilterBar>
-        <div className="xl:min-w-[300px] xl:flex-1">
-          <p className="mb-2 px-1 text-sm text-slate-500">选择商品</p>
-          <select
-            className={inputClassName}
-            value={productId}
-            onChange={(event) => handleProductChange(event.target.value ? Number(event.target.value) : "")}
-          >
-            <option value="">请选择商品</option>
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name}
-              </option>
-            ))}
-          </select>
+      <DashboardCard className="px-5 py-4">
+        <div className="grid gap-4">
+          <div className="grid gap-3 xl:grid-cols-[minmax(320px,1fr)_180px_240px]">
+            <Field label="选择商品">
+              <select
+                className={inputClassName}
+                value={productId}
+                onChange={(event) => handleProductChange(event.target.value ? Number(event.target.value) : "")}
+              >
+                <option value="">请选择商品</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="生成平台">
+              <select className={inputClassName} value={platform} onChange={(event) => handlePlatformChange(event.target.value)}>
+                <option value="">全部平台</option>
+                {platformOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="AI Provider">
+              <select
+                className={inputClassName}
+                value={activeProviderId}
+                onChange={(event) => {
+                  setMessage(null);
+                  const nextProviderId = event.target.value ? Number(event.target.value) : "";
+                  setProviderId(nextProviderId);
+                  syncRoute(productId, platform, nextProviderId);
+                }}
+              >
+                {defaultEnabledProviderId ? null : <option value="">请选择 Provider</option>}
+                {providers.map((provider) => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.name}
+                    {provider.isDefault ? "（默认）" : ""}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-[#EEF2F8] pt-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="grid gap-1 text-sm text-slate-600">
+              <p className="font-medium text-slate-900">{selectedProduct?.name ?? "先选择商品，再生成文案"}</p>
+              <p>
+                {selectedProduct
+                  ? `参考售价 ${typeof selectedProduct.estimatedPrice === "number" ? `¥${selectedProduct.estimatedPrice.toFixed(2)}` : "--"}，${platform || "全部平台"}，生成后保留历史版本。`
+                  : "顶部筛选只影响历史文案列表；这里用于生成新的文案草稿。"}
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3 xl:min-w-[560px]">
+              <ActionButton variant="secondary" href={productId ? `/products/${productId}?tab=copywriting` : "/products"}>
+                商品详情
+              </ActionButton>
+              <button
+                type="button"
+                disabled={isPending || Boolean(runtimeNotice)}
+                onClick={handleGenerateSinglePlatform}
+                className={actionButtonClassName}
+              >
+                生成当前平台
+              </button>
+              <button
+                type="button"
+                disabled={isPending || Boolean(runtimeNotice)}
+                onClick={handleGeneratePackage}
+                className={primaryActionButtonClassName}
+              >
+                <MiniIcon name="spark" className="h-4 w-4" />
+                {isPending ? "生成中..." : "生成文案包"}
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="xl:min-w-[180px]">
-          <p className="mb-2 px-1 text-sm text-slate-500">平台筛选</p>
-          <select className={inputClassName} value={platform} onChange={(event) => handlePlatformChange(event.target.value)}>
-            <option value="">全部平台</option>
-            {platformOptions.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="xl:min-w-[240px]">
-          <p className="mb-2 px-1 text-sm text-slate-500">AI Provider</p>
-          <select
-            className={inputClassName}
-            value={activeProviderId}
-            onChange={(event) => {
-              setMessage(null);
-              const nextProviderId = event.target.value ? Number(event.target.value) : "";
-              setProviderId(nextProviderId);
-              syncRoute(productId, platform, nextProviderId);
-            }}
-          >
-            {defaultEnabledProviderId ? null : <option value="">请选择 Provider</option>}
-            {providers.map((provider) => (
-              <option key={provider.id} value={provider.id}>
-                {provider.name}
-                {provider.isDefault ? "（默认）" : ""}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="grid w-full gap-3 sm:grid-cols-3 xl:ml-auto xl:w-auto">
-          <ActionButton variant="secondary" href={productId ? `/products/${productId}?tab=copywriting` : "/products"}>
-            商品详情文案
-          </ActionButton>
-          <button
-            type="button"
-            disabled={isPending || Boolean(runtimeNotice)}
-            onClick={handleGenerateSinglePlatform}
-            className={actionButtonClassName}
-          >
-            仅生成当前平台
-          </button>
-          <button
-            type="button"
-            disabled={isPending || Boolean(runtimeNotice)}
-            onClick={handleGeneratePackage}
-            className={primaryActionButtonClassName}
-          >
-            <MiniIcon name="spark" className="h-4 w-4" />
-            {isPending ? "生成中..." : "生成多平台文案包"}
-          </button>
-        </div>
-      </FilterBar>
+      </DashboardCard>
 
       {message ? (
         <div className="rounded-[24px] border border-[#E4EAF3] bg-[#FBFDFF] px-5 py-4 text-sm text-slate-600">{message}</div>
       ) : null}
 
-      <section className="grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
-        <DashboardCard>
-          <DashboardCardHeader title="商品信息概览" />
-          <div className="grid gap-3 px-5 py-5 text-sm text-slate-600">
-            <InfoRow label="商品名称" value={selectedProduct?.name ?? "--"} strong />
-            <InfoRow
-              label="参考售价"
-              value={typeof selectedProduct?.estimatedPrice === "number" ? `¥${selectedProduct.estimatedPrice.toFixed(2)}` : "--"}
-              strong
-            />
-            <InfoRow label="核心卖点" value={selectedProduct?.sellingPoints ?? "为空时仍允许继续生成，但建议先补充。"} />
-            <InfoRow label="用户痛点" value={selectedProduct?.painPoints ?? "为空时将按类目保守推断。"} />
-            <InfoRow label="使用场景" value={selectedProduct?.usageScenes ?? "日常使用场景"} />
-          </div>
-        </DashboardCard>
-
-        <DashboardCard>
-          <DashboardCardHeader title="生成说明" />
-          <div className="space-y-3 px-5 py-5 text-sm leading-7 text-slate-600">
-            <p>“生成多平台文案包”会一次产出闲鱼、淘宝、小红书、抖音四个平台的 A / B / C 三版草稿。</p>
-            <p>默认保留历史文案，不覆盖旧记录；只有同一个 AIJob 的重试场景才会更新该 AIJob 产出的草稿。</p>
-            <p>生成成功后与手动保存后都会重新执行违规词扫描；扫描失败不会破坏文案主记录，但会保留失败提示摘要。</p>
-          </div>
-        </DashboardCard>
-      </section>
+      <div className="rounded-[24px] border border-[#E4EAF3] bg-white px-5 py-4 text-sm text-slate-600">
+        <div className="grid gap-3 xl:grid-cols-[1fr_1.1fr]">
+          <InfoRow label="核心卖点" value={selectedProduct?.sellingPoints ?? "未填写，仍可生成，但建议后续补充。"} />
+          <InfoRow label="生成规则" value="文案包会产出各平台 A / B / C 草稿；保存和生成后都会重新扫描违禁词。" />
+        </div>
+      </div>
 
       {groupedRecords.length > 0 ? (
         groupedRecords
@@ -643,13 +635,18 @@ export function CopywritingManager({
                             {record.aiJobSummary ? ` · AIJob #${record.aiJobSummary.id} ${record.aiJobSummary.status}` : " · 手动记录"}
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          className={actionButtonClassName}
-                          onClick={() => updateDraft(record.id, { expanded: !draft.expanded })}
-                        >
-                          {draft.expanded ? "收起" : "展开"}
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className={actionButtonClassName}
+                            onClick={() => updateDraft(record.id, { expanded: !draft.expanded })}
+                          >
+                            {draft.expanded ? "收起" : "展开"}
+                          </button>
+                          <button type="button" disabled={isPending} onClick={() => handleDelete(record)} className={dangerButtonClassName}>
+                            删除
+                          </button>
+                        </div>
                       </div>
 
                       {draft.expanded ? (

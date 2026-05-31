@@ -22,6 +22,7 @@ import { getProductOperationLogs } from "@/lib/services/operation-log-service";
 import { buildProfitView } from "@/lib/services/profit-service";
 import { getHomeMaterialStats, getProductMaterials } from "@/lib/services/material-service";
 import { getHomePromptTaskStats, getProductPromptTasks } from "@/lib/services/prompt-task-service";
+import { formatStatDelta, getTodayStart } from "@/lib/services/stat-delta-service";
 import {
   buildProductReadUnavailableMessage,
   getRuntimeModeSummary,
@@ -260,19 +261,39 @@ export async function getProductList(filters?: ProductListFilters) {
 
 export async function getProductPoolStats() {
   try {
-    const grouped = await prisma.product.groupBy({
-      by: ["status"],
-      where: { deletedAt: null },
-      _count: { _all: true },
-    });
+    const todayStart = getTodayStart();
+    const [grouped, previousGrouped] = await Promise.all([
+      prisma.product.groupBy({
+        by: ["status"],
+        where: { deletedAt: null },
+        _count: { _all: true },
+      }),
+      prisma.product.groupBy({
+        by: ["status"],
+        where: { deletedAt: null, createdAt: { lt: todayStart } },
+        _count: { _all: true },
+      }),
+    ]);
 
     const totalCount = grouped.reduce((sum, item) => sum + item._count._all, 0);
+    const previousTotalCount = previousGrouped.reduce((sum, item) => sum + item._count._all, 0);
+    const getCount = (status: string) => grouped.find((item) => item.status === status)?._count._all ?? 0;
+    const getPreviousCount = (status: string) => previousGrouped.find((item) => item.status === status)?._count._all ?? 0;
+    const pendingCount = getCount("待分析");
+    const analyzingCount = getCount("分析中");
+    const suggestedCount = getCount("建议测试");
 
     return {
       totalCount,
-      pendingCount: grouped.find((item) => item.status === "待分析")?._count._all ?? 0,
-      analyzingCount: grouped.find((item) => item.status === "分析中")?._count._all ?? 0,
-      suggestedCount: grouped.find((item) => item.status === "建议测试")?._count._all ?? 0,
+      pendingCount,
+      analyzingCount,
+      suggestedCount,
+      deltas: {
+        totalCount: formatStatDelta(totalCount, previousTotalCount),
+        pendingCount: formatStatDelta(pendingCount, getPreviousCount("待分析")),
+        analyzingCount: formatStatDelta(analyzingCount, getPreviousCount("分析中")),
+        suggestedCount: formatStatDelta(suggestedCount, getPreviousCount("建议测试")),
+      },
     };
   } catch (error) {
     throw normalizeProductReadError(error);
@@ -362,10 +383,15 @@ export async function getProductOperationLogView(productId: number) {
 
 export async function getHomeProductStats() {
   try {
+    const todayStart = getTodayStart();
     const [
       totalCount,
       pendingCount,
       suggestedCount,
+      previousTotalCount,
+      previousPendingCount,
+      previousSuggestedCount,
+      previousGeneratedCopywritingCount,
       recentProducts,
       generatedCopywritingCount,
       promptTaskStats,
@@ -377,6 +403,10 @@ export async function getHomeProductStats() {
       prisma.product.count({ where: { deletedAt: null } }),
       prisma.product.count({ where: { deletedAt: null, status: "待分析" } }),
       prisma.product.count({ where: { deletedAt: null, status: "建议测试" } }),
+      prisma.product.count({ where: { deletedAt: null, createdAt: { lt: todayStart } } }),
+      prisma.product.count({ where: { deletedAt: null, status: "待分析", createdAt: { lt: todayStart } } }),
+      prisma.product.count({ where: { deletedAt: null, status: "建议测试", createdAt: { lt: todayStart } } }),
+      prisma.copywriting.count({ where: { createdAt: { lt: todayStart } } }),
       prisma.product.findMany({
         where: { deletedAt: null },
         orderBy: { updatedAt: "desc" },
@@ -477,6 +507,14 @@ export async function getHomeProductStats() {
       generatedCopywritingCount,
       promptTaskCount: promptTaskStats.totalCount,
       materialCount: materialStats.activeCount,
+      deltas: {
+        totalCount: formatStatDelta(totalCount, previousTotalCount),
+        pendingCount: formatStatDelta(pendingCount, previousPendingCount),
+        suggestedCount: formatStatDelta(suggestedCount, previousSuggestedCount),
+        generatedCopywritingCount: formatStatDelta(generatedCopywritingCount, previousGeneratedCopywritingCount),
+        promptTaskCount: promptTaskStats.deltas.totalCount,
+        materialCount: materialStats.deltas.activeCount,
+      },
       recentPromptTasks: promptTaskStats.recentTasks,
       recentProducts: await mapProductsWithLatestScores(recentProducts),
       recentActivities: [...operationActivities, ...exportActivities, ...backupActivities]

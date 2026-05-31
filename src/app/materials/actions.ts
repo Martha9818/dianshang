@@ -147,6 +147,12 @@ function redirectWithMaterialError(sourceUrl: string, message: string) {
   redirect(`${url.pathname}${url.search}`);
 }
 
+function redirectWithMaterialMessage(sourceUrl: string, message: string) {
+  const url = new URL(`http://local${sourceUrl}`);
+  url.searchParams.set("materialMessage", message);
+  redirect(`${url.pathname}${url.search}`);
+}
+
 export async function rebuildMaterialFingerprintAndRedirectAction(formData: FormData) {
   const sourceUrl = normalizeSourceUrl(String(formData.get("sourceUrl") ?? ""));
 
@@ -165,13 +171,16 @@ export async function rebuildMaterialLibraryFingerprintsAndRedirectAction(formDa
   const sourceUrl = normalizeSourceUrl(String(formData.get("sourceUrl") ?? ""));
 
   try {
-    await rebuildImageFingerprintsForLibrary("material");
+    const result = await rebuildImageFingerprintsForLibrary("material");
     revalidateMaterialScopes();
+    const message =
+      result.total === 0
+        ? "当前没有素材图片可检查。"
+        : `已检查 ${result.total} 个素材，疑似重复 ${result.exactCount}，高度相似 ${result.similarCount}，失败 ${result.failedCount}。`;
+    redirectWithMaterialMessage(sourceUrl, message);
   } catch (error) {
-    redirectWithMaterialError(sourceUrl, getProductErrorMessage(error, "素材库图片指纹补建失败，请稍后重试。"));
+    redirectWithMaterialError(sourceUrl, getProductErrorMessage(error, "素材相似度检查失败，请稍后重试。"));
   }
-
-  redirect(sourceUrl);
 }
 
 export async function ignoreImageReviewLogAndRedirectAction(formData: FormData) {

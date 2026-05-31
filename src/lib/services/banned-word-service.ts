@@ -3,6 +3,7 @@ import { BUSINESS_ERROR_CODES, ProductBusinessError } from "@/lib/modules/produc
 import { BANNED_WORD_RISK_LEVELS, COPYWRITING_AUDIT_STATUS } from "@/lib/modules/copywriting/prompts";
 import { tryCreateSettingsOperationLog } from "@/lib/services/operation-log-service";
 import { ensureProductWritesAllowed, normalizeProductReadError, normalizeProductWriteError } from "@/lib/services/product-runtime-service";
+import { formatStatDelta, getTodayStart } from "@/lib/services/stat-delta-service";
 
 export type BannedWordRecord = {
   id: number;
@@ -111,12 +112,25 @@ export async function getBannedWordSettingsPageData(filters?: { query?: string; 
       ...(riskLevel ? { riskLevel } : {}),
     };
 
-    const [totalCount, highRiskCount, categories, words] = await Promise.all([
+    const todayStart = getTodayStart();
+    const [totalCount, highRiskCount, previousTotalCount, previousHighRiskCount, categories, previousCategories, words] = await Promise.all([
       prisma.bannedWord.count(),
       prisma.bannedWord.count({
         where: { riskLevel: BANNED_WORD_RISK_LEVELS.HIGH },
       }),
+      prisma.bannedWord.count({
+        where: { createdAt: { lt: todayStart } },
+      }),
+      prisma.bannedWord.count({
+        where: { riskLevel: BANNED_WORD_RISK_LEVELS.HIGH, createdAt: { lt: todayStart } },
+      }),
       prisma.bannedWord.findMany({
+        select: { category: true },
+        distinct: ["category"],
+        orderBy: { category: "asc" },
+      }),
+      prisma.bannedWord.findMany({
+        where: { createdAt: { lt: todayStart } },
         select: { category: true },
         distinct: ["category"],
         orderBy: { category: "asc" },
@@ -132,6 +146,11 @@ export async function getBannedWordSettingsPageData(filters?: { query?: string; 
         totalCount,
         categoryCount: categories.length,
         highRiskCount,
+        deltas: {
+          totalCount: formatStatDelta(totalCount, previousTotalCount),
+          categoryCount: formatStatDelta(categories.length, previousCategories.length),
+          highRiskCount: formatStatDelta(highRiskCount, previousHighRiskCount),
+        },
       },
       filters: {
         categories: Array.from(new Set([...DEFAULT_CATEGORIES, ...categories.map((item) => item.category)])).sort((left, right) =>

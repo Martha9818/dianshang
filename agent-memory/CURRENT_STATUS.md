@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: V1.5 Stabilization UI/UX follow-up pass is complete locally and ready for review.
+- Current task state: V1.5 Stabilization ordered small-fix pass is complete locally, verified, and ready for review.
 - Next stage: Continue with the next approved Stabilization follow-up thread before any V2 planning thread.
 
 ## Product Direction
@@ -25,7 +25,8 @@
 - Provider-side rotation or revocation is still required for the historical Vercel recovery-code exposure; this must be completed outside the repository.
 - Manual backup exists, but in-app restore remains V2 scope.
 - Electron remains POC-only and is not a formal desktop runtime.
-- Recent UI stabilization adjusted copywriting, Prompt tasks, materials, inspirations, link imports, file cleanup affordances, and AI settings without schema, migration, dependency, or V2 scope changes.
+- Recent UI stabilization adjusted copywriting, Prompt tasks, materials, inspirations, link imports, file cleanup affordances, AI settings, header status menu, and stat deltas without schema, migration, dependency, or V2 scope changes.
+- Build/acceptance fixture inspirations from local verification were hidden from the default inspiration view and related scan/draft jobs were cleared; uploaded files were not deleted.
 
 ## Next Recommended Step
 

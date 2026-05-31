@@ -28,7 +28,7 @@ type ProviderMutationInput = {
   providerType: string;
   baseUrl: string;
   apiKey: string | null;
-  modelName: string;
+  modelName: string | null;
   purpose: string;
   enabled: boolean;
   isDefault: boolean;
@@ -97,12 +97,12 @@ function normalizeProviderInput(values: AIProviderFormValues): ProviderMutationI
     throw createValidationError("Base URL 不能为空。");
   }
 
-  if (!modelName) {
-    throw createValidationError("模型名不能为空。");
-  }
-
   if (!AI_PROVIDER_PURPOSES.has(purpose)) {
     throw createValidationError("Provider 用途仅支持 text 或 image。");
+  }
+
+  if (purpose !== "image" && !modelName) {
+    throw createValidationError("模型名不能为空。");
   }
 
   return {
@@ -110,7 +110,7 @@ function normalizeProviderInput(values: AIProviderFormValues): ProviderMutationI
     providerType,
     baseUrl,
     apiKey,
-    modelName,
+    modelName: modelName || null,
     purpose,
     enabled: values.enabled,
     isDefault: values.isDefault && values.enabled,
@@ -203,7 +203,7 @@ export async function getAISettingsPageData() {
         hasApiKey: Boolean(apiKey),
         maskedApiKey: buildMaskedApiKey(apiKey),
       })),
-      defaultProviderId: providers.find((provider) => provider.isDefault && provider.enabled && (provider.purpose ?? "text") === "text")?.id ?? null,
+      defaultProviderId: providers.find((provider) => provider.isDefault && provider.enabled)?.id ?? null,
       imageGenerationSettings: {
         enabled: settings.get(IMAGE_GENERATION_SETTING_KEYS.enabled) === "true",
         defaultSize: settings.get(IMAGE_GENERATION_SETTING_KEYS.defaultSize) ?? DEFAULT_IMAGE_GENERATION_SETTINGS.defaultSize,

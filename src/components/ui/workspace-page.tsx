@@ -62,18 +62,21 @@ function HeaderSettingsMenu() {
 
   return (
     <div className="group relative">
-      <button type="button" aria-label="设置" className={className}>
-        <MiniIcon name="gear" className="h-5 w-5" />
+      <button type="button" aria-label="状态与检查" title="状态与检查" className={className}>
+        <MiniIcon name="shield" className="h-5 w-5" />
       </button>
       <div className="invisible absolute right-0 top-[calc(100%+10px)] z-30 w-56 rounded-2xl border border-[#E6ECF5] bg-white p-2 opacity-0 shadow-[0_18px_40px_rgba(15,23,42,0.10)] transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
-        <Link href="/settings/ai" className="block rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-[#2563EB]">
-          AI 设置
-        </Link>
-        <Link href="/settings/banned-words" className="block rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-[#2563EB]">
-          违禁词设置
-        </Link>
         <Link href="/system/diagnostics" className="block rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-[#2563EB]">
-          诊断中心
+          运行状态
+        </Link>
+        <Link href="/backup" className="block rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-[#2563EB]">
+          备份与安全
+        </Link>
+        <Link href="/settings/ai" className="block rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-[#2563EB]">
+          AI 连接检查
+        </Link>
+        <Link href="/maintenance/files" className="block rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-[#2563EB]">
+          文件清理检查
         </Link>
       </div>
     </div>
