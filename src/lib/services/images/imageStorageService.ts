@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { BUSINESS_ERROR_CODES, ProductBusinessError } from "@/lib/modules/products/errors";
 import { readImageDimensionsFromBuffer } from "@/lib/services/image-metadata-service";
 import { getLocalDirectoryPath } from "@/lib/services/local-paths";
 import { assertPathLength, createShortFileName, toSafeRelativePath } from "@/lib/services/local-paths/pathSafetyService";
@@ -7,8 +8,14 @@ import { logWarn } from "@/lib/services/logging";
 import { assertLocalWritable } from "@/lib/services/runtime";
 import { calculateImageHash } from "./imageHashService";
 import { assertSupportedImageFile } from "./imageValidationService";
-import type { StoredImageResult } from "./imageTypes";
+import { DEFAULT_MAX_IMAGE_SIZE_BYTES, SUPPORTED_IMAGE_MIME_TYPES, type StoredImageResult, type SupportedImageMimeType } from "./imageTypes";
 import { generateImageThumbnail } from "./thumbnailService";
+
+const GENERATED_IMAGE_EXTENSION_BY_MIME: Record<SupportedImageMimeType, ".jpg" | ".png" | ".webp"> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+};
 
 function sanitizeSegment(value: string, fallback: string) {
   return value.replace(/[^a-zA-Z0-9-_]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || fallback;
@@ -58,7 +65,26 @@ export function buildMaterialImageRelativePath(input: {
   );
 }
 
-async function saveImageBuffer(relativePath: string, buffer: Buffer) {
+function assertSupportedImageBuffer(input: { buffer: Buffer; mimeType: string; label: string }) {
+  if (!SUPPORTED_IMAGE_MIME_TYPES.includes(input.mimeType as SupportedImageMimeType)) {
+    throw new ProductBusinessError(
+      BUSINESS_ERROR_CODES.VALIDATION_ERROR,
+      `${input.label}仅支持 jpg / jpeg / png / webp 格式。`,
+    );
+  }
+
+  if (input.buffer.length > DEFAULT_MAX_IMAGE_SIZE_BYTES) {
+    throw new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, `${input.label}大小不能超过 10MB。`);
+  }
+
+  if (input.buffer.length === 0) {
+    throw new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, `${input.label}为空，未保存。`);
+  }
+
+  return input.mimeType as SupportedImageMimeType;
+}
+
+async function writeImageBuffer(relativePath: string, buffer: Buffer) {
   const absolutePath = getUploadsAbsolutePath(relativePath);
   assertPathLength(absolutePath);
   await mkdir(path.dirname(absolutePath), { recursive: true });
@@ -78,7 +104,7 @@ export async function storeImageFile(input: {
   const fileHash = calculateImageHash(buffer);
   const warnings: string[] = [];
 
-  await saveImageBuffer(input.relativePath, buffer);
+  await writeImageBuffer(input.relativePath, buffer);
 
   let thumbnailPath: string | null = null;
   let thumbnailSizeBytes: number | null = null;
@@ -149,3 +175,58 @@ export async function saveMaterialImage(input: {
   });
 }
 
+export async function saveMaterialImageBuffer(input: {
+  productId: number;
+  platform: string;
+  imageType: string;
+  version: string;
+  buffer: Buffer;
+  mimeType: string;
+}): Promise<StoredImageResult> {
+  assertLocalWritable();
+  const mimeType = assertSupportedImageBuffer({
+    buffer: input.buffer,
+    mimeType: input.mimeType,
+    label: "生图结果",
+  });
+  const relativePath = buildMaterialImageRelativePath({
+    productId: input.productId,
+    platform: input.platform,
+    imageType: input.imageType,
+    version: input.version,
+    extension: GENERATED_IMAGE_EXTENSION_BY_MIME[mimeType],
+  });
+  const dimensions = readImageDimensionsFromBuffer(input.buffer);
+  const fileHash = calculateImageHash(input.buffer);
+  const warnings: string[] = [];
+
+  await writeImageBuffer(relativePath, input.buffer);
+
+  let thumbnailPath: string | null = null;
+  let thumbnailSizeBytes: number | null = null;
+
+  try {
+    const thumbnail = await generateImageThumbnail({
+      sourceBuffer: input.buffer,
+      originalRelativePath: relativePath,
+      mimeType,
+    });
+    thumbnailPath = thumbnail.thumbnailPath;
+    thumbnailSizeBytes = thumbnail.thumbnailSizeBytes;
+  } catch (error) {
+    warnings.push("缩略图生成失败，已保留原图并降级展示原图。");
+    await logWarn(`generated thumbnail failed for ${relativePath}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  return {
+    filePath: relativePath,
+    thumbnailPath,
+    thumbnailSizeBytes,
+    fileHash,
+    originalSizeBytes: input.buffer.length,
+    mimeType,
+    width: dimensions.width,
+    height: dimensions.height,
+    warnings,
+  };
+}

@@ -28,6 +28,14 @@ type LegacyGenerateRequestInput = TestConnectionConfig & {
 
 export async function testConnection(providerId: number) {
   const provider = await getAIProviderById(providerId);
+  if ((provider.purpose ?? "text") === "image") {
+    return {
+      success: true,
+      latencyMs: 0,
+      modelName: provider.modelName ?? "",
+    };
+  }
+
   return testConnectionWithConfig({
     baseUrl: provider.baseUrl ?? "",
     apiKey: provider.apiKey ?? "",

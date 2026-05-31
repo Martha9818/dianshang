@@ -8,7 +8,9 @@ import {
   disableAIProvider,
   enableAIProvider,
   extractAIProviderFormValues,
+  extractImageGenerationSettingsFormValues,
   updateAIProvider,
+  updateImageGenerationSettings,
 } from "@/lib/services/ai-provider-service";
 import { testConnection, testConnectionWithConfig } from "@/lib/services/ai-client";
 import {
@@ -72,6 +74,21 @@ export async function disableAIProviderAction(providerId: number) {
     return {
       success: false as const,
       error: getProductErrorMessage(error, "禁用 AI Provider 失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function saveImageGenerationSettingsAction(formData: FormData) {
+  try {
+    const saved = await updateImageGenerationSettings(extractImageGenerationSettingsFormValues(formData));
+    revalidatePath("/settings/ai");
+    revalidatePath("/prompt-tasks");
+
+    return { success: true as const, data: saved };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "保存 API 生图设置失败，请稍后重试。"),
     };
   }
 }

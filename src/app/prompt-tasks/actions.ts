@@ -10,6 +10,7 @@ import {
   uploadManualMaterial,
   uploadPromptTaskResult,
 } from "@/lib/services/prompt-task-service";
+import { generateImageForPromptTask } from "@/lib/services/image-generation";
 
 type ActionResult<T = null> = {
   success: boolean;
@@ -88,6 +89,25 @@ export async function cancelPromptTaskAction(taskCode: string): Promise<ActionRe
     return {
       success: false,
       error: getProductErrorMessage(error, "取消任务失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function generatePromptTaskImageAction(input: {
+  taskCode: string;
+  promptVersion?: string | null;
+  promptUse?: string | null;
+}): Promise<ActionResult<{ materialId: number | null }>> {
+  try {
+    const result = await generateImageForPromptTask(input);
+    revalidatePromptScopes(result.productId, input.taskCode);
+    revalidatePath("/materials");
+
+    return { success: true, data: { materialId: result.resultMaterialId } };
+  } catch (error) {
+    return {
+      success: false,
+      error: getProductErrorMessage(error, "API 生图失败，请稍后重试。"),
     };
   }
 }

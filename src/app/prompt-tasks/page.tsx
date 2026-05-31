@@ -10,12 +10,13 @@ import {
   StatusBadge,
   TableActionLink,
 } from "@/components/dashboard/primitives";
-import { PromptTaskCopyButton, PromptTaskCancelButton } from "@/components/prompt-tasks/prompt-task-actions";
+import { PromptTaskCopyButton, PromptTaskCancelButton, PromptTaskImageGenerationButton } from "@/components/prompt-tasks/prompt-task-actions";
 import { PromptTaskCreateForm } from "@/components/prompt-tasks/prompt-task-form";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { getProductErrorMessage } from "@/lib/modules/products";
 import { PROMPT_IMAGE_TYPES, PROMPT_TASK_PLATFORMS } from "@/lib/modules/prompt-task";
 import { getPromptTaskPageData, getPromptTaskStatusTone, PROMPT_TASK_STATUS } from "@/lib/services/prompt-task-service";
+import { getImageGenerationPanelData } from "@/lib/services/image-generation";
 import { buildReadonlyRuntimeMessage, getRuntimeModeSummary } from "@/lib/services/product-runtime-service";
 import { normalizePromptTaskQuery } from "@/lib/services/query-service";
 
@@ -52,6 +53,7 @@ export default async function PromptTasksPage({
     readError: getProductErrorMessage(error, "当前预览环境未加载 Windows 本地 SQLite 商品库，请在 Windows 本地验收 Prompt 任务。"),
   }));
   const activeTask = pageData.tasks.find((task) => task.taskCode === params.taskCode) ?? pageData.tasks[0] ?? null;
+  const imageGenerationPanel = await getImageGenerationPanelData(activeTask?.id ?? null).catch(() => null);
   const runtimeNotice = pageData.runtime.isWritable ? null : buildReadonlyRuntimeMessage(pageData.runtime.mode);
 
   return (
@@ -231,6 +233,52 @@ export default async function PromptTasksPage({
                     <PromptTaskCancelButton taskCode={activeTask.taskCode} disabled={Boolean(runtimeNotice)} />
                   ) : null}
                   <TableActionLink href={`/prompt-tasks/${encodeURIComponent(activeTask.taskCode)}/upload`}>上传生成结果</TableActionLink>
+                </div>
+
+                <div className="space-y-3 rounded-2xl border border-[#EEF2F8] bg-white px-4 py-4">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">API 生图轻量版</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        仅手动生成 1 张图；成功后自动保存到素材库，失败不会影响 Prompt、商品或已有素材。
+                      </p>
+                    </div>
+                    {imageGenerationPanel?.isConfigured ? (
+                      <PromptTaskImageGenerationButton
+                        taskCode={activeTask.taskCode}
+                        promptVersion={activeTask.version ?? "v1"}
+                        promptUse={activeTask.imageTypeLabel}
+                        promptVersionOptions={[activeTask.version ?? "v1"]}
+                        promptUseOptions={[activeTask.imageTypeLabel, `${activeTask.platformLabel} / ${activeTask.imageTypeLabel}`]}
+                        costHint={imageGenerationPanel.settings.costHint}
+                        providerLabel={`${imageGenerationPanel.provider?.name ?? "Image Provider"} / ${imageGenerationPanel.provider?.modelName ?? "--"} / ${imageGenerationPanel.settings.defaultSize} / ${imageGenerationPanel.settings.defaultQuality}`}
+                        disabled={Boolean(runtimeNotice) || activeTask.status === PROMPT_TASK_STATUS.CANCELLED}
+                        highCost={imageGenerationPanel.isHighCost}
+                      />
+                    ) : (
+                      <TableActionLink href="/settings/ai">配置 API 生图</TableActionLink>
+                    )}
+                  </div>
+                  {imageGenerationPanel?.previewMessage ? <PageNote>{imageGenerationPanel.previewMessage}</PageNote> : null}
+                  {imageGenerationPanel && !imageGenerationPanel.isConfigured ? (
+                    <PageNote>请在 AI 设置中启用 API 生图，并配置用途为 API 生图的默认 Provider。</PageNote>
+                  ) : null}
+                  {imageGenerationPanel?.recentJobs.length ? (
+                    <div className="space-y-2 border-t border-[#EEF2F8] pt-3">
+                      {imageGenerationPanel.recentJobs.map((job) => (
+                        <div key={job.id} className="grid gap-2 rounded-xl bg-[#FBFDFF] px-3 py-2 text-xs text-slate-500 md:grid-cols-[72px_1fr]">
+                          <StatusBadge label={job.statusLabel} tone={job.status === "success" ? "green" : job.status === "failed" ? "red" : "amber"} />
+                          <div className="min-w-0">
+                            <p className="truncate">
+                              {job.model} / {job.size} / {job.quality ?? "--"} / {job.promptVersion ?? "--"}
+                            </p>
+                            {job.resultMaterialId ? <p className="mt-0.5">素材 #{job.resultMaterialId}</p> : null}
+                            {job.errorSummary ? <p className="mt-0.5 text-rose-600">{job.errorSummary}</p> : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             ) : (

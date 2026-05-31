@@ -31,7 +31,7 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 ### Remaining V1.5 Threads Are Not Implemented Yet
 
 - Status: DEFERRED / PLANNED SCOPE
-- Impact: V1.5 Thread 01, Thread 02, Thread 03, Thread 04, and Thread 05 are implemented, but Thread 06-09 still require separately approved threads.
+- Impact: V1.5 Thread 01, Thread 02, Thread 03, Thread 04, Thread 05, and Thread 06 are implemented, but Thread 07-09 still require separately approved threads.
 - Mitigation: Do not imply these are available until their thread ships and is verified locally.
 
 ### Screenshot Recognition Depends On Vision-Capable AI Credentials
@@ -45,6 +45,12 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 - Status: OPEN
 - Impact: Competitor analysis history can be viewed locally, but generating a new analysis can fail if no valid default AI provider is configured.
 - Mitigation: AI failure is isolated to `CompetitorAnalysisSnapshot` / `AIJob`; product, competitor, scoring, export, backup, and cleanup data are not modified.
+
+### API Image Generation Depends On Image-Capable AI Credentials
+
+- Status: OPEN
+- Impact: Prompt tasks and manual upload remain usable, but API image generation can fail if no enabled image Provider, API key, quota, model, network access, or provider-side safety approval is available.
+- Mitigation: API image generation is optional, disabled by default, one-click manual only, records failed `ImageGenerationJob` / `AIJob`, and does not create invalid materials on failure.
 
 ### V1-Plus File Cleanup Must Not Be Rebuilt In V1.5
 

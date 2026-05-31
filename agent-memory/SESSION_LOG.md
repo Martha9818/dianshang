@@ -4,6 +4,14 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 
 ## 2026-05-31
 
+### V1.5 Thread 06 - Lightweight API Image Generation
+
+- Changed: Added optional API image generation settings, image-purpose AI Provider support, `ImageGenerationJob`, a local-only image-generation service, Prompt task detail trigger, generated-result material creation, AI job/request logs, operation logs, and success/failure notifications.
+- Safety: API image generation is disabled by default, user-triggered only, one image per click, confirmed before calling, with a second confirmation for high-cost model/quality/size hints.
+- Runtime: Vercel/read-only write attempts return `预览环境只读，请在 Windows 本地验收 API 生图。`; preview does not call image APIs, write SQLite, or save uploads.
+- Boundary: Thread 06 does not add batch generation, background generation, browser automation, ChatGPT opening, platform crawling, automatic publishing, listing, private messages, comments, inventory, suppliers, Electron release behavior, or multi-agent orchestration.
+- Verification: Encoding check, lint, build, Prisma validate, typecheck, local panel smoke, Vercel read-only simulation, and browser page smoke for `/settings/ai` + `/prompt-tasks` passed; `npm test` reported no `test` script.
+
 ### V1.5 Thread 05 - Image Dedupe And Lightweight Originality-Risk Hints
 
 - Changed: Added `ImageFingerprint` and `ImageReviewLog`, a local-only `image-dedup` service, manual material/inspiration fingerprint rebuild actions, exact duplicate detection, 8x8 perceptual-hash high-similarity detection, source-risk hints, ignore, and archive-suggestion records.

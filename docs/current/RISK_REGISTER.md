@@ -27,7 +27,10 @@ Keep only OPEN, ACTION_REQUIRED, MITIGATED, or DEFERRED risks here. Detailed his
 | V1.5 assistant features executing cleanup actions | OPEN | High | Thread 08 may remind and link to existing maintenance pages only; it must not scan, move, delete, or clean uploads/exports/backups automatically. |
 | Rebuilding file cleanup in V1.5 | OPEN | High | File cleanup/trash is already V1-Plus Thread 06; V1.5 must not add timed/background cleanup, Windows recycle-bin integration, cloud sync, auto compression, or a second cleanup system. |
 | V1.5 Electron validation becoming a formal desktop app | OPEN | Medium | Treat Electron as technical validation only; do not add installer, auto-update, tray, notifications, or formal desktop release. |
-| V1.5 API image generation cost or policy overreach | OPEN | Medium | Keep any future API image generation lightweight, explicit, guarded, and outside Vercel write/cost-heavy behavior. |
+| V1.5 Thread 06 API image generation cost surprise | OPEN | High | Feature is disabled by default, manual per Prompt task only, one image per click, shows cost hint, and requires a second confirmation for high-cost model/quality/size hints. |
+| V1.5 Thread 06 image API key leakage | OPEN | High | API keys stay in server-side `AIProvider`; UI only shows masked key status, logs/notifications/jobs store provider/model/parameter summaries without API keys or raw provider responses. |
+| V1.5 Thread 06 generated-content policy risk | OPEN | High | Prompt text is scanned with existing banned/risk words before the provider call, model safety limits are not bypassed, failures create no invalid material, and generated results are marked `ai_generated` with `needs_review`. |
+| V1.5 Thread 06 Vercel high-cost/write behavior | MITIGATED | High | Preview/read-only runtime returns `预览环境只读，请在 Windows 本地验收 API 生图。` before provider calls, SQLite writes, or uploads writes. |
 | Database migration or data repair damage | OPEN | High | Add new migrations only, evaluate backup needs, never reset real data. |
 | File/database mismatch | OPEN | High | Use service-layer checks, friendly failures, diagnostics, and conservative cleanup. |
 | API key, prompt, path, stack, or diagnostic leakage | OPEN | High | Sanitize frontend, logs, diagnostics, exports, backups, and docs. |

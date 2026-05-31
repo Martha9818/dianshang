@@ -7,6 +7,7 @@ export type AIRequestType =
   | "inspiration_vision"
   | "screenshot_recognition"
   | "competitor_analysis"
+  | "image_generation"
   | "provider-test"
   | "vision-preview"
   | "image-preview"
@@ -56,6 +57,20 @@ export type AITextResult = {
   inputTokens: number | null;
   outputTokens: number | null;
   durationMs: number;
+};
+
+export type GenerateImageInput = AIProviderConfig &
+  AIRequestContext & {
+    prompt: string;
+    size: string;
+    quality?: string | null;
+  };
+
+export type AIImageResult = {
+  imageBuffer: Buffer;
+  mimeType: "image/jpeg" | "image/png" | "image/webp";
+  durationMs: number;
+  source: "b64_json" | "url";
 };
 
 export type AIJobCreateInput = {

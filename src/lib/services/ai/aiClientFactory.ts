@@ -2,7 +2,7 @@ import { BUSINESS_ERROR_CODES, ProductBusinessError } from "@/lib/modules/produc
 import { estimateTokenCount } from "@/lib/services/ai/aiCostEstimator";
 import { createAIRequestLog } from "@/lib/services/ai/aiRequestLogService";
 import { sanitizeAIErrorSummary, sanitizePromptForAI, summarizePrompt } from "@/lib/services/ai/aiPromptSanitizer";
-import type { AIProviderConfig, AITextResult, GenerateTextJsonInput } from "@/lib/services/ai/aiTypes";
+import type { AIImageResult, AIProviderConfig, AITextResult, GenerateImageInput, GenerateTextJsonInput } from "@/lib/services/ai/aiTypes";
 import { getRuntimeModeSummary } from "@/lib/services/runtime";
 
 type ChatCompletionResponse = {
@@ -18,16 +18,25 @@ type ChatCompletionResponse = {
   };
 };
 
+type ImageGenerationResponse = {
+  data?: Array<{
+    b64_json?: string;
+    url?: string;
+  }>;
+};
+
 const PREVIEW_AI_MESSAGE = "预览环境只读，请在 Windows 本地验收 AI 调用。";
+const PREVIEW_IMAGE_AI_MESSAGE = "预览环境只读，请在 Windows 本地验收 API 生图。";
+const MAX_GENERATED_IMAGE_BYTES = 10 * 1024 * 1024;
 
 function createBusinessError(code: string, message: string) {
   return new ProductBusinessError(code as never, message);
 }
 
-function ensureAICallsAllowed() {
+function ensureAICallsAllowed(message = PREVIEW_AI_MESSAGE) {
   const runtime = getRuntimeModeSummary();
   if (!runtime.isWritable) {
-    throw createBusinessError(BUSINESS_ERROR_CODES.AI_CALL_DISABLED, PREVIEW_AI_MESSAGE);
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_CALL_DISABLED, message);
   }
 }
 
@@ -54,6 +63,37 @@ function buildHeaders(apiKey: string) {
     "Content-Type": "application/json",
     Authorization: `Bearer ${apiKey}`,
   };
+}
+
+function inferGeneratedImageMimeType(buffer: Buffer): AIImageResult["mimeType"] {
+  if (buffer.length >= 4 && buffer.toString("ascii", 1, 4) === "PNG") {
+    return "image/png";
+  }
+
+  if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xd8) {
+    return "image/jpeg";
+  }
+
+  if (buffer.length >= 12 && buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP") {
+    return "image/webp";
+  }
+
+  throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "生图接口返回的不是受支持图片格式。");
+}
+
+function bufferFromBase64Image(value: string) {
+  const normalized = value.includes(",") ? value.split(",").pop() ?? "" : value;
+  return Buffer.from(normalized, "base64");
+}
+
+function assertGeneratedImageSize(buffer: Buffer) {
+  if (buffer.length === 0) {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "生图接口返回空图片。");
+  }
+
+  if (buffer.length > MAX_GENERATED_IMAGE_BYTES) {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "生图结果超过 10MB，未保存到素材库。");
+  }
 }
 
 export function sanitizeProviderErrorMessage(message: string) {
@@ -234,6 +274,125 @@ async function postChatCompletion(input: GenerateTextJsonInput & { structuredOut
   }
 }
 
+async function fetchGeneratedImage(url: string, signal: AbortSignal) {
+  const parsed = new URL(url);
+  if (parsed.protocol !== "https:") {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "生图接口返回了不安全的图片地址。");
+  }
+
+  const response = await fetch(parsed, {
+    cache: "no-store",
+    signal,
+  });
+
+  if (!response.ok) {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "下载生图结果失败。");
+  }
+
+  const contentLength = Number(response.headers.get("content-length") ?? 0);
+  if (contentLength > MAX_GENERATED_IMAGE_BYTES) {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "生图结果超过 10MB，未保存到素材库。");
+  }
+
+  return Buffer.from(await response.arrayBuffer());
+}
+
+async function postImageGeneration(input: GenerateImageInput): Promise<AIImageResult> {
+  ensureAICallsAllowed(PREVIEW_IMAGE_AI_MESSAGE);
+  validateProviderConfig(input);
+
+  const startedAt = Date.now();
+  const sanitizedPrompt = sanitizePromptForAI(input.prompt);
+  const inputTokenEstimate = estimateTokenCount(sanitizedPrompt);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 90_000);
+  const provider = input.providerType || "openai-compatible";
+
+  try {
+    const endpoint = `${normalizeBaseUrl(input.baseUrl)}/images/generations`;
+    const body = {
+      model: input.modelName,
+      prompt: sanitizedPrompt,
+      n: 1,
+      size: input.size,
+      response_format: "b64_json",
+      ...(input.quality ? { quality: input.quality } : {}),
+    };
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: buildHeaders(input.apiKey),
+      body: JSON.stringify(body),
+      signal: controller.signal,
+      cache: "no-store",
+    });
+
+    const rawText = await response.text();
+    if (!response.ok) {
+      throw translateAIError(response.status, rawText);
+    }
+
+    let parsed: ImageGenerationResponse | null = null;
+    try {
+      parsed = JSON.parse(rawText) as ImageGenerationResponse;
+    } catch {
+      throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "生图接口返回格式异常，无法解析响应。");
+    }
+
+    const firstImage = parsed.data?.[0];
+    if (!firstImage?.b64_json && !firstImage?.url) {
+      throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "生图接口未返回图片。");
+    }
+
+    const imageBuffer = firstImage.b64_json
+      ? bufferFromBase64Image(firstImage.b64_json)
+      : await fetchGeneratedImage(firstImage.url!, controller.signal);
+    assertGeneratedImageSize(imageBuffer);
+    const mimeType = inferGeneratedImageMimeType(imageBuffer);
+    const durationMs = Date.now() - startedAt;
+
+    await createAIRequestLog({
+      provider,
+      model: input.modelName,
+      requestType: input.requestType,
+      inputTokens: inputTokenEstimate,
+      outputTokens: null,
+      durationMs,
+      success: true,
+      inputSummary: input.inputSummary ?? summarizePrompt(sanitizedPrompt),
+      relatedProductId: input.relatedProductId,
+      relatedInspirationId: input.relatedInspirationId,
+      relatedTaskId: input.relatedTaskId ?? input.jobId,
+    });
+
+    return {
+      imageBuffer,
+      mimeType,
+      durationMs,
+      source: firstImage.b64_json ? "b64_json" : "url",
+    };
+  } catch (error) {
+    const safeError = error instanceof ProductBusinessError ? error : normalizeUnknownAIError(error);
+    await createAIRequestLog({
+      provider,
+      model: input.modelName || "unknown",
+      requestType: input.requestType,
+      inputTokens: inputTokenEstimate,
+      outputTokens: null,
+      durationMs: Date.now() - startedAt,
+      success: false,
+      errorSummary: safeError.message,
+      inputSummary: input.inputSummary ?? summarizePrompt(sanitizedPrompt),
+      relatedProductId: input.relatedProductId,
+      relatedInspirationId: input.relatedInspirationId,
+      relatedTaskId: input.relatedTaskId ?? input.jobId,
+    });
+    throw safeError;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 function normalizeUnknownAIError(error: unknown) {
   if (error instanceof DOMException && error.name === "AbortError") {
     return createBusinessError(BUSINESS_ERROR_CODES.AI_TIMEOUT, "网络超时，请重试。");
@@ -283,6 +442,12 @@ export function createAIClient(config: AIProviderConfig) {
         ...config,
         ...input,
         structuredOutput: false,
+      });
+    },
+    async generateImage(input: Omit<GenerateImageInput, keyof AIProviderConfig>) {
+      return postImageGeneration({
+        ...config,
+        ...input,
       });
     },
   };

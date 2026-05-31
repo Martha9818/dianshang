@@ -15,6 +15,18 @@ This file records active V1-Core schema changes. Add new entries when `prisma/sc
 - If a migration fails, stop and document the cause plus the safe next step instead of forcing progress with a reset.
 - If old data is incomplete, prefer `nullable`, `legacy`, `unknown`, or an explicit repair script over invented values.
 
+## 2026-05-31 - V1.5 Thread 06 Lightweight API Image Generation
+
+- Added migration `prisma/migrations/20260531071423_v15_thread06_image_generation/migration.sql`.
+- Added `ImageGenerationJob` for optional, user-triggered API image generation attempts:
+  - `promptTaskId`, `productId`, optional `aiJobId`
+  - provider/model/size/quality and Prompt version/use summaries
+  - status: `pending`, `processing`, `success`, `failed`, or `cancelled`
+  - optional `resultMaterialId`, sanitized `errorSummary`, parameter summary JSON, timestamps
+- Added relations from Product, PromptTask, AIJob, and Material to image-generation jobs.
+- Migration is additive; old migrations were not edited and no database reset was used.
+- A local SQLite backup was created before applying the migration under `backups/v15_thread06_migration_20260531_150255/`.
+
 ## 2026-05-31 - V1.5 Thread 05 Image Dedupe And Review Logs
 
 - Added migration `prisma/migrations/20260531063406_v15_thread05_image_dedup/migration.sql`.

@@ -12,6 +12,12 @@ export default async function AISettingsPage() {
   const pageData = await getAISettingsPageData().catch((error) => ({
     providers: [],
     defaultProviderId: null,
+    imageGenerationSettings: {
+      enabled: false,
+      defaultSize: "1024x1024",
+      defaultQuality: "standard",
+      costHint: "API 生图可能产生额外费用；请确认模型、尺寸和质量后再手动生成。",
+    },
     readError: getProductErrorMessage(error, "当前预览环境无法读取本地 AI Provider，请在 Windows 本地验收。"),
   }));
 
@@ -25,6 +31,7 @@ export default async function AISettingsPage() {
       <AISettingsManager
         providers={pageData.providers}
         defaultProviderId={pageData.defaultProviderId}
+        imageGenerationSettings={pageData.imageGenerationSettings}
         runtimeNotice={runtime.isWritable ? null : buildReadonlyRuntimeMessage(runtime.mode)}
       />
     </WorkspacePage>

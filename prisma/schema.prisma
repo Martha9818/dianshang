@@ -52,6 +52,7 @@ model Product {
   screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobProduct")
   linkImportDrafts    LinkImportDraft[] @relation("LinkImportDraftProduct")
   competitorAnalysisSnapshots CompetitorAnalysisSnapshot[] @relation("CompetitorAnalysisSnapshotProduct")
+  imageGenerationJobs ImageGenerationJob[] @relation("ImageGenerationJobProduct")
 
   @@index([deletedAt])
   @@index([updatedAt])
@@ -163,6 +164,7 @@ model PromptTask {
   updatedAt       DateTime   @updatedAt
   product         Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
   materials       Material[]
+  imageGenerationJobs ImageGenerationJob[] @relation("ImageGenerationJobPromptTask")
 
   @@index([productId])
 }
@@ -191,6 +193,7 @@ model Material {
   promptTask   PromptTask? @relation(fields: [promptTaskId], references: [id], onDelete: SetNull)
   screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobMaterial")
   linkImportDrafts LinkImportDraft[] @relation("LinkImportDraftScreenshotMaterial")
+  imageGenerationJobs ImageGenerationJob[] @relation("ImageGenerationJobResultMaterial")
 
   @@index([productId])
   @@index([promptTaskId])
@@ -288,6 +291,7 @@ model AIJob {
   inspirationAiDraftJobs InspirationAiDraftJob[] @relation("InspirationAiDraftJobAIJob")
   screenshotRecognitionJobs ScreenshotRecognitionJob[] @relation("ScreenshotRecognitionJobAIJob")
   competitorAnalysisSnapshots CompetitorAnalysisSnapshot[] @relation("CompetitorAnalysisSnapshotAIJob")
+  imageGenerationJobs ImageGenerationJob[] @relation("ImageGenerationJobAIJob")
 
   @@index([jobType])
   @@index([status])
@@ -530,6 +534,38 @@ model CompetitorAnalysisSnapshot {
   @@index([status])
   @@index([isReference])
   @@index([archivedAt])
+  @@index([createdAt])
+}
+
+model ImageGenerationJob {
+  id                   Int          @id @default(autoincrement())
+  promptTaskId         Int
+  productId            Int
+  aiJobId              Int?
+  provider             String
+  model                String
+  size                 String
+  quality              String?
+  promptVersion        String?
+  promptUse            String?
+  status               String       @default("pending")
+  resultMaterialId     Int?
+  errorSummary         String?
+  parameterSummaryJson String?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  promptTask           PromptTask   @relation("ImageGenerationJobPromptTask", fields: [promptTaskId], references: [id], onDelete: Cascade)
+  product              Product      @relation("ImageGenerationJobProduct", fields: [productId], references: [id], onDelete: Cascade)
+  aiJob                AIJob?       @relation("ImageGenerationJobAIJob", fields: [aiJobId], references: [id], onDelete: SetNull)
+  resultMaterial       Material?    @relation("ImageGenerationJobResultMaterial", fields: [resultMaterialId], references: [id], onDelete: SetNull)
+
+  @@index([promptTaskId])
+  @@index([productId])
+  @@index([aiJobId])
+  @@index([resultMaterialId])
+  @@index([status])
+  @@index([provider])
+  @@index([model])
   @@index([createdAt])
 }
 

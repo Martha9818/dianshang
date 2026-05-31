@@ -19,6 +19,7 @@ import {
   deleteAIProviderAction,
   disableAIProviderAction,
   enableAIProviderAction,
+  saveImageGenerationSettingsAction,
   saveAIProviderAction,
   testAIProviderConnectionAction,
   testAIProviderConnectionWithConfigAction,
@@ -35,6 +36,13 @@ type ProviderView = {
   isDefault: boolean;
   hasApiKey: boolean;
   maskedApiKey: string;
+};
+
+type ImageGenerationSettingsView = {
+  enabled: boolean;
+  defaultSize: string;
+  defaultQuality: string;
+  costHint: string;
 };
 
 type ConnectionResult =
@@ -64,15 +72,19 @@ function getEmptyForm() {
 export function AISettingsManager({
   providers,
   defaultProviderId,
+  imageGenerationSettings,
   runtimeNotice,
 }: {
   providers: ProviderView[];
   defaultProviderId: number | null;
+  imageGenerationSettings: ImageGenerationSettingsView;
   runtimeNotice?: string | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [connectionResult, setConnectionResult] = useState<ConnectionResult>(null);
+  const [imageSettingsResult, setImageSettingsResult] = useState<ConnectionResult>(null);
+  const [imageSettings, setImageSettings] = useState(imageGenerationSettings);
   const [form, setForm] = useState(() => {
     const defaultProvider = providers.find((item) => item.id === defaultProviderId) ?? providers[0];
     return defaultProvider
@@ -267,7 +279,20 @@ export function AISettingsManager({
                   <input className={inputClassName} value={form.modelName} onChange={(event) => setForm((current) => ({ ...current, modelName: event.target.value }))} />
                 </Field>
                 <Field label="用途">
-                  <input className={`${inputClassName} bg-slate-50 text-slate-500`} value={form.purpose} readOnly />
+                  <select
+                    className={inputClassName}
+                    value={form.purpose}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        purpose: event.target.value,
+                        isDefault: false,
+                      }))
+                    }
+                  >
+                    <option value="text">文本 / 识图</option>
+                    <option value="image">API 生图</option>
+                  </select>
                 </Field>
 
                 <div className="grid gap-3">
@@ -378,6 +403,102 @@ export function AISettingsManager({
                   <MiniIcon name={connectionResult.type === "success" ? "shield" : "ban"} className="h-5 w-5" />
                   <p className="text-sm font-medium">{connectionResult.text}</p>
                 </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </DashboardCard>
+
+      <DashboardCard>
+        <div className="grid gap-4 px-5 py-5 xl:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <h2 className="text-[1.08rem] font-semibold text-slate-900">API 生图设置</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              生图只在 Prompt 任务详情里由用户手动触发；Vercel 预览不会调用生图 API，也不会写入 uploads。
+            </p>
+            <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-700">
+              {imageSettings.costHint}
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <ToggleField
+              label="启用 API 生图"
+              checked={imageSettings.enabled}
+              onChange={(checked) => setImageSettings((current) => ({ ...current, enabled: checked }))}
+            />
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="默认尺寸">
+                <select
+                  className={inputClassName}
+                  value={imageSettings.defaultSize}
+                  onChange={(event) => setImageSettings((current) => ({ ...current, defaultSize: event.target.value }))}
+                >
+                  <option value="1024x1024">1024x1024</option>
+                  <option value="1024x1536">1024x1536</option>
+                  <option value="1536x1024">1536x1024</option>
+                  <option value="1792x1024">1792x1024</option>
+                  <option value="1024x1792">1024x1792</option>
+                </select>
+              </Field>
+              <Field label="默认质量">
+                <select
+                  className={inputClassName}
+                  value={imageSettings.defaultQuality}
+                  onChange={(event) => setImageSettings((current) => ({ ...current, defaultQuality: event.target.value }))}
+                >
+                  <option value="standard">standard</option>
+                  <option value="hd">hd</option>
+                  <option value="low">low</option>
+                  <option value="medium">medium</option>
+                  <option value="high">high</option>
+                </select>
+              </Field>
+            </div>
+            <Field label="成本提示">
+              <textarea
+                className="min-h-[88px] w-full rounded-2xl border border-[#E4EAF3] bg-white px-4 py-3 text-sm leading-6 text-slate-700 outline-none transition-all duration-200 ease-out hover:border-blue-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
+                value={imageSettings.costHint}
+                onChange={(event) => setImageSettings((current) => ({ ...current, costHint: event.target.value }))}
+              />
+            </Field>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                disabled={isPending || Boolean(runtimeNotice)}
+                onClick={() => {
+                  const formData = new FormData();
+                  if (imageSettings.enabled) formData.set("imageGenerationEnabled", "on");
+                  formData.set("imageGenerationSize", imageSettings.defaultSize);
+                  formData.set("imageGenerationQuality", imageSettings.defaultQuality);
+                  formData.set("imageGenerationCostHint", imageSettings.costHint);
+
+                  startTransition(async () => {
+                    const result = await saveImageGenerationSettingsAction(formData);
+                    if (!result.success) {
+                      setImageSettingsResult({ type: "error", text: result.error });
+                      return;
+                    }
+
+                    setImageSettings(result.data);
+                    setImageSettingsResult({ type: "success", text: "API 生图设置已保存。" });
+                    router.refresh();
+                  });
+                }}
+                className="inline-flex h-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-5 text-sm font-medium text-white transition disabled:opacity-70"
+              >
+                保存生图设置
+              </button>
+            </div>
+            {imageSettingsResult ? (
+              <div
+                className={`rounded-[24px] border px-5 py-4 ${
+                  imageSettingsResult.type === "success"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-rose-200 bg-rose-50 text-rose-700"
+                }`}
+              >
+                <p className="text-sm font-medium">{imageSettingsResult.text}</p>
               </div>
             ) : null}
           </div>

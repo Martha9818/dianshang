@@ -4,6 +4,7 @@ export {
   buildProductImageRelativePath,
   getUploadsAbsolutePath,
   saveCompetitorScreenshot,
+  saveMaterialImageBuffer,
   saveMaterialImage,
   saveProductMainImage,
 } from "@/lib/services/images";
