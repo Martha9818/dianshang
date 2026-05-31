@@ -13,7 +13,7 @@ EcomPilot 是一个 Windows 本地优先的电商选品与运营工作台。正�
 首次使用请在 PowerShell 中进入项目目录：
 
 ```powershell
-cd E:\电商
+cd <项目目录>
 npm install
 Copy-Item .env.example .env
 npx prisma migrate dev

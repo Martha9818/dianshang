@@ -4,7 +4,7 @@ These are stable rules for the current mainline. Historical specs are secondary 
 
 ## Version Boundary
 
-- Current line: V1-Plus after V1-Core completion.
+- Current line: V1.5 after V1-Plus completion and baseline freeze.
 - New behavior requires an explicitly approved thread.
 - Historical issues are fixed on the latest mainline through Patch Threads, not by editing old versions or old migrations.
 - Docs-only threads must not change business code, UI behavior, schema, migrations, dependencies, AI behavior, or runtime write behavior.
@@ -36,6 +36,7 @@ These are stable rules for the current mainline. Historical specs are secondary 
 - Folder checks, safe display labels, filename safety, and path safety should reuse local-path services.
 - Frontend, diagnostics, logs, exports, backups, and docs must not expose full local paths, database paths, API keys, `.env` values, raw prompts, full stacks, or sensitive cost data.
 - File cleanup may permanently delete only files already moved into application-managed `trash/`; it must not call the Windows system recycle bin or delete active product/material/inspiration files directly.
+- File cleanup and app trash are V1-Plus Thread 06 baseline capabilities. V1.5 must not create timed/background cleanup, AI-driven auto-delete, auto-compression, cloud sync, Windows recycle-bin integration, database-record deletion, or a second cleanup system.
 
 ## AI Safety
 

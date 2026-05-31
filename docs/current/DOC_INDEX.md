@@ -15,7 +15,7 @@ Use this file only as a routing table after the required startup read. Do not co
 | --- | --- | --- |
 | `PROJECT_MAP.md` | Module and route map. | Code structure, routes, services, runtime, AI, file, export, backup, or diagnostics work. |
 | `ARCHITECTURE_RULES.md` | Stable architecture and safety rules. | Before behavior, data, filesystem, AI, runtime, or dependency changes. |
-| `THREAD_SCOPE_CHECKLIST.md` | Thread boundary/status checklist and V1.5 range map. | At development-thread start and final boundary check. |
+| `THREAD_SCOPE_CHECKLIST.md` | Thread boundary/status checklist, frozen V1.5 range map, and file-cleanup boundary note. | At development-thread start and final boundary check. |
 | `RISK_REGISTER.md` | Open, mitigated, and deferred risks. | Risk-sensitive work, V1.5 feature planning, migrations, filesystem writes, AI, secrets, or Vercel behavior. |
 | `CHANGELOG_DEV.md` | Version-level change summary and V1.5 baseline note. | Recent version context and after meaningful behavior/docs changes. |
 | `DATABASE_CHANGELOG.md` | Schema and migration history. | Prisma schema, migration, compatibility, or data-repair work. |
@@ -35,4 +35,5 @@ Archived history lives in `agent-memory/archive/` and is indexed by `agent-memor
 
 - MVP, V1-Core, and V1-Plus are complete.
 - V1.5 is the current stage after baseline freeze.
+- The frozen V1.5 route lives in `THREAD_SCOPE_CHECKLIST.md`; V1-Plus Thread 06 file cleanup/trash remains existing baseline capability.
 - Vercel remains preview-only and read-only; Windows local runtime remains the source of truth.

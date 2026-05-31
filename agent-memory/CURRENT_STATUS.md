@@ -4,7 +4,7 @@
 
 - Current stage: V1.5 after Thread 00 baseline freeze.
 - V1-Plus status: completed and frozen as the current development baseline.
-- Current task: Thread 00 documentation closeout, archive slimming, status confirmation, and V1.5 boundary setup completed locally.
+- Current task: V1.5 baseline documentation route correction completed locally; no feature work started.
 - Next thread: V1.5 Thread 01 - 灵感文件夹定时扫描与自动 AI 识图草稿, if explicitly approved.
 
 ## Product Direction
@@ -17,9 +17,9 @@
 ## V1.5 Boundary
 
 - V1.5 is for lightweight intelligence and technical validation.
-- Frozen route: Thread 01 is local inspiration-folder scheduled scanning and automatic AI image-recognition drafts; Thread 02 is screenshot recognition and structured image import. Do not merge them.
-- Allowed by explicit thread: local inspiration-folder scheduled scanning, user-uploaded image/screenshot recognition, lightweight API image generation, and Electron technical validation.
+- Frozen route: Thread 01 is local inspiration-folder scheduled scanning and automatic AI image-recognition drafts; Thread 02 is screenshot recognition and structured image import. Do not merge them. Thread 03-09 route is frozen in `docs/current/THREAD_SCOPE_CHECKLIST.md`.
 - Not in V1.5: formal Electron desktop app, platform crawlers, automatic collection, automatic publishing, automatic private messages, automatic comments, SKU, supplier, inventory, trial-sale review, PDF reports, or real multi-agent scheduling.
+- File cleanup and app trash are already V1-Plus Thread 06 capabilities; V1.5 must not create a second cleanup system.
 
 ## Blockers Or Risks
 
@@ -27,7 +27,8 @@
 - Vercel remains preview-only and read-only; it is not a formal runtime environment.
 - No `test` script exists in the current project scripts.
 - V1.5 threads must not reimplement path, environment, logging, or Vercel-readonly foundations.
-- Thread 00 verification passed: lint, build, Prisma validation, typecheck, encoding check, and sensitive-pattern scans on changed docs.
+- Latest docs-only verification passed: encoding check, lint, diff whitespace check, and sensitive-pattern scans on changed docs.
+- Follow-up doc slimming for long files is deferred to a later documentation slimming pass or V1.5 Thread 09 closeout.
 
 ## Next Recommended Step
 

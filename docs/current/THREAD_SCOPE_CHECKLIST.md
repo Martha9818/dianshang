@@ -35,23 +35,41 @@ Use this as a short boundary/status record for development threads. Do not paste
 
 | Thread | Frozen Name | Status | Boundary |
 | --- | --- | --- |
-| V1.5 Thread 00 | V1-Plus closeout and V1.5 baseline freeze | COMPLETE | Docs/status/archive only. |
+| V1.5 Thread 00 | V1-Plus 收口与 V1.5 基线冻结 | COMPLETE | Docs/status/archive only. |
 | V1.5 Thread 01 | 灵感文件夹定时扫描与自动 AI 识图草稿 | NOT STARTED | Do not implement screenshot recognition, screenshot structured import, or product screenshot field extraction here. |
 | V1.5 Thread 02 | 截图识别与图片导入结构化 | NOT STARTED | Separate from Thread 01; do not backfill Thread 01 scope here unless explicitly approved. |
-| V1.5 Thread 03 | API 生图轻量版技术验证 | NOT STARTED | Lightweight validation only; no Vercel high-cost AI calls or automated publishing. |
-| V1.5 Thread 04 | Electron 技术验证 | NOT STARTED | Technical validation only; no formal Electron desktop app, installer, tray, auto-update, or system notifications. |
-| V1.5 Thread 05 | V1.5 AI 结果人工复核与降级验收 | NOT STARTED | Verify suggestions remain drafts/reference-only and Vercel stays read-only. |
-| V1.5 Thread 06 | V1.5 本地运行与桌面底座复用验收 | NOT STARTED | Confirm RuntimeConfig, LocalPathService, EnvironmentGuard, LogService, OperationLog, diagnostics, and Vercel guards are reused. |
-| V1.5 Thread 07 | V1.5 集成回归与安全扫描 | NOT STARTED | Regression/security only; no new product capability. |
-| V1.5 Thread 08 | V1.5 文档、风险与已知问题收口 | NOT STARTED | Documentation closeout only. |
-| V1.5 Thread 09 | V1.5 最终验收与 V2 前基线冻结 | NOT STARTED | Final acceptance and freeze only; no V2 implementation. |
+| V1.5 Thread 03 | 链接导入尝试与导入质量分级 | NOT STARTED | Import attempt and quality grading only; no platform crawler or automatic collection. |
+| V1.5 Thread 04 | 竞品智能分析与差异化建议 | NOT STARTED | Suggestive analysis only; no automated publishing, messaging, comments, SKU, supplier, or inventory. |
+| V1.5 Thread 05 | 图片去重与轻量原创性风险提示 | NOT STARTED | Detect duplicates/similarity/originality risk, manual ignore, and manual archive suggestions only; no auto delete, permanent delete, auto compression, or new cleanup system. |
+| V1.5 Thread 06 | API 生图轻量版 | NOT STARTED | Lightweight API image generation only; no Vercel high-cost AI calls or automated publishing. |
+| V1.5 Thread 07 | Electron 技术验证 | NOT STARTED | Technical validation only; no formal Electron desktop app, installer, tray, auto-update, or system notifications. |
+| V1.5 Thread 08 | 站内搜索助手与通知摘要助手 | NOT STARTED | May remind and link to existing maintenance pages; must not scan, move, delete, or clean uploads/exports/backups automatically. |
+| V1.5 Thread 09 | 最终集成验收、README 与 V2 准备 | NOT STARTED | Final acceptance, README, risks, safety scan, V1-Plus Thread 06 cleanup regression, and V2 preparation only. |
+
+## File Cleanup Boundary
+
+- Existing owner: V1-Plus Thread 06 already owns uploads/exports/backups manual scan, orphan-file detection, old export/backup detection, application-managed `trash/`, confirmed permanent delete, CleanupLog, Vercel no-real-scan/delete behavior, path sanitization, path traversal protection, and active product/material/competitor/inspiration file protection.
+- V1.5 must not create a second file cleanup system.
+- V1.5 Thread 05 may only detect duplicates/similar images/originality risk, support manual ignore, and suggest manual archive. If deletion or trash movement is needed, guide the user to the existing file maintenance page.
+- V1.5 Thread 08 may remind about cleanup-related todos and link to the existing file maintenance page. It must not automatically scan, move, delete, or clean uploads/exports/backups.
+- V1.5 Thread 09 must regression-test V1-Plus Thread 06 cleanup/trash: manual scans, app trash, CleanupLog, Vercel no-real-scan/delete, path sanitization, path traversal protection, and protection against deleting active product main images, materials, or competitor screenshots.
+- V1.5 cleanup-related forbidden scope: timed auto-cleanup, background cleanup, AI quality judgment followed by auto-delete, auto-compression, cloud sync, Windows system recycle-bin integration, active material auto-delete, database-record deletion, second cleanup system, and bypassing LocalPathService/path guards.
+
+## Deferred Documentation Slimming
+
+- `DATABASE_CHANGELOG.md`: leave unchanged now; later keep schema/migration summaries and archive old migration detail.
+- `V1_CORE_UNDERSTANDING_CHECK.md`: leave unchanged now; later convert to a V1-Core capability index and move long explanation to archive.
+- `PROJECT_MAP.md`: do not broadly rewrite now; only correct baseline-route or cleanup-boundary errors.
+- `THREAD_SCOPE_CHECKLIST.md`: only correct the frozen V1.5 route and cleanup boundary now.
+- `ARCHIVE_INDEX.md`: do not split now; only update index entries when new archive files are created.
+- Treat this as a future documentation slimming pass or a V1.5 Thread 09 closeout item.
 
 ## Scope
 
 - Goal: mark V1-Plus complete, set V1.5 as current stage, freeze baseline, shorten active docs, archive old summaries, and record V1.5 boundaries.
-- Non-goals: new business features, OCR, link import, API image generation, Electron implementation, crawlers, automated collection, automated publishing, private messages, comments, SKU, supplier, inventory, trial-sale review, PDF reports, or multi-agent scheduling.
+- Non-goals for Thread 00: new business features, screenshots import, link import, API image generation, Electron implementation, crawlers, automated collection, automated publishing, private messages, comments, SKU, supplier, inventory, trial-sale review, PDF reports, new cleanup systems, or multi-agent scheduling.
 - Frozen next-step rule: V1.5 Thread 01 and Thread 02 are separate; Thread 01 must not implement screenshot recognition, screenshot structured import, or product screenshot field extraction.
-- Allowed files/systems: AGENTS, agent memory, docs/current, and archive indexes.
+- Allowed files/systems: AGENTS, README, agent memory, docs/current, and archive indexes.
 - Forbidden files/systems: schema changes, migration changes, dependency changes, app behavior, AI behavior, runtime/filesystem write behavior, Vercel policy changes, and module implementation files.
 - Module README needed: no.
 
@@ -79,4 +97,5 @@ Use this as a short boundary/status record for development threads. Do not paste
 - Optional commands: `npm test` was not run because no test script exists.
 - Extra check: `npm run encoding:check` passed.
 - Security scans: changed docs were checked for API-key-like strings, full local path strings, database path strings, and full stack-trace markers; no new matches found.
+- Latest route-correction verification: `npm run encoding:check`, `npm run lint`, and `git diff --check` passed; build and Prisma validation were skipped because only docs/memory changed.
 - Commit/push/deploy status: local commit expected after verification; no push or Vercel live refresh requested.

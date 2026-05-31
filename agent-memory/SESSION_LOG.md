@@ -8,6 +8,8 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 
 - Changed: Marked V1-Plus complete, set V1.5 as the current stage, recorded V1.5 boundaries, slimmed active memory/current docs, and added baseline archive files.
 - Supplement: Corrected the next-thread route so V1.5 Thread 01 is inspiration-folder scheduled scanning and automatic AI image-recognition drafts, while Thread 02 remains screenshot recognition and structured image import.
+- Baseline fix: Restored V1.5 Thread 03-09 to the frozen feature route and documented that file cleanup/trash belongs to V1-Plus Thread 06, not a V1.5 rebuild.
+- Verification refresh: For the baseline route correction, reran encoding check, lint, diff whitespace check, and sensitive-pattern scans; build and Prisma validation were skipped because only docs/memory changed.
 - Verified: `npm run lint`, `npm run build`, `npx prisma validate`, `npm run typecheck`, `npm run encoding:check`, and changed-doc sensitive-pattern scans all passed; no `test` script exists.
 - Scope: Documentation, status, risk, issue, patch, changelog, and archive-index cleanup only.
 - Handoff: No business feature, schema, migration, dependency, filesystem write behavior, AI behavior, Electron feature, OCR, link parsing, API image generation, crawler, automation, SKU, inventory, PDF, or multi-agent behavior was implemented.

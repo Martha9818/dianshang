@@ -31,5 +31,11 @@ Only unresolved or deferred issues live here. Fixed, closed, or non-issue histor
 ### V1.5 Features Are Not Implemented Yet
 
 - Status: DEFERRED / PLANNED SCOPE
-- Impact: Local inspiration-folder scheduled scanning, screenshot recognition and structured image import, lightweight API image generation, and Electron technical validation require separately approved V1.5 threads.
+- Impact: The frozen V1.5 Thread 01-09 feature route requires separately approved threads; Thread 01 folder scanning and Thread 02 screenshot import remain separate.
 - Mitigation: Do not imply these are available until their thread ships and is verified locally.
+
+### V1-Plus File Cleanup Must Not Be Rebuilt In V1.5
+
+- Status: DEFERRED / BOUNDARY
+- Impact: V1.5 Thread 05 image dedupe and Thread 08 assistant reminders could be confused with cleanup execution.
+- Mitigation: Use the existing V1-Plus Thread 06 file cleanup/trash flow for deletion or trash movement; V1.5 should only detect, suggest, remind, or link unless a later explicit scope changes this.

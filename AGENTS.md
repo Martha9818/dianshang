@@ -25,7 +25,7 @@ Use `DOC_INDEX.md` to choose only the task-relevant current docs. Do not read `a
 
 Do not add login, cloud accounts, payments, crawlers, OCR, link parsing, automated publishing, inventory, supplier management, notification-center expansion, background queues, real multi-agent systems, or V2 behavior unless the user explicitly opens that thread.
 
-V1.5 is a lightweight intelligence and technical validation stage only. Approved V1.5 threads may explore user-uploaded image/screenshot recognition, local inspiration-folder scheduled scans, lightweight API image generation, and Electron technical validation. V1.5 does not include a formal Electron desktop release, platform crawlers, automatic collection, automatic publishing, automatic private messages, automatic comments, SKU, supplier, inventory, trial-sale review, PDF reports, or real multi-agent orchestration.
+V1.5 is a lightweight intelligence and technical validation stage only. Follow the frozen V1.5 thread route in `THREAD_SCOPE_CHECKLIST.md`; do not merge Thread 01 folder scanning with Thread 02 screenshot import. File cleanup and app trash are existing V1-Plus Thread 06 capabilities, not a V1.5 rebuild. V1.5 does not include a formal Electron desktop release, platform crawlers, automatic collection, automatic publishing, automatic private messages, automatic comments, SKU, supplier, inventory, trial-sale review, PDF reports, or real multi-agent orchestration.
 
 Do not change database schema, migrations, dependencies, filesystem write behavior, AI behavior, UI behavior, or product logic during docs-only tasks.
 
