@@ -9,6 +9,7 @@ Only the latest key summaries stay here. Detailed entries and older history are 
 - Changed: Added local inspiration scan config, app-runtime scheduled scan trigger, per-file scan jobs, AI draft jobs, manual retry, and AI draft confirm/ignore/edit flow.
 - Safety: Reused runtime/read-only guards, path validation, managed uploads, hash dedupe, AI base, sanitized logs, and service-layer actions; no platform crawler, screenshot import, link import, auto-publish, background service, tray, Windows notification, or formal Electron behavior was added.
 - Local acceptance: Fixture folder import created one inspiration successfully while AI draft failed because no default provider was configured, proving AI failure isolation; scheduled scan then skipped the duplicate by hash. Scheduled scanning was disabled afterward to avoid surprise local polling.
+- Provider patch: After adding a vision-capable Doubao provider, patched the vision prompt fallback and image request timeout; a real local inspiration image generated an `AI 草稿 / 待用户确认` draft successfully without applying it to formal product fields.
 
 ### V1.5 Thread 00 - V1-Plus Closeout And Baseline Freeze
 

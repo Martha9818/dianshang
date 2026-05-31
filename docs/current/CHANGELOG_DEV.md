@@ -6,6 +6,7 @@ This file keeps version-level summaries only. Detailed per-task history is in `a
 
 - V1.5 begins after MVP, V1-Core, and V1-Plus completion.
 - Thread 01 shipped local inspiration-folder scan settings, app-runtime scheduled scans, new image detection with hash dedupe, `InspirationScanJob` / `InspirationAiDraftJob` task states, and AI image-recognition drafts that require user confirmation.
+- Thread 01 follow-up patched provider compatibility so a vision-capable OpenAI-compatible provider can complete real local AI draft generation even when `json_schema` is unsupported.
 - V1.5 is a lightweight intelligence and technical validation stage, not a new product-foundation rewrite.
 - Frozen route: Thread 01 is local inspiration-folder scheduled scanning and automatic AI image-recognition drafts; Thread 02 is screenshot recognition and structured image import.
 - Frozen route continued: Thread 03 link import/quality grading, Thread 04 competitor intelligence/differentiation, Thread 05 image dedupe/originality risk hints, Thread 06 lightweight API image generation, Thread 07 Electron validation, Thread 08 site-search/notification-summary assistants, and Thread 09 final acceptance/README/V2 preparation.

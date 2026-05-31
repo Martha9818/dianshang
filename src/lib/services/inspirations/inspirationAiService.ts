@@ -41,11 +41,29 @@ function getMimeTypeFromRelativePath(relativePath: string) {
 
 function buildVisionPrompt() {
   return [
-    "你是一名谨慎的电商选品助手。",
-    "请只根据图片中能直接观察到的信息，生成 AI 草稿 / 待用户确认 的轻量建议。",
-    "不得虚构品牌、功能、价格、销量、认证、供应商、平台规则结论或任何无法从图片判断的事实。",
-    "可以给出可能商品类型、颜色、材质、风格、适合平台、卖点建议、风险提示和文案方向，但必须把不确定内容写进 uncertaintyNotes。",
-    "输出字段必须是 JSON，并符合既定 schema；draftLabel 必须写为 AI 草稿 / 待用户确认。",
+    "You are a cautious ecommerce product inspiration assistant.",
+    "Use only directly visible information from the image. Do not invent brand, sales, certification, supplier, price, platform policy, or any fact that cannot be observed.",
+    "Return only one valid JSON object. Do not wrap it in markdown. Do not add explanatory text outside JSON.",
+    'Set draftLabel exactly to "AI 草稿 / 待用户确认".',
+    "All fields below are required. Use an empty string or empty array when uncertain.",
+    JSON.stringify({
+      titleSuggestion: "short title suggestion",
+      shortDescription: "one or two cautious sentences about visible content",
+      possibleCategory: "possible category",
+      possibleProductType: "possible product type",
+      colors: ["visible colors"],
+      materials: ["possible visible materials"],
+      styleKeywords: ["style keywords"],
+      suitablePlatforms: ["possible ecommerce platforms or empty when uncertain"],
+      visibleElements: ["directly visible elements"],
+      useScenarios: ["possible usage scenarios"],
+      targetAudience: ["possible target audience"],
+      sellingPoints: ["cautious selling point suggestions"],
+      riskNotes: ["risks or facts requiring user confirmation"],
+      copywritingDirections: ["possible copywriting directions"],
+      uncertaintyNotes: ["uncertain points"],
+      draftLabel: "AI 草稿 / 待用户确认",
+    }),
   ].join("\n");
 }
 

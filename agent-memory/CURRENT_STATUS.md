@@ -28,6 +28,7 @@
 - No `test` script exists in the current project scripts.
 - V1.5 threads must not reimplement path, environment, logging, or Vercel-readonly foundations.
 - Latest Thread 01 verification passed encoding check, lint, build, Prisma validate, typecheck, local Windows fixture acceptance, Vercel read-only simulation, and browser smoke test.
+- A vision-capable Doubao provider has now generated a real local inspiration AI draft successfully after the prompt fallback and image timeout compatibility patch.
 - Follow-up doc slimming for long files is deferred to a later documentation slimming pass or V1.5 Thread 09 closeout.
 
 ## Next Recommended Step
