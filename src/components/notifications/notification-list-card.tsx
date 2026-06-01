@@ -117,6 +117,23 @@ export function NotificationListCard({
     };
   }, [updateSelectedCount]);
 
+  useEffect(() => {
+    if (!state.ok) {
+      return;
+    }
+
+    const checkboxes = document.querySelectorAll<HTMLInputElement>(
+      `input[name="ids"][form="${NOTIFICATION_BATCH_FORM_ID}"]`,
+    );
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = false;
+    });
+    const timer = window.setTimeout(updateSelectedCount, 0);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [state.ok, state.message, updateSelectedCount]);
+
   return (
     <DashboardCard>
       <DashboardCardHeader
