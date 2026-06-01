@@ -68,17 +68,17 @@ export function ProductMaterialsTab({
           />
         </div>
         <TableScrollArea>
-          <DataTable className="min-w-[960px]">
+          <DataTable className="min-w-[1180px]">
             <DataTableHead>
               <tr>
-                <DataTableHeaderCell className="w-[24%]">文件</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[26%]">文件</DataTableHeaderCell>
                 <DataTableHeaderCell className="w-[10%]">平台</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[12%]">素材类型</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[10%]">来源</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[10%]">状态</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[12%]">Task ID</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[11%]">素材类型</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[13%]">来源</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[11%]">状态</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[14%]">Task ID</DataTableHeaderCell>
                 <DataTableHeaderCell className="w-[10%]">创建时间</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[12%]">操作</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[18%]">操作</DataTableHeaderCell>
               </tr>
             </DataTableHead>
             <DataTableBody>
@@ -86,15 +86,18 @@ export function ProductMaterialsTab({
                 materials.map((material) => (
                   <DataTableRow key={material.id}>
                     <DataTableCell>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3">
                         <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" missing={!material.fileExists} />
-                        <span className="truncate text-xs text-slate-500">{material.filePath}</span>
+                        <div className="min-w-0 space-y-1">
+                          <p className="truncate text-sm font-medium text-slate-800">{material.product.name}</p>
+                          <p className="truncate text-xs text-slate-500">{material.filePath}</p>
+                        </div>
                       </div>
                     </DataTableCell>
                     <DataTableCell>{material.platformLabel}</DataTableCell>
                     <DataTableCell>{material.materialTypeLabel}</DataTableCell>
                     <DataTableCell>
-                      <div className="space-y-1">
+                      <div className="space-y-2">
                         <div>{material.sourceTypeLabel}</div>
                         <StatusBadge label={material.usagePermissionLabel} tone={material.isReferenceOnly ? "amber" : "green"} />
                       </div>
@@ -102,13 +105,15 @@ export function ProductMaterialsTab({
                     <DataTableCell>
                       <StatusBadge label={material.status ?? "--"} tone={material.statusTone} />
                     </DataTableCell>
-                    <DataTableCell>{material.taskCode ?? "--"}</DataTableCell>
-                    <DataTableCell>{material.formattedCreatedAt}</DataTableCell>
+                    <DataTableCell className="text-xs leading-6 text-slate-500">
+                      <span className="break-all">{material.taskCode ?? "--"}</span>
+                    </DataTableCell>
+                    <DataTableCell className="text-slate-500">{material.formattedCreatedAt}</DataTableCell>
                     <DataTableCell>
                       {runtimeNotice ? (
                         <span className="text-xs text-slate-400">只读</span>
                       ) : (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid gap-2 xl:grid-cols-2">
                           <TableActionLink href={`/screenshots?sourceType=material&sourceId=${material.id}&productId=${product.id}`}>
                             截图识别
                           </TableActionLink>
@@ -144,7 +149,7 @@ export function ProductMaterialsTab({
           {runtimeNotice ? <PageNote>预览环境只读，请在 Windows 本地验收。</PageNote> : null}
           <div className="flex flex-wrap gap-2">
             <TableActionLink href={`/materials?productId=${product.id}`}>查看素材库</TableActionLink>
-            <TableActionLink href={`/products/${product.id}?tab=copywriting`}>查看文案素材</TableActionLink>
+            <TableActionLink href={`/copywriting?productId=${product.id}`}>查看文案素材</TableActionLink>
             <TableActionLink href={`/copywriting?productId=${product.id}`}>去文案列表</TableActionLink>
           </div>
         </div>

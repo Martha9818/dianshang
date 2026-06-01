@@ -3,8 +3,8 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: V1.5 Stabilization auto-filter follow-up is complete locally and verified; notification, product, copywriting, Prompt task, material, and inspiration filters now auto-apply without a separate filter button.
-- Next stage: Continue with the next approved Stabilization follow-up thread before any V2 planning thread.
+- Current task state: The approved stabilization batch for notifications, products/materials, copywriting package timeout handling, Prompt task card selection, materials detail actions, and inspiration ScanLog tightening is complete locally and verified.
+- Next stage: Review the latest local stabilization batch on Windows local runtime, then continue only with the next explicitly approved V1.5 follow-up thread.
 
 ## Product Direction
 
@@ -40,7 +40,8 @@
 - Latest follow-up fixed material `materialId` detail switching by preserving numeric query values through normalization, and made link-import draft `全部删除` submit in place instead of redirecting to the top.
 - Latest auto-filter follow-up removed the visible filter submit buttons from notifications, products, copywriting history, Prompt tasks, materials, and inspirations. Select controls update the URL immediately, text/number filters update on Enter or blur, scroll is preserved, multi-filter state is serialized from the whole form, and stale `materialId` / `taskCode` params are cleared on relevant filter changes.
 - Latest dashboard follow-up excludes cancelled Prompt tasks from the home dashboard recent Prompt task list while leaving Prompt task history and status filtering intact.
+- Latest stabilization batch removes duplicated notification action areas, concentrates selection/read/delete/cleanup controls in the notification list header, makes Prompt tasks switch detail by clicking the whole card, moves high-frequency material detail links above the metadata block, relaxes product material table density, adds collapsed/deletable ScanLog history, and increases the multi-platform copywriting package text timeout without changing schema, migrations, dependencies, or V2 behavior.
 
 ## Next Recommended Step
 
-- Review the latest V1.5 Stabilization small-fix batch locally, then open the next approved stabilization thread if more cleanup is desired. Do not enter V2 until explicitly approved.
+- Review the latest V1.5 stabilization batch locally on `/notifications`, `/prompt-tasks`, `/materials`, `/products`, and `/inspirations`, then open only the next approved stabilization thread if more cleanup is still desired. Do not enter V2 until explicitly approved.

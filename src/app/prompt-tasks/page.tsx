@@ -15,13 +15,18 @@ import {
   PromptTaskCopyButton,
   PromptTaskImageGenerationButton,
 } from "@/components/prompt-tasks/prompt-task-actions";
+import { PromptTaskCardShell } from "@/components/prompt-tasks/prompt-task-card-shell";
 import { PromptTaskCreateForm } from "@/components/prompt-tasks/prompt-task-form";
 import { AutoFilterForm } from "@/components/ui/auto-filter-form";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { getProductErrorMessage } from "@/lib/modules/products";
 import { PROMPT_IMAGE_TYPES, PROMPT_TASK_PLATFORMS } from "@/lib/modules/prompt-task";
-import { getPromptTaskPageData, getPromptTaskStatusTone, PROMPT_TASK_STATUS } from "@/lib/services/prompt-task-service";
 import { getImageGenerationPanelData } from "@/lib/services/image-generation";
+import {
+  getPromptTaskPageData,
+  getPromptTaskStatusTone,
+  PROMPT_TASK_STATUS,
+} from "@/lib/services/prompt-task-service";
 import { buildReadonlyRuntimeMessage, getRuntimeModeSummary } from "@/lib/services/product-runtime-service";
 import { normalizePromptTaskQuery } from "@/lib/services/query-service";
 
@@ -55,11 +60,15 @@ export default async function PromptTasksPage({
     imageTypes: PROMPT_IMAGE_TYPES,
     statuses: Object.values(PROMPT_TASK_STATUS),
     runtime,
-    readError: getProductErrorMessage(error, "当前预览环境未加载 Windows 本地 SQLite 商品库，请在 Windows 本地验收 Prompt 任务。"),
+    readError: getProductErrorMessage(
+      error,
+      "当前预览环境未加载 Windows 本地 SQLite 商品库，请在 Windows 本地验收 Prompt 任务。",
+    ),
   }));
   const activeTask = pageData.tasks.find((task) => task.taskCode === params.taskCode) ?? pageData.tasks[0] ?? null;
   const imageGenerationPanel = await getImageGenerationPanelData(activeTask?.id ?? null).catch(() => null);
   const runtimeNotice = pageData.runtime.isWritable ? null : buildReadonlyRuntimeMessage(pageData.runtime.mode);
+
   const buildTaskHref = (taskCode: string) => {
     const next = new URLSearchParams();
     for (const key of ["productId", "q", "platform", "imageType", "recommendedSize", "status", "sort"] as const) {
@@ -106,7 +115,12 @@ export default async function PromptTasksPage({
               </option>
             ))}
           </FilterSelect>
-          <FilterSelect label="推荐尺寸" name="recommendedSize" defaultValue={params.recommendedSize ?? ""} className="min-w-[160px] flex-[0_1_180px]">
+          <FilterSelect
+            label="推荐尺寸"
+            name="recommendedSize"
+            defaultValue={params.recommendedSize ?? ""}
+            className="min-w-[160px] flex-[0_1_180px]"
+          >
             <option value="">全部尺寸</option>
             {pageData.recommendedSizes.map((size) => (
               <option key={size} value={size}>
@@ -152,15 +166,7 @@ export default async function PromptTasksPage({
                   const isActive = activeTask?.taskCode === task.taskCode;
 
                   return (
-                    <article
-                      key={task.id}
-                      className={[
-                        "rounded-2xl border px-4 py-3 transition",
-                        isActive
-                          ? "border-blue-200 bg-[#F8FBFF] shadow-[0_14px_30px_rgba(59,130,246,0.08)]"
-                          : "border-[#EEF2F8] bg-white hover:border-blue-100 hover:bg-[#FBFDFF]",
-                      ].join(" ")}
-                    >
+                    <PromptTaskCardShell key={task.id} href={buildTaskHref(task.taskCode)} selected={isActive}>
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                         <div className="flex min-w-0 flex-1 items-start gap-3">
                           <MockThumb label="PT" tone="violet" />
@@ -173,19 +179,17 @@ export default async function PromptTasksPage({
                                 {task.taskCode}
                               </Link>
                               <StatusBadge label={task.status} tone={getPromptTaskStatusTone(task.status)} />
+                              {isActive ? (
+                                <span className="inline-flex h-7 items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 text-xs font-medium text-[#2563EB]">
+                                  当前查看
+                                </span>
+                              ) : null}
                             </div>
                             <p className="mt-1 text-xs text-slate-400">{task.formattedUpdatedAt}</p>
                           </div>
                         </div>
 
                         <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
-                          {isActive ? (
-                            <span className="inline-flex h-10 items-center rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-medium text-[#2563EB]">
-                              当前查看
-                            </span>
-                          ) : (
-                            <TableActionLink href={buildTaskHref(task.taskCode)}>查看</TableActionLink>
-                          )}
                           <TableActionLink href={`/prompt-tasks/${encodeURIComponent(task.taskCode)}/upload`}>上传</TableActionLink>
                         </div>
                       </div>
@@ -196,7 +200,7 @@ export default async function PromptTasksPage({
                         <TaskMetaItem label="图片类型" value={task.imageTypeLabel} />
                         <TaskMetaItem label="推荐尺寸" value={task.recommendedSize ?? "--"} strong />
                       </dl>
-                    </article>
+                    </PromptTaskCardShell>
                   );
                 })}
               </div>
@@ -215,113 +219,116 @@ export default async function PromptTasksPage({
           </DashboardCard>
 
           <div id="prompt-task-detail" className="scroll-mt-6">
-          <DashboardCard>
-            <DashboardCardHeader title={activeTask ? `任务详情 · ${activeTask.taskCode}` : "任务详情"} />
-            {activeTask ? (
-              <div className="space-y-4 px-4 py-4">
-                <div className="grid gap-3 rounded-2xl border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4 text-sm text-slate-600 sm:grid-cols-2">
-                  <DetailItem label="任务 ID" value={activeTask.taskCode} strong />
-                  <DetailItem label="商品" value={activeTask.product.name} />
-                  <DetailItem label="平台" value={activeTask.platformLabel} />
-                  <DetailItem label="图片类型" value={activeTask.imageTypeLabel} />
-                  <DetailItem label="推荐尺寸" value={activeTask.recommendedSize ?? "--"} />
-                  <div>
-                    <p className="text-slate-400">状态</p>
-                    <div className="mt-1">
-                      <StatusBadge label={activeTask.status} tone={getPromptTaskStatusTone(activeTask.status)} />
+            <DashboardCard>
+              <DashboardCardHeader title={activeTask ? `任务详情 · ${activeTask.taskCode}` : "任务详情"} />
+              {activeTask ? (
+                <div className="space-y-4 px-4 py-4">
+                  <div className="grid gap-3 rounded-2xl border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4 text-sm text-slate-600 sm:grid-cols-2">
+                    <DetailItem label="任务 ID" value={activeTask.taskCode} strong />
+                    <DetailItem label="商品" value={activeTask.product.name} />
+                    <DetailItem label="平台" value={activeTask.platformLabel} />
+                    <DetailItem label="图片类型" value={activeTask.imageTypeLabel} />
+                    <DetailItem label="推荐尺寸" value={activeTask.recommendedSize ?? "--"} />
+                    <div>
+                      <p className="text-slate-400">状态</p>
+                      <div className="mt-1">
+                        <StatusBadge label={activeTask.status} tone={getPromptTaskStatusTone(activeTask.status)} />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-2xl border border-[#EEF2F8] bg-white/95 px-4 py-3 shadow-[0_14px_30px_rgba(15,23,42,0.08)] backdrop-blur md:flex-row md:items-center md:justify-between">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <PromptTaskCopyButton
-                      taskCode={activeTask.taskCode}
-                      promptText={activeTask.promptText ?? ""}
-                      disabled={Boolean(runtimeNotice)}
-                    />
-                    {activeTask.status !== PROMPT_TASK_STATUS.RETURNED ? (
-                      <PromptTaskCancelButton taskCode={activeTask.taskCode} disabled={Boolean(runtimeNotice)} />
+                  <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-2xl border border-[#EEF2F8] bg-white/95 px-4 py-3 shadow-[0_14px_30px_rgba(15,23,42,0.08)] backdrop-blur md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <PromptTaskCopyButton
+                        taskCode={activeTask.taskCode}
+                        promptText={activeTask.promptText ?? ""}
+                        disabled={Boolean(runtimeNotice)}
+                      />
+                      {activeTask.status !== PROMPT_TASK_STATUS.RETURNED ? (
+                        <PromptTaskCancelButton taskCode={activeTask.taskCode} disabled={Boolean(runtimeNotice)} />
+                      ) : null}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <TableActionLink href={`/prompt-tasks/${encodeURIComponent(activeTask.taskCode)}/upload`}>上传生成结果</TableActionLink>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 rounded-2xl border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">API 生图轻量版</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                          仅手动生成 1 张图；成功后自动保存到素材库，失败不会影响 Prompt、商品或已有素材。
+                        </p>
+                      </div>
+                      {imageGenerationPanel?.isConfigured ? (
+                        <PromptTaskImageGenerationButton
+                          taskCode={activeTask.taskCode}
+                          promptVersion={activeTask.version ?? "v1"}
+                          promptUse={activeTask.imageTypeLabel}
+                          promptVersionOptions={[activeTask.version ?? "v1"]}
+                          promptUseOptions={[activeTask.imageTypeLabel, `${activeTask.platformLabel} / ${activeTask.imageTypeLabel}`]}
+                          costHint={imageGenerationPanel.settings.costHint}
+                          providerLabel={`${imageGenerationPanel.provider?.name ?? "Image Provider"} / ${imageGenerationPanel.provider?.modelName?.trim() || "Provider 默认模型"} / ${imageGenerationPanel.settings.defaultSize} / ${imageGenerationPanel.settings.defaultQuality}`}
+                          disabled={Boolean(runtimeNotice) || activeTask.status === PROMPT_TASK_STATUS.CANCELLED}
+                          highCost={imageGenerationPanel.isHighCost}
+                        />
+                      ) : (
+                        <TableActionLink href="/settings/ai">配置 API 生图</TableActionLink>
+                      )}
+                    </div>
+                    {imageGenerationPanel?.previewMessage ? <PageNote>{imageGenerationPanel.previewMessage}</PageNote> : null}
+                    {imageGenerationPanel && !imageGenerationPanel.isConfigured ? (
+                      <PageNote>
+                        {!imageGenerationPanel.settings.enabled
+                          ? "API 生图当前未启用。请在 AI 设置中启用后，再配置用于 API 生图的默认 Provider。"
+                          : !imageGenerationPanel.provider
+                            ? "API 生图已启用，但未配置可用的 API 生图 Provider。请在 AI 设置中新增或设为默认。"
+                            : "API 生图 Provider 缺少 Base URL 或 API Key，请先补齐配置。"}
+                      </PageNote>
+                    ) : null}
+                    {imageGenerationPanel?.recentJobs.length ? (
+                      <div className="space-y-2 border-t border-[#EEF2F8] pt-3">
+                        {imageGenerationPanel.recentJobs.map((job) => (
+                          <div
+                            key={job.id}
+                            className="group/job grid gap-2 rounded-xl bg-[#FBFDFF] px-3 py-2 text-xs text-slate-500 md:grid-cols-[72px_1fr_auto]"
+                          >
+                            <StatusBadge
+                              label={job.statusLabel}
+                              tone={job.status === "success" ? "green" : job.status === "failed" ? "red" : "amber"}
+                            />
+                            <div className="min-w-0">
+                              <p className="truncate">
+                                {job.model} / {job.size} / {job.quality ?? "--"} / {job.promptVersion ?? "--"}
+                              </p>
+                              {job.resultMaterialId ? <p className="mt-0.5">素材 #{job.resultMaterialId}</p> : null}
+                              {job.errorSummary ? <p className="mt-0.5 text-rose-600">{job.errorSummary}</p> : null}
+                            </div>
+                            {job.status === "failed" ? (
+                              <FailedImageGenerationJobDeleteButton jobId={job.id} taskCode={activeTask.taskCode} />
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
                     ) : null}
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <TableActionLink href={`/prompt-tasks/${encodeURIComponent(activeTask.taskCode)}/upload`}>上传生成结果</TableActionLink>
-                  </div>
-                </div>
 
-                <div className="space-y-3 rounded-2xl border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">API 生图轻量版</p>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
-                        仅手动生成 1 张图；成功后自动保存到素材库，失败不会影响 Prompt、商品或已有素材。
-                      </p>
+                  <div className="rounded-2xl border border-[#EEF2F8] bg-[#FBFDFF]">
+                    <div className="border-b border-[#EEF2F8] px-4 py-3">
+                      <p className="text-sm font-medium text-slate-900">Prompt 内容</p>
                     </div>
-                    {imageGenerationPanel?.isConfigured ? (
-                      <PromptTaskImageGenerationButton
-                        taskCode={activeTask.taskCode}
-                        promptVersion={activeTask.version ?? "v1"}
-                        promptUse={activeTask.imageTypeLabel}
-                        promptVersionOptions={[activeTask.version ?? "v1"]}
-                        promptUseOptions={[activeTask.imageTypeLabel, `${activeTask.platformLabel} / ${activeTask.imageTypeLabel}`]}
-                        costHint={imageGenerationPanel.settings.costHint}
-                        providerLabel={`${imageGenerationPanel.provider?.name ?? "Image Provider"} / ${imageGenerationPanel.provider?.modelName?.trim() || "Provider 默认模型"} / ${imageGenerationPanel.settings.defaultSize} / ${imageGenerationPanel.settings.defaultQuality}`}
-                        disabled={Boolean(runtimeNotice) || activeTask.status === PROMPT_TASK_STATUS.CANCELLED}
-                        highCost={imageGenerationPanel.isHighCost}
-                      />
-                    ) : (
-                      <TableActionLink href="/settings/ai">配置 API 生图</TableActionLink>
-                    )}
+                    <pre className="max-h-[360px] overflow-y-auto whitespace-pre-wrap bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+                      {activeTask.promptText}
+                    </pre>
                   </div>
-                  {imageGenerationPanel?.previewMessage ? <PageNote>{imageGenerationPanel.previewMessage}</PageNote> : null}
-                  {imageGenerationPanel && !imageGenerationPanel.isConfigured ? (
-                    <PageNote>
-                      {!imageGenerationPanel.settings.enabled
-                        ? "API 生图当前未启用。请在 AI 设置中启用后，再配置用途为 API 生图的默认 Provider。"
-                        : !imageGenerationPanel.provider
-                          ? "API 生图已启用，但未配置可用的 API 生图 Provider。请在 AI 设置中新增或设为默认。"
-                          : "API 生图 Provider 缺少 Base URL 或 API Key，请先补齐配置。"}
-                    </PageNote>
-                  ) : null}
-                  {imageGenerationPanel?.recentJobs.length ? (
-                    <div className="space-y-2 border-t border-[#EEF2F8] pt-3">
-                      {imageGenerationPanel.recentJobs.map((job) => (
-                        <div
-                          key={job.id}
-                          className="group/job grid gap-2 rounded-xl bg-[#FBFDFF] px-3 py-2 text-xs text-slate-500 md:grid-cols-[72px_1fr_auto]"
-                        >
-                          <StatusBadge label={job.statusLabel} tone={job.status === "success" ? "green" : job.status === "failed" ? "red" : "amber"} />
-                          <div className="min-w-0">
-                            <p className="truncate">
-                              {job.model} / {job.size} / {job.quality ?? "--"} / {job.promptVersion ?? "--"}
-                            </p>
-                            {job.resultMaterialId ? <p className="mt-0.5">素材 #{job.resultMaterialId}</p> : null}
-                            {job.errorSummary ? <p className="mt-0.5 text-rose-600">{job.errorSummary}</p> : null}
-                          </div>
-                          {job.status === "failed" ? (
-                            <FailedImageGenerationJobDeleteButton jobId={job.id} taskCode={activeTask.taskCode} />
-                          ) : null}
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
                 </div>
-
-                <div className="rounded-2xl border border-[#EEF2F8] bg-[#FBFDFF]">
-                  <div className="border-b border-[#EEF2F8] px-4 py-3">
-                    <p className="text-sm font-medium text-slate-900">Prompt 内容</p>
-                  </div>
-                  <pre className="max-h-[360px] overflow-y-auto whitespace-pre-wrap bg-white px-4 py-4 text-sm leading-7 text-slate-600">
-                    {activeTask.promptText}
-                  </pre>
+              ) : (
+                <div className="px-4 py-4">
+                  <PageNote>请先创建或选择一个 Prompt 任务。</PageNote>
                 </div>
-              </div>
-            ) : (
-              <div className="px-4 py-4">
-                <PageNote>请先创建或选择一个 Prompt 任务。</PageNote>
-              </div>
-            )}
-          </DashboardCard>
+              )}
+            </DashboardCard>
           </div>
         </div>
       </section>

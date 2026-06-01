@@ -16,8 +16,13 @@ import {
 
 function getCopywritingAIErrorMessage(error: unknown, fallbackMessage: string) {
   const message = getProductErrorMessage(error, fallbackMessage);
-  if (/网络超时|连接 AI 服务失败|Base URL|模型不可用|model/i.test(message)) {
-    return `${message} 如果当前切换的是豆包，请确认 Base URL 使用火山方舟 OpenAI 兼容地址（例如 https://ark.cn-beijing.volces.com/api/v3），模型名填写 Endpoint ID，并确认该模型支持文本对话。`;
+
+  if (/网络超时/i.test(message)) {
+    return `${message} 文案包会一次生成 4 个平台共 12 条文案，当前 Provider 响应较慢时更容易超时；如果仍频繁出现，请先检查 Provider 稳定性，或先按单平台生成。`;
+  }
+
+  if (/连接 AI 服务失败|Base URL|模型不可用|model/i.test(message)) {
+    return `${message} 如果当前切换的是豆包，请确认 Base URL 使用火山方舟 OpenAI 兼容地址（例如 https://ark.cn-beijing.volces.com/api/v3 ），模型名填写 Endpoint ID，并确认该模型支持文本对话。`;
   }
 
   return message;

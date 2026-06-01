@@ -21,6 +21,7 @@ import {
   batchInspirationOperationAction,
   convertInspirationToProductAction,
   deleteInspirationAiDraftJobsAction,
+  deleteInspirationScanLogsAction,
   deleteInspirationScanJobsAction,
   generateInspirationAiSuggestionAction,
   ignoreInspirationAiDraftAction,
@@ -312,6 +313,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
     Number.isInteger(initialSelectedId) && initialSelectedId > 0 ? initialSelectedId : data.inspirations[0]?.id ?? null,
   );
   const [statusFilter, setStatusFilter] = useState("all");
+  const [scanLogExpanded, setScanLogExpanded] = useState(false);
 
   const [folderState, folderAction, folderPending] = useActionState(saveInspirationFolderAction, {
     success: false,
@@ -373,6 +375,10 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
     success: false,
     error: "",
   });
+  const [deleteScanLogsState, deleteScanLogsAction, deleteScanLogsPending] = useActionState(deleteInspirationScanLogsAction, {
+    success: false,
+    error: "",
+  });
   const [reviewState, reviewAction, reviewPending] = useActionState(markInspirationReviewedAction, {
     success: false,
     error: "",
@@ -412,6 +418,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
   const selectedIsConverted = selectedInspiration?.status === "converted" || Boolean(selectedInspiration?.convertedProduct);
   const selectedIsClosed = selectedInspiration?.status === "archived" || selectedInspiration?.status === "rejected";
   const latestFailedAiDraft = selectedInspiration?.aiDraftJobs.find((job) => job.status === "failed") ?? null;
+  const visibleScanLogs = scanLogExpanded ? data.recentScanLogs : data.recentScanLogs.slice(0, 4);
 
   useEffect(() => {
     if (convertState.success && convertState.data?.id) {
@@ -925,7 +932,23 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
       </section>
 
       <DashboardCard>
-        <DashboardCardHeader title="最近 ScanLog" description="只显示脱敏摘要，不展示完整本地路径。" />
+        <DashboardCardHeader
+          title="最近 ScanLog"
+          description="只显示脱敏摘要，不展示完整本地路径。默认先展示最近 4 条，避免扫描历史占满页面。"
+          action={
+            data.recentScanLogs.length > 4 ? (
+              <button
+                type="button"
+                onClick={() => setScanLogExpanded((current) => !current)}
+                className="inline-flex h-10 items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:bg-blue-50"
+              >
+                {scanLogExpanded ? "收起" : `展开全部 ${data.recentScanLogs.length} 条`}
+              </button>
+            ) : null
+          }
+        />
+        {deleteScanLogsState.message ? <p className="px-5 pt-4 text-sm text-emerald-600">{deleteScanLogsState.message}</p> : null}
+        {deleteScanLogsState.error ? <p className="px-5 pt-4 text-sm text-rose-600">{deleteScanLogsState.error}</p> : null}
         <div className="overflow-x-auto px-5 py-4">
           <table className="min-w-full table-fixed text-left text-sm text-slate-600">
             <thead className="text-slate-400">
@@ -938,11 +961,12 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                 <th className="pb-3 text-xs font-medium">重复</th>
                 <th className="pb-3 text-xs font-medium">失败</th>
                 <th className="pb-3 text-xs font-medium">错误摘要</th>
+                <th className="pb-3 text-xs font-medium">操作</th>
               </tr>
             </thead>
             <tbody>
-              {data.recentScanLogs.length > 0 ? (
-                data.recentScanLogs.map((log) => (
+              {visibleScanLogs.length > 0 ? (
+                visibleScanLogs.map((log) => (
                   <tr key={log.id} className="border-t border-[#F0F3F8]">
                     <td className="py-4">{log.formattedStartedAt}</td>
                     <td className="py-4">{log.scanType}</td>
@@ -953,12 +977,26 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                     <td className="py-4">{log.newFiles}</td>
                     <td className="py-4">{log.skippedDuplicates}</td>
                     <td className="py-4">{log.failedFiles}</td>
-                    <td className="py-4 text-rose-600">{log.errorSummary ?? "--"}</td>
+                    <td className="py-4">
+                      <p className="line-clamp-2 text-rose-600">{log.errorSummary ?? "--"}</p>
+                    </td>
+                    <td className="py-4">
+                      <form action={deleteScanLogsAction}>
+                        <input type="hidden" name="scanLogIds" value={log.id} />
+                        <button
+                          type="submit"
+                          disabled={deleteScanLogsPending || !data.runtime.isWritable}
+                          className="inline-flex h-9 items-center rounded-xl border border-rose-200 bg-white px-3 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                        >
+                          删除
+                        </button>
+                      </form>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr className="border-t border-[#F0F3F8]">
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                  <td colSpan={9} className="py-8 text-center text-slate-400">
                     暂无 ScanLog。
                   </td>
                 </tr>

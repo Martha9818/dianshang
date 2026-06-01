@@ -1,57 +1,19 @@
 import Link from "next/link";
 import {
   DashboardCard,
-  DashboardCardHeader,
-  DataTable,
-  DataTableBody,
-  DataTableCell,
-  DataTableHead,
-  DataTableHeaderCell,
-  DataTableRow,
   FilterBar,
   MiniIcon,
   PageNote,
   StatCard,
-  StatusBadge,
-  TableActionLink,
-  TableScrollArea,
 } from "@/components/dashboard/primitives";
-import { BatchOperationForm } from "@/components/batch/batch-operation-form";
-import {
-  CleanupOldNotificationsForm,
-  DeleteNotificationForm,
-  MarkAllNotificationsReadForm,
-  MarkNotificationReadForm,
-} from "@/components/notifications/notification-actions";
-import { batchNotificationOperationAction } from "@/app/notifications/actions";
+import { NotificationListCard } from "@/components/notifications/notification-list-card";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { AutoFilterForm } from "@/components/ui/auto-filter-form";
-import { formatDateTime } from "@/lib/modules/products";
 import {
   getNotificationCenterPageData,
-  NOTIFICATION_TYPE_LABELS,
-  type NotificationLevel,
-  type NotificationStatus,
-  type NotificationType,
 } from "@/lib/services/notificationService";
 
 export const dynamic = "force-dynamic";
-
-const notificationBatchOperations = [
-  {
-    value: "MARK_READ",
-    label: "批量标记已读",
-    impact: "只修改已选通知的已读状态。",
-  },
-  {
-    value: "DELETE",
-    label: "批量删除通知",
-    dangerous: true,
-    impact: "已选通知记录会被删除，业务数据不会被删除。",
-  },
-];
-
-const NOTIFICATION_BATCH_FORM_ID = "notification-batch-operation";
 
 type SearchParams = {
   type?: string;
@@ -61,27 +23,8 @@ type SearchParams = {
 const inputClassName =
   "h-12 w-full rounded-2xl border border-[#E4EAF3] bg-white px-4 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] outline-none transition-all duration-200 ease-out hover:border-blue-200 hover:shadow-[0_10px_22px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] focus:border-blue-300 focus:ring-4 focus:ring-blue-50 motion-reduce:transition-none";
 
-function levelTone(level: NotificationLevel) {
-  if (level === "success") return "green" as const;
-  if (level === "warning") return "amber" as const;
-  if (level === "error") return "red" as const;
-  return "blue" as const;
-}
-
-function statusTone(status: NotificationStatus) {
-  return status === "unread" ? ("blue" as const) : ("slate" as const);
-}
-
 function FilterLabel({ children }: { children: React.ReactNode }) {
   return <p className="mb-2 px-1 text-sm text-slate-500">{children}</p>;
-}
-
-function getTypeHref(type: NotificationType | "ALL") {
-  if (type === "ALL") {
-    return "/notifications";
-  }
-
-  return `/notifications?type=${type}`;
 }
 
 export default async function NotificationsPage({
@@ -101,7 +44,6 @@ export default async function NotificationsPage({
 
   const activeType = pageData?.filters.type ?? "ALL";
   const activeStatus = pageData?.filters.status ?? "ALL";
-  const notifications = pageData?.notifications ?? [];
   const isWritable = pageData?.runtime.isWritable ?? false;
 
   return (
@@ -146,135 +88,42 @@ export default async function NotificationsPage({
       </section>
 
       <FilterBar>
-        <div className="flex w-full flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-end">
-          <AutoFilterForm action="/notifications" className="flex flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-end">
-            <div className="xl:min-w-[180px]">
-              <FilterLabel>类型</FilterLabel>
-              <select name="type" defaultValue={activeType} className={inputClassName}>
-                <option value="ALL">全部类型</option>
-                {pageData?.typeOptions.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label} ({item.count})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="xl:min-w-[180px]">
-              <FilterLabel>状态</FilterLabel>
-              <select name="status" defaultValue={activeStatus} className={inputClassName}>
-                <option value="ALL">全部状态</option>
-                <option value="unread">未读 ({pageData?.statusCounts.unread ?? 0})</option>
-                <option value="read">已读 ({pageData?.statusCounts.read ?? 0})</option>
-              </select>
-            </div>
-            <Link
-              href="/notifications"
-              className="inline-flex h-12 items-center justify-center rounded-2xl border border-[#DCE5F2] bg-white px-5 text-sm font-medium text-slate-600 transition hover:-translate-y-[1px] hover:bg-slate-50"
-            >
-              重置
-            </Link>
-          </AutoFilterForm>
-          <div className="flex flex-1 flex-col gap-3 xl:flex-row xl:items-start xl:justify-end">
-            <MarkAllNotificationsReadForm type={activeType} disabled={!isWritable} />
-            <CleanupOldNotificationsForm disabled={!isWritable} />
+        <AutoFilterForm action="/notifications" className="flex w-full flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-end">
+          <div className="xl:min-w-[180px]">
+            <FilterLabel>类型</FilterLabel>
+            <select name="type" defaultValue={activeType} className={inputClassName}>
+              <option value="ALL">全部类型</option>
+              {pageData?.typeOptions.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label} ({item.count})
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
+          <div className="xl:min-w-[180px]">
+            <FilterLabel>状态</FilterLabel>
+            <select name="status" defaultValue={activeStatus} className={inputClassName}>
+              <option value="ALL">全部状态</option>
+              <option value="unread">未读 ({pageData?.statusCounts.unread ?? 0})</option>
+              <option value="read">已读 ({pageData?.statusCounts.read ?? 0})</option>
+            </select>
+          </div>
+          <Link
+            href="/notifications"
+            className="inline-flex h-12 items-center justify-center rounded-2xl border border-[#DCE5F2] bg-white px-5 text-sm font-medium text-slate-600 transition hover:-translate-y-[1px] hover:bg-slate-50"
+          >
+            重置
+          </Link>
+        </AutoFilterForm>
       </FilterBar>
 
-      <BatchOperationForm
-        formId={NOTIFICATION_BATCH_FORM_ID}
-        action={batchNotificationOperationAction}
-        operations={notificationBatchOperations}
-        disabled={!isWritable}
-      >
-      <DashboardCard>
-        <DashboardCardHeader
-          title="通知列表"
-          description="通知只保存脱敏摘要、业务 ID 和安全站内跳转，不保存完整本地路径、API Key 或完整错误堆栈。"
+      {pageData ? (
+        <NotificationListCard
+          notifications={pageData.notifications}
+          typeOptions={pageData.typeOptions}
+          isWritable={isWritable}
         />
-        <div className="flex flex-wrap gap-2 border-b border-[#EEF2F8] px-5 py-3">
-          <TableActionLink href={getTypeHref("ALL")}>全部</TableActionLink>
-          {pageData?.typeOptions.map((item) => (
-            <TableActionLink key={item.value} href={getTypeHref(item.value)}>
-              {NOTIFICATION_TYPE_LABELS[item.value]} {item.count}
-            </TableActionLink>
-          ))}
-        </div>
-        <TableScrollArea>
-          <DataTable className="min-w-[1120px]">
-            <DataTableHead>
-              <tr>
-                <DataTableHeaderCell className="w-[6%]">选择</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[13%]">时间</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[10%]">类型</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[10%]">级别</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[12%]">状态</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[31%]">内容</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[10%]">关联</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[14%]">操作</DataTableHeaderCell>
-              </tr>
-            </DataTableHead>
-            <DataTableBody>
-              {notifications.length > 0 ? (
-                notifications.map((item) => (
-                  <DataTableRow key={item.id} className={item.isUnread ? "bg-blue-50/30" : undefined}>
-                    <DataTableCell>
-                      <input
-                        type="checkbox"
-                        form={NOTIFICATION_BATCH_FORM_ID}
-                        name="ids"
-                        value={item.id}
-                        aria-label={`选择通知 ${item.id}`}
-                        className="h-4 w-4 rounded border-slate-300 text-blue-600"
-                      />
-                    </DataTableCell>
-                    <DataTableCell className="text-slate-500">{formatDateTime(item.createdAt)}</DataTableCell>
-                    <DataTableCell>
-                      <StatusBadge label={item.typeLabel} tone="slate" />
-                    </DataTableCell>
-                    <DataTableCell>
-                      <StatusBadge label={item.levelLabel} tone={levelTone(item.level)} />
-                    </DataTableCell>
-                    <DataTableCell>
-                      <StatusBadge label={item.status === "unread" ? "未读" : "已读"} tone={statusTone(item.status)} />
-                    </DataTableCell>
-                    <DataTableCell>
-                      <p className="font-medium text-slate-900">{item.title}</p>
-                      {item.message ? <p className="mt-1 line-clamp-2 text-sm text-slate-500">{item.message}</p> : null}
-                    </DataTableCell>
-                    <DataTableCell className="text-slate-500">
-                      {item.relatedType ? (
-                        <span>
-                          {item.relatedType}
-                          {item.relatedId ? ` #${item.relatedId}` : ""}
-                        </span>
-                      ) : (
-                        "--"
-                      )}
-                    </DataTableCell>
-                    <DataTableCell>
-                      <div className="flex flex-wrap gap-2">
-                        {item.actionUrl ? <TableActionLink href={item.actionUrl}>打开</TableActionLink> : null}
-                        {item.status === "unread" ? (
-                          <MarkNotificationReadForm notificationId={item.id} disabled={!isWritable} />
-                        ) : null}
-                        <DeleteNotificationForm notificationId={item.id} disabled={!isWritable} />
-                      </div>
-                    </DataTableCell>
-                  </DataTableRow>
-                ))
-              ) : (
-                <DataTableRow>
-                  <DataTableCell colSpan={8} className="py-12 text-center text-sm text-slate-400">
-                    暂无通知。
-                  </DataTableCell>
-                </DataTableRow>
-              )}
-            </DataTableBody>
-          </DataTable>
-        </TableScrollArea>
-      </DashboardCard>
-      </BatchOperationForm>
+      ) : null}
     </WorkspacePage>
   );
 }

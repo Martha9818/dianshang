@@ -1047,6 +1047,7 @@ export async function generateMultiPlatformCopywritingPackage(input: MultiPlatfo
       relatedTaskId: aiJobId,
       preferStructuredOutput: true,
       responseSchema: buildMultiPlatformCopywritingJsonSchema(),
+      timeoutMs: 60_000,
     });
 
     const structuredResult = parseMultiPlatformStructuredResponse(aiResult.content);

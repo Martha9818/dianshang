@@ -49,6 +49,7 @@ export type GenerateTextJsonInput = AIProviderConfig &
     imageDataUrl?: string | null;
     preferStructuredOutput?: boolean;
     responseSchema?: unknown;
+    timeoutMs?: number;
   };
 
 export type AITextResult = {

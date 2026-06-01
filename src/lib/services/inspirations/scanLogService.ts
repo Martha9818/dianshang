@@ -202,3 +202,22 @@ export async function deleteInspirationAiDraftJobs(ids: number[]) {
     throw normalizeProductWriteError(error);
   }
 }
+
+export async function deleteInspirationScanLogs(ids: number[]) {
+  ensureProductWritesAllowed();
+
+  try {
+    const normalizedIds = normalizeIds(ids);
+    if (normalizedIds.length === 0) {
+      return { deletedCount: 0 };
+    }
+
+    const result = await prisma.scanLog.deleteMany({
+      where: { id: { in: normalizedIds } },
+    });
+
+    return { deletedCount: result.count };
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}

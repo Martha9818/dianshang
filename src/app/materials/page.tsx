@@ -326,7 +326,7 @@ export default async function MaterialsPage({
         <DashboardCard>
           <DashboardCardHeader
             title="素材详情"
-            description={selectedMaterial ? "查看文件路径、尺寸、来源和状态流转。" : "点击左侧素材图片、标题或查看详情入口。勾选框仅用于批量操作。"}
+            description={selectedMaterial ? "查看预览、来源、Task ID 和状态流转。" : "点击左侧素材卡片即可切换右侧详情，勾选框只用于批量操作。"}
           />
           {selectedMaterial ? (
             <div className="space-y-5 px-5 py-5">
@@ -373,6 +373,9 @@ export default async function MaterialsPage({
                 />
               </div>
               <div className="flex flex-wrap gap-2">
+                <TableActionLink href={`/screenshots?sourceType=material&sourceId=${selectedMaterial.id}&productId=${selectedMaterial.productId}`}>截图识别</TableActionLink>
+                <TableActionLink href={`/copywriting?productId=${selectedMaterial.productId}`}>查看文案素材</TableActionLink>
+                <TableActionLink href={`/copywriting?productId=${selectedMaterial.productId}`}>去文案列表</TableActionLink>
                 <TableActionLink href="/maintenance/files">去文件清理与回收站</TableActionLink>
               </div>
               <ImageDedupPanel summary={selectedMaterial.imageDedup ?? null} sourceUrl={sourceUrl} readonly={Boolean(readonlyNotice)} />
@@ -392,13 +395,6 @@ export default async function MaterialsPage({
                     <MaterialDiscardButton materialId={selectedMaterial.id} sourceUrl={sourceUrl} />
                   </>
                 )}
-              </div>
-              <div className="border-t border-[#EEF2F8] pt-5">
-                <div className="flex flex-wrap gap-2">
-                  <TableActionLink href={`/screenshots?sourceType=material&sourceId=${selectedMaterial.id}&productId=${selectedMaterial.productId}`}>截图识别</TableActionLink>
-                  <TableActionLink href={`/products/${selectedMaterial.productId}?tab=copywriting`}>查看文案素材</TableActionLink>
-                  <TableActionLink href={`/copywriting?productId=${selectedMaterial.productId}`}>去文案列表</TableActionLink>
-                </div>
               </div>
             </div>
           ) : (

@@ -291,7 +291,7 @@ async function postChatCompletion(input: GenerateTextJsonInput & { structuredOut
   const sanitizedPrompt = sanitizePromptForAI(input.prompt);
   const inputTokenEstimate = estimateTokenCount(sanitizedPrompt);
   const controller = new AbortController();
-  const timeoutMs = input.imageDataUrl ? 45000 : 20000;
+  const timeoutMs = input.timeoutMs ?? (input.imageDataUrl ? 45000 : 20000);
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   const provider = input.providerType || "openai-compatible";
 

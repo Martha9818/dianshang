@@ -18,6 +18,7 @@ type LegacyGenerateRequestInput = TestConnectionConfig & {
   imageDataUrl?: string | null;
   preferStructuredOutput?: boolean;
   responseSchema?: unknown;
+  timeoutMs?: number;
   requestType?: GenerateTextJsonInput["requestType"];
   inputSummary?: string | null;
   relatedProductId?: number | null;
@@ -61,6 +62,7 @@ export async function generateTextJson(input: LegacyGenerateRequestInput) {
     imageDataUrl: input.imageDataUrl,
     preferStructuredOutput: input.preferStructuredOutput,
     responseSchema: input.responseSchema,
+    timeoutMs: input.timeoutMs,
     requestType: input.requestType ?? "general",
     inputSummary: input.inputSummary,
     relatedProductId: input.relatedProductId,

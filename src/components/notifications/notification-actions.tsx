@@ -15,32 +15,46 @@ type ActionState = {
   message?: string;
 };
 
-function ActionMessage({ state }: { state: ActionState }) {
+function ActionMessage({ state, compact = false }: { state: ActionState; compact?: boolean }) {
   if (!state.message) {
     return null;
   }
 
   return (
-    <p className={["mt-2 text-xs", state.ok ? "text-emerald-600" : "text-amber-600"].join(" ")}>
+    <p className={["text-xs", compact ? "mt-1" : "mt-2", state.ok ? "text-emerald-600" : "text-amber-600"].join(" ")}>
       {state.message}
     </p>
   );
 }
 
-export function MarkNotificationReadForm({ notificationId, disabled = false }: { notificationId: number; disabled?: boolean }) {
+function inlineButtonClassName(compact: boolean, tone: "blue" | "rose" = "blue") {
+  return [
+    "inline-flex items-center rounded-xl border px-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
+    compact ? "h-10" : "h-9",
+    tone === "rose"
+      ? "border-rose-200/80 text-rose-600 hover:bg-rose-50"
+      : "border-[#DCE5F2] text-[#2563EB] hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50",
+  ].join(" ");
+}
+
+export function MarkNotificationReadForm({
+  notificationId,
+  disabled = false,
+  compact = false,
+}: {
+  notificationId: number;
+  disabled?: boolean;
+  compact?: boolean;
+}) {
   const [state, formAction, isPending] = useActionState(markNotificationReadAction, {});
 
   return (
     <form action={formAction}>
       <input type="hidden" name="notificationId" value={notificationId} />
-      <button
-        type="submit"
-        disabled={isPending || disabled}
-        className="inline-flex h-9 cursor-pointer items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] transition hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
-      >
+      <button type="submit" disabled={isPending || disabled} className={inlineButtonClassName(compact)}>
         {isPending ? "处理中..." : "标记已读"}
       </button>
-      <ActionMessage state={state} />
+      <ActionMessage state={state} compact={compact} />
     </form>
   );
 }
@@ -67,37 +81,35 @@ export function MarkAllNotificationsReadForm({
   );
 }
 
-export function DeleteNotificationForm({ notificationId, disabled = false }: { notificationId: number; disabled?: boolean }) {
+export function DeleteNotificationForm({
+  notificationId,
+  disabled = false,
+  compact = false,
+}: {
+  notificationId: number;
+  disabled?: boolean;
+  compact?: boolean;
+}) {
   const [state, formAction, isPending] = useActionState(deleteNotificationAction, {});
 
   return (
-    <form
-      action={formAction}
-      onSubmit={(event) => {
-        if (disabled) {
-          event.preventDefault();
-          return;
-        }
-
-        if (!window.confirm("确定删除这条通知吗？删除后不可恢复。")) {
-          event.preventDefault();
-        }
-      }}
-    >
+    <form action={formAction}>
       <input type="hidden" name="notificationId" value={notificationId} />
-      <button
-        type="submit"
-        disabled={isPending || disabled}
-        className="inline-flex h-9 cursor-pointer items-center rounded-xl border border-rose-200/80 px-3 text-sm font-medium text-rose-600 transition hover:-translate-y-[1px] hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
-      >
+      <button type="submit" disabled={isPending || disabled} className={inlineButtonClassName(compact, "rose")}>
         {isPending ? "删除中..." : "删除"}
       </button>
-      <ActionMessage state={state} />
+      <ActionMessage state={state} compact={compact} />
     </form>
   );
 }
 
-export function CleanupOldNotificationsForm({ disabled = false }: { disabled?: boolean }) {
+export function CleanupOldNotificationsForm({
+  disabled = false,
+  compact = false,
+}: {
+  disabled?: boolean;
+  compact?: boolean;
+}) {
   const [state, formAction, isPending] = useActionState(cleanupOldNotificationsAction, {});
 
   return (
@@ -115,11 +127,17 @@ export function CleanupOldNotificationsForm({ disabled = false }: { disabled?: b
       }}
     >
       <input type="hidden" name="daysToKeep" value="30" />
-      <ActionButton type="submit" variant="ghost" disabled={isPending || disabled}>
-        <MiniIcon name="ban" className="h-4 w-4" />
-        {isPending ? "清理中..." : "清理旧通知"}
-      </ActionButton>
-      <ActionMessage state={state} />
+      {compact ? (
+        <button type="submit" disabled={isPending || disabled} className={inlineButtonClassName(true)}>
+          清理旧通知
+        </button>
+      ) : (
+        <ActionButton type="submit" variant="ghost" disabled={isPending || disabled}>
+          <MiniIcon name="ban" className="h-4 w-4" />
+          {isPending ? "清理中..." : "清理旧通知"}
+        </ActionButton>
+      )}
+      <ActionMessage state={state} compact={compact} />
     </form>
   );
 }

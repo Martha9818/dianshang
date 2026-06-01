@@ -4,6 +4,17 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-01
 
+### V1.5 Stabilization - Notifications, Prompt Tasks, Materials, And ScanLog Tightening
+
+- Changed: Removed the duplicated notification action areas, kept only the filter bar plus a unified notification-list toolbar, and moved `全选` / `全部标记已读` / `全部删除` / `清理旧通知` into the list header. Notification delete actions no longer prompt for a second confirmation, while the existing cleanup guard remains in place.
+- Changed: Tightened the shared batch-operation form so products, materials, and inspirations now show clearer selected counts, target-status feedback, action summaries, and execution readiness instead of feeling like the dropdowns do nothing.
+- Changed: Prompt task cards now switch the right-side detail pane by clicking the whole card, while the upload button stays independent. The extra `查看 / 当前查看` button is removed.
+- Changed: Product material records now use a looser table layout with more room for long Task IDs and actions. Material detail actions were moved above the metadata block, and `查看文案素材` now jumps to the copywriting workspace by product filter.
+- Changed: Inspiration `最近 ScanLog` now defaults to a shorter list, supports expand/collapse, truncates long error summaries, and allows deleting individual `ScanLog` rows without touching inspirations, tasks, or files.
+- Changed: Multi-platform copywriting package generation now gets a longer text-request timeout window and a clearer timeout-vs-provider-config error hint, while keeping the existing one-request-for-four-platforms behavior.
+- Verification: `npm run encoding:check`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npx prisma validate` passed. HTTP smoke returned 200 for `/notifications`, `/products`, `/copywriting`, `/prompt-tasks`, `/materials`, and `/inspirations`. Chrome DevTools snapshots verified the new notification toolbar, Prompt task full-card selection, material detail action placement, and collapsed ScanLog block.
+- Boundary: No schema, migration, dependency, V2 behavior, second cleanup system, background queue, or file-deletion workflow change was added.
+
 ### V1.5 Stabilization - Auto Filter Controls
 
 - Changed: Added a shared client auto-filter form and removed the visible `筛选` submit buttons from notifications, products, copywriting history, Prompt tasks, materials, and inspirations. Select filters now route immediately; text/number filters route on Enter or blur.

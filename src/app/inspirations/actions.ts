@@ -14,6 +14,7 @@ import {
   archiveInspiration,
   convertInspirationToProduct,
   deleteInspirationAiDraftJobs,
+  deleteInspirationScanLogs,
   deleteInspirationScanJobs,
   generateInspirationAiSuggestion,
   ignoreInspirationAiDraft,
@@ -256,6 +257,20 @@ export async function deleteInspirationAiDraftJobsAction(_prevState: unknown, fo
     return {
       success: false as const,
       error: getProductErrorMessage(error, "删除 AI 草稿任务记录失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function deleteInspirationScanLogsAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const result = await deleteInspirationScanLogs(parseTaskIds(formData, "scanLogIds"));
+    revalidateInspirations();
+    return { success: true as const, data: result, message: `已删除 ${result.deletedCount} 条 ScanLog 记录。` };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "删除 ScanLog 记录失败，请稍后重试。"),
     };
   }
 }
