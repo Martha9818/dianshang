@@ -25,6 +25,7 @@ import {
 } from "@/components/notifications/notification-actions";
 import { batchNotificationOperationAction } from "@/app/notifications/actions";
 import { WorkspacePage } from "@/components/ui/workspace-page";
+import { AutoFilterForm } from "@/components/ui/auto-filter-form";
 import { formatDateTime } from "@/lib/modules/products";
 import {
   getNotificationCenterPageData,
@@ -146,7 +147,7 @@ export default async function NotificationsPage({
 
       <FilterBar>
         <div className="flex w-full flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-end">
-          <form className="flex flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-end">
+          <AutoFilterForm action="/notifications" className="flex flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-end">
             <div className="xl:min-w-[180px]">
               <FilterLabel>类型</FilterLabel>
               <select name="type" defaultValue={activeType} className={inputClassName}>
@@ -166,19 +167,13 @@ export default async function NotificationsPage({
                 <option value="read">已读 ({pageData?.statusCounts.read ?? 0})</option>
               </select>
             </div>
-            <button
-              type="submit"
-              className="h-12 cursor-pointer rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-5 text-sm font-medium text-white shadow-[0_16px_36px_rgba(43,115,255,0.22)] transition hover:-translate-y-[1px]"
-            >
-              筛选
-            </button>
             <Link
               href="/notifications"
               className="inline-flex h-12 items-center justify-center rounded-2xl border border-[#DCE5F2] bg-white px-5 text-sm font-medium text-slate-600 transition hover:-translate-y-[1px] hover:bg-slate-50"
             >
               重置
             </Link>
-          </form>
+          </AutoFilterForm>
           <div className="flex flex-1 flex-col gap-3 xl:flex-row xl:items-start xl:justify-end">
             <MarkAllNotificationsReadForm type={activeType} disabled={!isWritable} />
             <CleanupOldNotificationsForm disabled={!isWritable} />

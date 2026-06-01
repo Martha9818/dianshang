@@ -14,6 +14,7 @@ import {
 } from "@/components/dashboard/primitives";
 import { BatchOperationForm } from "@/components/batch/batch-operation-form";
 import { ProductImage } from "@/components/products/product-image";
+import { AutoFilterForm } from "@/components/ui/auto-filter-form";
 import {
   applyInspirationAiSuggestionAction,
   archiveInspirationAction,
@@ -433,7 +434,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
       </section>
 
       <DashboardCard className="px-5 py-5">
-        <form action="/inspirations" method="get" className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_170px_160px_160px_150px_160px_auto] xl:items-end">
+        <AutoFilterForm action="/inspirations" className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_170px_160px_160px_150px_160px] xl:items-end">
           <FilterField label="关键词">
             <input name="q" defaultValue={data.filters.keyword ?? ""} placeholder="标题 / 备注 / 文件名" className={inputClassName} />
           </FilterField>
@@ -477,10 +478,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
               <option value="createdAt_asc">从旧到新</option>
             </select>
           </FilterField>
-          <button type="submit" className={primaryButtonClassName}>
-            筛选
-          </button>
-        </form>
+        </AutoFilterForm>
       </DashboardCard>
 
       <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">

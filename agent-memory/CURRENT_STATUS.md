@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: V1.5 Stabilization small-fix batch for materials selection/detail, AI image default Provider sync, inspiration/link-import task cleanup, export layout, backup guidance, and file-cleanup confirmation simplification is complete locally and verified.
+- Current task state: V1.5 Stabilization auto-filter follow-up is complete locally and verified; notification, product, copywriting, Prompt task, material, and inspiration filters now auto-apply without a separate filter button.
 - Next stage: Continue with the next approved Stabilization follow-up thread before any V2 planning thread.
 
 ## Product Direction
@@ -38,6 +38,7 @@
 - Build/acceptance fixture inspirations from local verification were hidden from the default inspiration view and related scan/draft jobs were cleared; uploaded files were not deleted.
 - Latest small-fix batch keeps V1.5 boundaries: no schema, migration, dependency, V2 behavior, background cleanup, or automatic backup deletion. Link-import and inspiration task deletes remove only history rows; file cleanup still uses the existing service, browser confirmation, Vercel read-only guard, and `CleanupLog`.
 - Latest follow-up fixed material `materialId` detail switching by preserving numeric query values through normalization, and made link-import draft `全部删除` submit in place instead of redirecting to the top.
+- Latest auto-filter follow-up removed the visible filter submit buttons from notifications, products, copywriting history, Prompt tasks, materials, and inspirations. Select controls update the URL immediately, text/number filters update on Enter or blur, scroll is preserved, multi-filter state is serialized from the whole form, and stale `materialId` / `taskCode` params are cleared on relevant filter changes.
 
 ## Next Recommended Step
 

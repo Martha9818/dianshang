@@ -1,5 +1,6 @@
 import { CopywritingManager } from "@/components/copywriting/copywriting-manager";
 import { DashboardCard, FilterBar } from "@/components/dashboard/primitives";
+import { AutoFilterForm } from "@/components/ui/auto-filter-form";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { COPYWRITING_PLATFORMS, COPYWRITING_VERSIONS } from "@/lib/modules/copywriting/prompts";
 import { getProductErrorMessage } from "@/lib/modules/products";
@@ -61,7 +62,7 @@ export default async function CopywritingPage({
           <p className="mt-1 text-sm text-slate-500">这里只筛选下方历史文案，生成新文案请使用下一块控制区。</p>
         </div>
         <FilterBar>
-          <form action="/copywriting" method="get" className="grid w-full gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_180px_140px_140px_150px_160px_auto] xl:items-end">
+          <AutoFilterForm action="/copywriting" className="grid w-full gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_180px_140px_140px_150px_160px] xl:items-end">
             <FilterField label="商品关键词">
               <input name="q" defaultValue={query.keyword ?? ""} placeholder="搜索商品 / 标题 / 正文" className={inputClassName} />
             </FilterField>
@@ -108,10 +109,7 @@ export default async function CopywritingPage({
                 <option value="createdAt_asc">从旧到新</option>
               </select>
             </FilterField>
-            <button type="submit" className="inline-flex h-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-5 text-sm font-medium text-white">
-              筛选
-            </button>
-          </form>
+          </AutoFilterForm>
         </FilterBar>
       </DashboardCard>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { AutoFilterForm } from "@/components/ui/auto-filter-form";
+
 const inputClassName =
   "h-12 w-full rounded-2xl border border-[#E4EAF3] bg-white px-4 text-sm text-slate-700 outline-none transition-all duration-200 ease-out hover:border-blue-200 hover:shadow-[0_10px_22px_rgba(59,130,246,0.08)] focus:border-blue-300 focus:ring-4 focus:ring-blue-50 motion-reduce:transition-none";
 
@@ -37,7 +39,11 @@ export function MaterialFilterForm({
   hiddenFields?: Record<string, string>;
 }) {
   return (
-    <form action={basePath} className="grid gap-3 xl:grid-cols-[minmax(240px,1fr)_180px_150px_160px_150px_170px_auto] xl:items-end">
+    <AutoFilterForm
+      action={basePath}
+      dropParams={["materialId", "materialError", "materialMessage"]}
+      className="grid gap-3 xl:grid-cols-[minmax(240px,1fr)_180px_150px_160px_150px_170px] xl:items-end"
+    >
       <FilterField label="关键词">
         <input name="query" defaultValue={values.query ?? ""} placeholder="搜索文件名 / 商品 / Task ID" className={inputClassName} />
       </FilterField>
@@ -92,13 +98,7 @@ export function MaterialFilterForm({
       {hiddenFields
         ? Object.entries(hiddenFields).map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)
         : null}
-      <button
-        type="submit"
-        className="group inline-flex h-12 cursor-pointer items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-5 text-sm font-medium text-white shadow-[0_16px_36px_rgba(43,115,255,0.22)] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:bg-[linear-gradient(135deg,#4A86FF,#275FE8)] hover:shadow-[0_20px_42px_rgba(43,115,255,0.32)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 motion-reduce:transition-none motion-reduce:transform-none"
-      >
-        筛选
-      </button>
-    </form>
+    </AutoFilterForm>
   );
 }
 

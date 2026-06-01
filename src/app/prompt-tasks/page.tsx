@@ -16,6 +16,7 @@ import {
   PromptTaskImageGenerationButton,
 } from "@/components/prompt-tasks/prompt-task-actions";
 import { PromptTaskCreateForm } from "@/components/prompt-tasks/prompt-task-form";
+import { AutoFilterForm } from "@/components/ui/auto-filter-form";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { getProductErrorMessage } from "@/lib/modules/products";
 import { PROMPT_IMAGE_TYPES, PROMPT_TASK_PLATFORMS } from "@/lib/modules/prompt-task";
@@ -76,7 +77,7 @@ export default async function PromptTasksPage({
       description="为商品生成可复制到网页版 ChatGPT 的生图 Prompt，并管理生成图回传状态。"
     >
       <FilterBar className="py-3">
-        <form action="/prompt-tasks" method="get" className="flex w-full flex-wrap items-end gap-3">
+        <AutoFilterForm action="/prompt-tasks" dropParams={["taskCode"]} className="flex w-full flex-wrap items-end gap-3">
           <label className="min-w-[220px] flex-[1_1_240px]">
             <span className="mb-1.5 block px-1 text-sm text-slate-500">商品关键词</span>
             <input name="q" defaultValue={query.keyword ?? ""} placeholder="搜索商品 / Task ID" className={selectClassName} />
@@ -125,13 +126,7 @@ export default async function PromptTasksPage({
             <option value="createdAt_desc">从新到旧</option>
             <option value="createdAt_asc">从旧到新</option>
           </FilterSelect>
-          <div className="ml-auto flex min-w-[240px] flex-wrap justify-end gap-2">
-            <button
-              type="submit"
-              className="group inline-flex h-11 min-w-[96px] cursor-pointer items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-4 text-sm font-medium text-white shadow-[0_16px_36px_rgba(43,115,255,0.22)] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:bg-[linear-gradient(135deg,#4A86FF,#275FE8)] hover:shadow-[0_20px_42px_rgba(43,115,255,0.32)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 motion-reduce:transition-none motion-reduce:transform-none"
-            >
-              筛选
-            </button>
+          <div className="ml-auto flex min-w-[132px] flex-wrap justify-end gap-2">
             <button
               type="button"
               disabled
@@ -141,7 +136,7 @@ export default async function PromptTasksPage({
               批量生成
             </button>
           </div>
-        </form>
+        </AutoFilterForm>
       </FilterBar>
 
       {"readError" in pageData ? <PageNote>{pageData.readError}</PageNote> : null}

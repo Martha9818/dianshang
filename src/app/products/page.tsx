@@ -19,6 +19,7 @@ import {
 import { BatchOperationForm } from "@/components/batch/batch-operation-form";
 import { DeleteProductButton } from "@/components/products/delete-product-button";
 import { ProductImage } from "@/components/products/product-image";
+import { AutoFilterForm } from "@/components/ui/auto-filter-form";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { batchProductOperationAction, deleteProductAction } from "@/app/products/actions";
 import { formatCurrency } from "@/lib/modules/products";
@@ -130,7 +131,7 @@ export default async function ProductsPage({
       description="集中管理商品基础档案、状态、评分结论、素材与文案覆盖情况。"
     >
       <FilterBar>
-        <form action="/products" method="get" className="flex w-full flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-end">
+        <AutoFilterForm action="/products" dropParams={["analysisError"]} className="flex w-full flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-end">
           <div className="xl:min-w-[300px] xl:flex-1">
             <FilterLabel>关键词</FilterLabel>
             <input name="q" defaultValue={query.keyword ?? ""} placeholder="搜索商品标题 / SPU" className={inputClassName} />
@@ -199,18 +200,12 @@ export default async function ProductsPage({
           <BooleanFilterSelect label="重评分" name="needsRescore" value={query.needsRescore} trueLabel="需要重评分" falseLabel="无需重评分" />
 
           <div className="flex gap-3 xl:ml-auto">
-            <button
-              type="submit"
-              className="group inline-flex h-12 cursor-pointer items-center justify-center rounded-2xl border border-[#DCE5F2] bg-white px-5 text-sm font-medium text-[#2563EB] shadow-[0_10px_22px_rgba(59,130,246,0.08)] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-[#1D4ED8] hover:shadow-[0_16px_30px_rgba(59,130,246,0.12)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 motion-reduce:transition-none motion-reduce:transform-none"
-            >
-              筛选
-            </button>
             <ActionButton href="/products/new">
               <MiniIcon name="spark" className="h-4 w-4" />
               新增商品
             </ActionButton>
           </div>
-        </form>
+        </AutoFilterForm>
       </FilterBar>
 
       {pageData.kind === "unavailable" ? (
