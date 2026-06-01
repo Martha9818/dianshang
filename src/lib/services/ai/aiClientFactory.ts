@@ -44,6 +44,22 @@ function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.replace(/\/+$/, "");
 }
 
+function buildImageGenerationEndpoints(baseUrl: string) {
+  const normalized = normalizeBaseUrl(baseUrl);
+  const endpoints = [`${normalized}/images/generations`];
+
+  try {
+    const parsed = new URL(normalized);
+    if (!/\/v1\/?$/.test(parsed.pathname)) {
+      endpoints.push(`${normalized}/v1/images/generations`);
+    }
+  } catch {
+    // validateImageProviderConfig and fetch will surface the invalid URL.
+  }
+
+  return Array.from(new Set(endpoints));
+}
+
 function extractTextContent(content: unknown) {
   if (typeof content === "string") {
     return content;
@@ -115,6 +131,10 @@ export function sanitizeProviderErrorMessage(message: string) {
     }
   } catch {
     // Keep the original text and sanitize below.
+  }
+
+  if (/^\s*<(?:!doctype\s+html|html|head|body)\b/i.test(normalized)) {
+    normalized = "接口返回网页 HTML，请确认 Base URL 是 OpenAI-compatible API 地址，通常需要以 /v1 结尾。";
   }
 
   normalized = normalized
@@ -319,7 +339,6 @@ async function postImageGeneration(input: GenerateImageInput): Promise<AIImageRe
   const provider = input.providerType || "openai-compatible";
 
   try {
-    const endpoint = `${normalizeBaseUrl(input.baseUrl)}/images/generations`;
     const body = {
       ...(input.modelName.trim() ? { model: input.modelName.trim() } : {}),
       prompt: sanitizedPrompt,
@@ -329,23 +348,47 @@ async function postImageGeneration(input: GenerateImageInput): Promise<AIImageRe
       ...(input.quality ? { quality: input.quality } : {}),
     };
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: buildHeaders(input.apiKey),
-      body: JSON.stringify(body),
-      signal: controller.signal,
-      cache: "no-store",
-    });
+    let parsed: ImageGenerationResponse | null = null;
+    const endpoints = buildImageGenerationEndpoints(input.baseUrl);
 
-    const rawText = await response.text();
-    if (!response.ok) {
-      throw translateAIError(response.status, rawText);
+    for (const [index, endpoint] of endpoints.entries()) {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: buildHeaders(input.apiKey),
+        body: JSON.stringify(body),
+        signal: controller.signal,
+        cache: "no-store",
+      });
+
+      const rawText = await response.text();
+      const contentType = response.headers.get("content-type") ?? "";
+      const isHtmlResponse = contentType.includes("text/html") || /^\s*<(?:!doctype\s+html|html|head|body)\b/i.test(rawText);
+      const canTryNextEndpoint = isHtmlResponse && index < endpoints.length - 1;
+
+      if (!response.ok) {
+        if (canTryNextEndpoint) {
+          continue;
+        }
+        throw translateAIError(response.status, rawText);
+      }
+
+      try {
+        parsed = JSON.parse(rawText) as ImageGenerationResponse;
+        break;
+      } catch {
+        if (canTryNextEndpoint) {
+          continue;
+        }
+        throw createBusinessError(
+          BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID,
+          isHtmlResponse
+            ? "生图接口返回网页 HTML，请确认 Base URL 是 OpenAI-compatible API 地址，通常需要以 /v1 结尾。"
+            : "生图接口返回格式异常，无法解析响应。",
+        );
+      }
     }
 
-    let parsed: ImageGenerationResponse | null = null;
-    try {
-      parsed = JSON.parse(rawText) as ImageGenerationResponse;
-    } catch {
+    if (!parsed) {
       throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "生图接口返回格式异常，无法解析响应。");
     }
 

@@ -7,7 +7,7 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 ### V1.5 Stabilization - UI/AI Follow-up
 
 - Changed: Removed the copywriting note strip, moved Prompt API image generation above long Prompt text, changed empty API image model display to `Provider 默认模型`, improved link-import success feedback and auto-filtering, and added lightweight scene default Provider settings for copywriting, AI vision, and API image generation through existing `AppSetting` keys.
-- Changed: Refined link-import auto filtering so changing purpose/status keeps the current scroll position instead of jumping to the top.
+- Changed: Refined link-import auto filtering so changing purpose/status restores the current scroll position instead of jumping to the top. API image generation now retries `/v1/images/generations` when a provider root URL returns an HTML page, and HTML provider errors are shown as a configuration hint instead of raw `<html>`.
 - Verification: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, and `npm run typecheck` passed. Root `npm test` remains unavailable because the project has no `test` script. HTTP smoke checks returned 200 for `/copywriting`, `/prompt-tasks`, `/link-imports`, and `/settings/ai`, with the expected UI text present or removed.
 - Boundary: No schema, migration, dependency, V2 feature, crawler, automatic publishing, second cleanup system, formal desktop release, or filesystem delete behavior was added. Vercel/read-only AI and write guards remain in the existing service layers.
 
