@@ -1,4 +1,4 @@
-export type AIProviderType = "openai-compatible";
+export type AIProviderType = "openai-compatible" | "nova-chat-image" | "atlascloud-image";
 
 export type AIModelPurpose = "text" | "vision" | "image";
 

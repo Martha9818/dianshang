@@ -25,6 +25,21 @@ type ImageGenerationResponse = {
   }>;
 };
 
+type AtlasPredictionResponse = {
+  data?: {
+    id?: string;
+    status?: string;
+    outputs?: string[];
+    output?: string | string[];
+    error?: string;
+  };
+  id?: string;
+  status?: string;
+  outputs?: string[];
+  output?: string | string[];
+  error?: string | { message?: string };
+};
+
 const PREVIEW_AI_MESSAGE = "预览环境只读，请在 Windows 本地验收 AI 调用。";
 const PREVIEW_IMAGE_AI_MESSAGE = "预览环境只读，请在 Windows 本地验收 API 生图。";
 const MAX_GENERATED_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -58,6 +73,83 @@ function buildImageGenerationEndpoints(baseUrl: string) {
   }
 
   return Array.from(new Set(endpoints));
+}
+
+function buildNovaChatImageEndpoint(baseUrl: string) {
+  const normalized = normalizeBaseUrl(baseUrl);
+  try {
+    const parsed = new URL(normalized);
+    if (/\/v1\/chat\/completions\/?$/.test(parsed.pathname)) {
+      return normalized;
+    }
+    return /\/v1\/?$/.test(parsed.pathname) ? `${normalized}/chat/completions` : `${normalized}/v1/chat/completions`;
+  } catch {
+    return `${normalized}/v1/chat/completions`;
+  }
+}
+
+function buildAtlasCloudEndpoints(baseUrl: string) {
+  const normalized = normalizeBaseUrl(baseUrl);
+  if (/\/api\/v1\/model\/generateImage\/?$/.test(normalized)) {
+    const modelRoot = normalized.replace(/\/generateImage\/?$/, "");
+    return {
+      create: normalized,
+      prediction: (id: string) => `${modelRoot}/prediction/${encodeURIComponent(id)}`,
+    };
+  }
+
+  if (/\/api\/v1\/model\/?$/.test(normalized)) {
+    return {
+      create: `${normalized}/generateImage`,
+      prediction: (id: string) => `${normalized}/prediction/${encodeURIComponent(id)}`,
+    };
+  }
+
+  const apiRoot = /\/api\/v1\/?$/.test(normalized) ? normalized : `${normalized}/api/v1`;
+  return {
+    create: `${apiRoot}/model/generateImage`,
+    prediction: (id: string) => `${apiRoot}/model/prediction/${encodeURIComponent(id)}`,
+  };
+}
+
+function extractImageUrlFromText(text: string, baseUrl?: string) {
+  const patterns = [
+    /!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/i,
+    /<img[^>]*\ssrc=["']([^"']+)["']/i,
+    /(\/v1\/[^\s)"'`]+)/i,
+    /(https?:\/\/[^\s<>"'`]+)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    const value = match?.[1] ?? match?.[0];
+    if (!value) continue;
+
+    if (/^https?:\/\//i.test(value)) {
+      return value;
+    }
+
+    if (value.startsWith("/") && baseUrl) {
+      const parsed = new URL(normalizeBaseUrl(baseUrl));
+      return `${parsed.origin}${value}`;
+    }
+  }
+
+  return null;
+}
+
+function delay(ms: number, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    const timeoutId = setTimeout(resolve, ms);
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timeoutId);
+        reject(new DOMException("Aborted", "AbortError"));
+      },
+      { once: true },
+    );
+  });
 }
 
 function extractTextContent(content: unknown) {
@@ -177,12 +269,17 @@ function validateProviderConfig(config: AIProviderConfig) {
 }
 
 function validateImageProviderConfig(config: AIProviderConfig) {
-  if (config.providerType !== "openai-compatible") {
-    throw createBusinessError(BUSINESS_ERROR_CODES.AI_CONFIG_INVALID, "V1-Core 当前仅支持 openai-compatible。");
+  const supportedProviderTypes = new Set(["openai-compatible", "nova-chat-image", "atlascloud-image"]);
+  if (!supportedProviderTypes.has(config.providerType)) {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_CONFIG_INVALID, "API 生图 Provider 类型不受支持。");
   }
 
   if (!config.baseUrl.trim() || !config.apiKey.trim()) {
     throw createBusinessError(BUSINESS_ERROR_CODES.AI_CONFIG_INVALID, "请完整填写 Base URL 和 API Key。");
+  }
+
+  if ((config.providerType === "nova-chat-image" || config.providerType === "atlascloud-image") && !config.modelName.trim()) {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_CONFIG_INVALID, "当前 API 生图 Provider 需要选择模型。");
   }
 }
 
@@ -327,6 +424,177 @@ async function fetchGeneratedImage(url: string, signal: AbortSignal) {
   return Buffer.from(await response.arrayBuffer());
 }
 
+async function postNovaChatImage(input: GenerateImageInput, sanitizedPrompt: string, signal: AbortSignal) {
+  const response = await fetch(buildNovaChatImageEndpoint(input.baseUrl), {
+    method: "POST",
+    headers: buildHeaders(input.apiKey),
+    body: JSON.stringify({
+      model: input.modelName.trim(),
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: sanitizedPrompt,
+            },
+          ],
+        },
+      ],
+      stream: true,
+      moderation: "auto",
+    }),
+    signal,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw translateAIError(response.status, await response.text());
+  }
+
+  if (!response.body) {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "Nova 生图接口未返回可读取的流。");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffered = "";
+  let collectedContent = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (value) {
+      buffered += decoder.decode(value, { stream: !done });
+    }
+
+    const lines = buffered.split(/\r?\n/);
+    buffered = lines.pop() ?? "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+
+      const data = trimmed.slice("data:".length).trim();
+      if (!data || data === "[DONE]") continue;
+
+      try {
+        const parsed = JSON.parse(data) as {
+          error?: { message?: string };
+          choices?: Array<{ delta?: { content?: string }; message?: { content?: string } }>;
+        };
+        if (parsed.error?.message) {
+          throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, sanitizeProviderErrorMessage(parsed.error.message));
+        }
+
+        const content = parsed.choices?.[0]?.delta?.content ?? parsed.choices?.[0]?.message?.content ?? "";
+        if (content) {
+          collectedContent += content;
+          const imageUrl = extractImageUrlFromText(collectedContent, input.baseUrl);
+          if (imageUrl) return imageUrl;
+        }
+      } catch (error) {
+        if (error instanceof ProductBusinessError) throw error;
+        throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "Nova 生图流返回格式异常。");
+      }
+    }
+
+    if (done) break;
+  }
+
+  const imageUrl = extractImageUrlFromText(collectedContent, input.baseUrl);
+  if (!imageUrl) {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "Nova 生图接口未返回图片地址。");
+  }
+
+  return imageUrl;
+}
+
+function pickAtlasPredictionPayload(parsed: AtlasPredictionResponse) {
+  return parsed.data ?? parsed;
+}
+
+function getAtlasOutputs(parsed: AtlasPredictionResponse) {
+  const payload = pickAtlasPredictionPayload(parsed);
+  const output = payload.outputs ?? payload.output;
+  if (Array.isArray(output)) return output.filter((item): item is string => typeof item === "string");
+  return typeof output === "string" ? [output] : [];
+}
+
+function getAtlasError(parsed: AtlasPredictionResponse) {
+  const payload = pickAtlasPredictionPayload(parsed);
+  const error = payload.error ?? parsed.error;
+  if (typeof error === "string") return error;
+  return error?.message ?? null;
+}
+
+async function readJsonResponse<T>(response: Response) {
+  const rawText = await response.text();
+  if (!response.ok) {
+    throw translateAIError(response.status, rawText);
+  }
+
+  try {
+    return JSON.parse(rawText) as T;
+  } catch {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "AI 接口返回格式异常，无法解析响应。");
+  }
+}
+
+async function postAtlasCloudImage(input: GenerateImageInput, sanitizedPrompt: string, signal: AbortSignal) {
+  const endpoints = buildAtlasCloudEndpoints(input.baseUrl);
+  const created = await fetch(endpoints.create, {
+    method: "POST",
+    headers: buildHeaders(input.apiKey),
+    body: JSON.stringify({
+      model: input.modelName.trim(),
+      prompt: sanitizedPrompt,
+    }),
+    signal,
+    cache: "no-store",
+  });
+  const createdPayload = pickAtlasPredictionPayload(await readJsonResponse<AtlasPredictionResponse>(created));
+  const predictionId = createdPayload.id;
+
+  if (!predictionId) {
+    throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "AtlasCloud 未返回 prediction id。");
+  }
+
+  const terminalStatuses = new Set(["completed", "succeeded", "success", "failed", "canceled", "cancelled"]);
+  const failedStatuses = new Set(["failed", "canceled", "cancelled"]);
+  const maxAttempts = 150;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    await delay(attempt === 0 ? 1000 : 2000, signal);
+
+    const response = await fetch(endpoints.prediction(predictionId), {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${input.apiKey}`,
+      },
+      signal,
+      cache: "no-store",
+    });
+    const parsed = await readJsonResponse<AtlasPredictionResponse>(response);
+    const payload = pickAtlasPredictionPayload(parsed);
+    const status = String(payload.status ?? "").toLowerCase();
+    const outputs = getAtlasOutputs(parsed);
+
+    if (outputs[0]) {
+      return outputs[0];
+    }
+
+    if (failedStatuses.has(status)) {
+      throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, getAtlasError(parsed) ?? "AtlasCloud 生图任务失败。");
+    }
+
+    if (terminalStatuses.has(status)) {
+      throw createBusinessError(BUSINESS_ERROR_CODES.AI_RESPONSE_INVALID, "AtlasCloud 生图任务完成但未返回图片地址。");
+    }
+  }
+
+  throw createBusinessError(BUSINESS_ERROR_CODES.AI_TIMEOUT, "AtlasCloud 生图任务超时，请稍后重试。");
+}
+
 async function postImageGeneration(input: GenerateImageInput): Promise<AIImageResult> {
   ensureAICallsAllowed(PREVIEW_IMAGE_AI_MESSAGE);
   validateImageProviderConfig(input);
@@ -335,10 +603,43 @@ async function postImageGeneration(input: GenerateImageInput): Promise<AIImageRe
   const sanitizedPrompt = sanitizePromptForAI(input.prompt);
   const inputTokenEstimate = estimateTokenCount(sanitizedPrompt);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 90_000);
+  const timeoutMs = input.providerType === "nova-chat-image" || input.providerType === "atlascloud-image" ? 600_000 : 90_000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   const provider = input.providerType || "openai-compatible";
 
   try {
+    if (input.providerType === "nova-chat-image" || input.providerType === "atlascloud-image") {
+      const imageUrl =
+        input.providerType === "nova-chat-image"
+          ? await postNovaChatImage(input, sanitizedPrompt, controller.signal)
+          : await postAtlasCloudImage(input, sanitizedPrompt, controller.signal);
+      const imageBuffer = await fetchGeneratedImage(imageUrl, controller.signal);
+      assertGeneratedImageSize(imageBuffer);
+      const mimeType = inferGeneratedImageMimeType(imageBuffer);
+      const durationMs = Date.now() - startedAt;
+
+      await createAIRequestLog({
+        provider,
+        model: input.modelName || "unknown",
+        requestType: input.requestType,
+        inputTokens: inputTokenEstimate,
+        outputTokens: null,
+        durationMs,
+        success: true,
+        inputSummary: input.inputSummary ?? summarizePrompt(sanitizedPrompt),
+        relatedProductId: input.relatedProductId,
+        relatedInspirationId: input.relatedInspirationId,
+        relatedTaskId: input.relatedTaskId ?? input.jobId,
+      });
+
+      return {
+        imageBuffer,
+        mimeType,
+        durationMs,
+        source: "url",
+      };
+    }
+
     const body = {
       ...(input.modelName.trim() ? { model: input.modelName.trim() } : {}),
       prompt: sanitizedPrompt,

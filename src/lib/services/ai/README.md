@@ -13,7 +13,7 @@
 
 ## Main Entry Functions
 
-- `createAIClient(config)`: creates a server-side AI client for OpenAI-compatible chat completions, including the minimal V1-Core single-image vision request shape.
+- `createAIClient(config)`: creates a server-side AI client for OpenAI-compatible chat completions, including the minimal V1-Core single-image vision request shape and the approved V1.5 API image Provider modes.
 - `listRegisteredAIModels()` / `getRegisteredAIModel()`: reads centralized text, vision, and future image model metadata.
 - `createAIJob()`, `markAIJobRunning()`, `markAIJobSuccess()`, `markAIJobFailed()`, `retryAIJob()`: record lightweight AI task status.
 - `createAIRequestLog()`: stores sanitized request outcome, token counts, duration, and cost estimate.
@@ -64,3 +64,4 @@ Future copywriting, vision, and inspiration features should use this module for 
 - Do not move API key reads to client components.
 - Do not store raw prompts in `AIJob` or `AIRequestLog`.
 - Do not turn this lightweight status layer into a background queue without an approved future thread.
+- Do not expand API image generation into a generic provider adapter framework without an approved future thread; V1.5 only carries the explicitly approved image modes.

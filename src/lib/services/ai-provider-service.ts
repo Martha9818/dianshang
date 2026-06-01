@@ -44,6 +44,8 @@ function normalizeOptionalText(value: string | null | undefined) {
 }
 
 const AI_PROVIDER_PURPOSES = new Set(["text", "image"]);
+const AI_PROVIDER_TYPES = new Set(["openai-compatible", "nova-chat-image", "atlascloud-image"]);
+const IMAGE_PROVIDER_TYPES = new Set(["openai-compatible", "nova-chat-image", "atlascloud-image"]);
 const IMAGE_GENERATION_SETTING_KEYS = {
   enabled: "imageGeneration.enabled",
   defaultSize: "imageGeneration.defaultSize",
@@ -113,8 +115,16 @@ function normalizeProviderInput(values: AIProviderFormValues): ProviderMutationI
     throw createValidationError("Provider 名称不能为空。");
   }
 
-  if (providerType !== "openai-compatible") {
-    throw createValidationError("MVP 仅支持 openai-compatible 类型。");
+  if (!AI_PROVIDER_TYPES.has(providerType)) {
+    throw createValidationError("Provider 类型不受支持。");
+  }
+
+  if (purpose !== "image" && providerType !== "openai-compatible") {
+    throw createValidationError("文本 / 识图 Provider 仅支持 openai-compatible 类型。");
+  }
+
+  if (purpose === "image" && !IMAGE_PROVIDER_TYPES.has(providerType)) {
+    throw createValidationError("API 生图 Provider 类型不受支持。");
   }
 
   if (!baseUrl) {
@@ -127,6 +137,10 @@ function normalizeProviderInput(values: AIProviderFormValues): ProviderMutationI
 
   if (purpose !== "image" && !modelName) {
     throw createValidationError("模型名不能为空。");
+  }
+
+  if (purpose === "image" && (providerType === "nova-chat-image" || providerType === "atlascloud-image") && !modelName) {
+    throw createValidationError("当前 API 生图 Provider 需要选择模型。");
   }
 
   return {

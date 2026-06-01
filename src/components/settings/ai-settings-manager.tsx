@@ -60,6 +60,42 @@ type ConnectionResult =
 const inputClassName =
   "h-12 w-full rounded-2xl border border-[#E4EAF3] bg-white px-4 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] outline-none transition-all duration-200 ease-out hover:border-blue-200 hover:shadow-[0_10px_22px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] focus:border-blue-300 focus:ring-4 focus:ring-blue-50 motion-reduce:transition-none";
 
+const providerTypeOptions = [
+  { value: "openai-compatible", label: "OpenAI Images 兼容" },
+  { value: "nova-chat-image", label: "Nova 聊天流式生图" },
+  { value: "atlascloud-image", label: "AtlasCloud 异步任务生图" },
+];
+
+const modelPresetOptions: Record<string, Array<{ value: string; label: string }>> = {
+  "openai-compatible": [
+    { value: "gpt-image-1", label: "GPT Image 1" },
+    { value: "dall-e-3", label: "DALL-E 3" },
+    { value: "dall-e-2", label: "DALL-E 2" },
+  ],
+  "nova-chat-image": [
+    { value: "firefly-gpt-image-1k-1x1", label: "Firefly GPT Image 1K 1:1" },
+    { value: "firefly-gpt-image-1k-16x9", label: "Firefly GPT Image 1K 16:9" },
+    { value: "firefly-gpt-image-1k-9x16", label: "Firefly GPT Image 1K 9:16" },
+    { value: "firefly-gpt-image-2k-1x1", label: "Firefly GPT Image 2K 1:1" },
+    { value: "firefly-gpt-image-2k-16x9", label: "Firefly GPT Image 2K 16:9" },
+    { value: "firefly-nano-banana2-1k-1x1", label: "Nano Banana 2 1K 1:1" },
+    { value: "firefly-nano-banana2-1k-16x9", label: "Nano Banana 2 1K 16:9" },
+    { value: "firefly-nano-banana2-1k-9x16", label: "Nano Banana 2 1K 9:16" },
+  ],
+  "atlascloud-image": [
+    { value: "openai/gpt-image-2/text-to-image", label: "OpenAI GPT Image 2 Text-to-Image" },
+    { value: "seedream-3.0", label: "Seedream 3.0" },
+  ],
+};
+
+function getProviderTypeLabel(providerType: string) {
+  return providerTypeOptions.find((option) => option.value === providerType)?.label ?? providerType;
+}
+
+function getModelPresets(providerType: string) {
+  return modelPresetOptions[providerType] ?? [];
+}
+
 function getEmptyForm() {
   return {
     id: "",
@@ -145,6 +181,10 @@ export function AISettingsManager({
       ? "已启用 API 生图，但未配置可用的 API 生图 Provider。请在场景默认中选择 API 生图 Provider，或设为生图默认。"
       : "API 生图当前未启用。启用后仍需要配置用途为 API 生图的 Provider。";
   const isImageProviderForm = form.purpose === "image";
+  const availableProviderTypeOptions = isImageProviderForm ? providerTypeOptions : providerTypeOptions.slice(0, 1);
+  const modelPresets = isImageProviderForm ? getModelPresets(form.providerType) : [];
+  const modelPresetValues = new Set(modelPresets.map((option) => option.value));
+  const selectedModelPresetValue = form.modelName && modelPresetValues.has(form.modelName) ? form.modelName : "__custom";
 
   function getProviderModelLabel(provider: ProviderView) {
     if (provider.modelName?.trim()) return provider.modelName;
@@ -210,6 +250,11 @@ export function AISettingsManager({
       if (isImageProviderForm) {
         if (!form.baseUrl.trim() || (!form.apiKey.trim() && !form.hasApiKey)) {
           setConnectionResult({ type: "error", text: "请先填写 Base URL 和 API Key。" });
+          return;
+        }
+
+        if ((form.providerType === "nova-chat-image" || form.providerType === "atlascloud-image") && !form.modelName.trim()) {
+          setConnectionResult({ type: "error", text: "请先选择 API 生图模型。" });
           return;
         }
 
@@ -330,7 +375,26 @@ export function AISettingsManager({
                   <input className={inputClassName} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
                 </Field>
                 <Field label="Provider 类型">
-                  <input className={`${inputClassName} bg-slate-50 text-slate-500`} value={form.providerType} readOnly />
+                  <select
+                    className={inputClassName}
+                    value={form.providerType}
+                    onChange={(event) => {
+                      const providerType = event.target.value;
+                      const presets = getModelPresets(providerType);
+                      setForm((current) => ({
+                        ...current,
+                        providerType,
+                        modelName: current.purpose === "image" && presets.length > 0 ? presets[0].value : current.modelName,
+                      }));
+                    }}
+                    disabled={!isImageProviderForm}
+                  >
+                    {availableProviderTypeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
                 <Field label="Base URL">
                   <input className={inputClassName} value={form.baseUrl} onChange={(event) => setForm((current) => ({ ...current, baseUrl: event.target.value }))} />
@@ -344,13 +408,41 @@ export function AISettingsManager({
                     onChange={(event) => setForm((current) => ({ ...current, apiKey: event.target.value }))}
                   />
                 </Field>
-                <Field label={isImageProviderForm ? "模型名（可选）" : "模型名"}>
-                  <input
-                    className={inputClassName}
-                    placeholder={isImageProviderForm ? "第三方生图接口不需要模型名时可留空" : ""}
-                    value={form.modelName}
-                    onChange={(event) => setForm((current) => ({ ...current, modelName: event.target.value }))}
-                  />
+                <Field label={isImageProviderForm ? "模型" : "模型名"}>
+                  {modelPresets.length > 0 ? (
+                    <div className="grid gap-2">
+                      <select
+                        className={inputClassName}
+                        value={selectedModelPresetValue}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            modelName: event.target.value === "__custom" ? "" : event.target.value,
+                          }))
+                        }
+                      >
+                        {modelPresets.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                        <option value="__custom">自定义模型</option>
+                      </select>
+                      <input
+                        className={inputClassName}
+                        placeholder="需要自定义模型时在这里填写"
+                        value={form.modelName}
+                        onChange={(event) => setForm((current) => ({ ...current, modelName: event.target.value }))}
+                      />
+                    </div>
+                  ) : (
+                    <input
+                      className={inputClassName}
+                      placeholder={isImageProviderForm ? "第三方生图接口不需要模型名时可留空" : ""}
+                      value={form.modelName}
+                      onChange={(event) => setForm((current) => ({ ...current, modelName: event.target.value }))}
+                    />
+                  )}
                 </Field>
                 <Field label="用途">
                   <select
@@ -360,6 +452,7 @@ export function AISettingsManager({
                       setForm((current) => ({
                         ...current,
                         purpose: event.target.value,
+                        providerType: event.target.value === "image" ? current.providerType : "openai-compatible",
                       }))
                     }
                   >
@@ -712,7 +805,7 @@ export function AISettingsManager({
               {providers.map((provider) => (
                 <DataTableRow key={provider.id}>
                   <DataTableCell>{provider.name}</DataTableCell>
-                  <DataTableCell>{provider.providerType}</DataTableCell>
+                  <DataTableCell>{getProviderTypeLabel(provider.providerType)}</DataTableCell>
                   <DataTableCell>{getProviderModelLabel(provider)}</DataTableCell>
                   <DataTableCell>{provider.purpose ?? "--"}</DataTableCell>
                   <DataTableCell>
