@@ -7,7 +7,6 @@ import {
   DataTableHead,
   DataTableHeaderCell,
   DataTableRow,
-  EntityCell,
   FilterBar,
   MiniIcon,
   PageNote,
@@ -229,13 +228,12 @@ export default async function ProductsPage({
           >
           <DashboardCard>
             <TableScrollArea className="py-3">
-              <DataTable className="min-w-[1320px]">
+              <DataTable className="min-w-[1240px]">
                 <DataTableHead>
                   <tr>
                     <DataTableHeaderCell className="w-[5%]">选择</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[25%]">商品信息</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[12%]">类目</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[10%]">Product ID</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[12%]">平台</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[10%]">售价</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[10%]">净利润</DataTableHeaderCell>
@@ -261,20 +259,22 @@ export default async function ProductsPage({
                           />
                         </DataTableCell>
                         <DataTableCell>
-                          <EntityCell
-                            thumb={<ProductImage src={product.mainImagePath} alt={product.name} label={product.name.slice(0, 3)} />}
-                            title={product.name}
-                            subtitle={product.spu}
-                          />
+                          <div className="flex items-center gap-3">
+                            <ProductImage src={product.mainImagePath} alt={product.name} label={product.name.slice(0, 3)} />
+                            <div className="min-w-0">
+                              <p className="truncate font-medium leading-6 text-slate-900">{product.name}</p>
+                              <p className="mt-1 text-xs font-medium leading-5 text-[#2563EB]">
+                                {product.displayNumber ? `商品 ${product.displayNumber}` : "商品 --"}
+                              </p>
+                              <p className="mt-1 truncate text-xs leading-5 text-slate-400">{product.spu}</p>
+                            </div>
+                          </div>
                         </DataTableCell>
                         <DataTableCell>
                           <div className="leading-6">
                             <p>{product.categoryLevel1 ?? "--"}</p>
                             <p className="text-xs text-slate-400">{product.categoryLevel2 ?? "--"}</p>
                           </div>
-                        </DataTableCell>
-                        <DataTableCell>
-                          <span className="font-medium text-slate-700">{product.id}</span>
                         </DataTableCell>
                         <DataTableCell>{product.targetPlatforms.length > 0 ? product.targetPlatforms.join(" / ") : "--"}</DataTableCell>
                         <DataTableCell>{formatCurrency(product.estimatedPrice)}</DataTableCell>
@@ -313,7 +313,7 @@ export default async function ProductsPage({
                     ))
                   ) : (
                     <DataTableRow>
-                      <DataTableCell colSpan={12} className="py-12">
+                      <DataTableCell colSpan={11} className="py-12">
                         <div className="text-center">
                           <p className="text-base font-medium text-slate-700">
                             {activeFilters ? "当前筛选条件下没有商品记录" : "商品池还没有数据"}

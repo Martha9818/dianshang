@@ -4,6 +4,15 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-01
 
+### V1.5 Stabilization - Display Numbering, Product Pool Cleanup, And Empty Directory Cleanup
+
+- Changed: Replaced the temporary primary-ID emphasis with computed display numbering. `/products` now shows `商品 {n}` inside the product-info cell instead of a standalone `Product ID` column, while `/products/[id]` keeps both the display number and real `Product ID` in the detail view.
+- Changed: `/materials` now shows per-product `素材 {n}` display numbering in grid/list surfaces, keeps real `素材ID` and real `Product ID` in the detail metadata, and shows the related product with its display-number context when available.
+- Changed: Removed the duplicate copywriting shortcut from the materials detail action row and the mirrored product-detail materials panel, keeping the clearer `查看文案素材` entry only.
+- Changed: Extended the existing file-cleanup flow so `/maintenance/files` can surface empty directories as cleanup candidates and as trash entries, while reusing the same read-only guards, move-to-trash flow, and permanent-delete safety checks. The cleanup panel now labels empty directories distinctly from normal files.
+- Verification: `npm run typecheck`, `npm run lint`, `npm run build`, and `npx prisma validate`.
+- Boundary: No schema migration, dependency change, real-ID reset/reindex, second cleanup system, or V2 behavior was added.
+
 ### V1.5 Stabilization - Display Numbering, Product Pool Cleanup, And Empty Directory Cleanup Design
 
 - Changed: Wrote the approved follow-up design spec at `docs/superpowers/specs/2026-06-01-products-materials-display-number-and-cleanup-design.md`.

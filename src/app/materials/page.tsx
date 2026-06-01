@@ -235,7 +235,7 @@ export default async function MaterialsPage({
                         className="h-4 w-4 rounded border-slate-300 text-blue-600"
                       />
                       <span className="rounded-full border border-[#DCE5F2] bg-white/90 px-2.5 py-1 font-medium text-slate-600 shadow-sm">
-                        素材ID {material.id}
+                        {material.displayNumberWithinProduct ? `素材 ${material.displayNumberWithinProduct}` : "素材 --"}
                       </span>
                     </span>
                     <div className="pointer-events-none relative z-10">
@@ -297,7 +297,12 @@ export default async function MaterialsPage({
                         <DataTableCell>
                           <Link href={buildUrl(params, { view, materialId: String(material.id) })} scroll={false} className="flex items-center gap-3">
                             <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" missing={!material.fileExists} />
-                            <span className="truncate font-medium text-slate-900">{material.product.name}</span>
+                            <div className="min-w-0">
+                              <span className="block truncate font-medium text-slate-900">{material.product.name}</span>
+                              <span className="mt-1 block text-xs font-medium text-[#2563EB]">
+                                {material.displayNumberWithinProduct ? `素材 ${material.displayNumberWithinProduct}` : "素材 --"}
+                              </span>
+                            </div>
                           </Link>
                         </DataTableCell>
                         <DataTableCell className="truncate text-xs text-slate-500">{material.filePath}</DataTableCell>
@@ -359,6 +364,8 @@ export default async function MaterialsPage({
                 <DetailRow label="原图大小" value={selectedMaterial.originalSizeLabel} />
                 <DetailRow label="缩略图大小" value={selectedMaterial.thumbnailSizeLabel} />
                 <DetailRow label="MIME" value={selectedMaterial.mimeType ?? "--"} />
+                <DetailRow label="商品内素材序号" value={selectedMaterial.displayNumberWithinProduct ? String(selectedMaterial.displayNumberWithinProduct) : "--"} />
+                <DetailRow label="素材ID" value={String(selectedMaterial.id)} />
                 <DetailRow label="文件 Hash" value={selectedMaterial.fileHash ? `${selectedMaterial.fileHash.slice(0, 12)}...` : "--"} />
                 <DetailRow label="创建时间" value={selectedMaterial.formattedCreatedAt} />
                 <DetailRow label="图片来源" value={selectedMaterial.sourceTypeLabel} />
@@ -367,7 +374,11 @@ export default async function MaterialsPage({
                 <DetailRow label="素材类型" value={selectedMaterial.materialTypeLabel} />
                 <DetailRow label="状态" value={selectedMaterial.status ?? "--"} badgeTone={selectedMaterial.statusTone} />
                 <DetailRow label="平台" value={selectedMaterial.platformLabel} />
-                <DetailRow label="关联商品" value={`${selectedMaterial.product.name} / ${selectedMaterial.product.spu}`} />
+                <DetailRow
+                  label="关联商品"
+                  value={`${selectedMaterial.productDisplayNumber ? `商品 ${selectedMaterial.productDisplayNumber} / ` : ""}${selectedMaterial.product.name} / ${selectedMaterial.product.spu}`}
+                />
+                <DetailRow label="Product ID" value={String(selectedMaterial.productId)} />
                 <DetailRow label="关联 Task ID" value={selectedMaterial.taskCode ?? "--"} />
                 <DetailRow
                   label="图片去重"
@@ -378,7 +389,6 @@ export default async function MaterialsPage({
               <div className="flex flex-wrap gap-2">
                 <TableActionLink href={`/screenshots?sourceType=material&sourceId=${selectedMaterial.id}&productId=${selectedMaterial.productId}`}>截图识别</TableActionLink>
                 <TableActionLink href={`/copywriting?productId=${selectedMaterial.productId}`}>查看文案素材</TableActionLink>
-                <TableActionLink href={`/copywriting?productId=${selectedMaterial.productId}`}>去文案列表</TableActionLink>
                 <TableActionLink href="/maintenance/files">去文件清理与回收站</TableActionLink>
               </div>
               <ImageDedupPanel summary={selectedMaterial.imageDedup ?? null} sourceUrl={sourceUrl} readonly={Boolean(readonlyNotice)} />

@@ -165,7 +165,10 @@ export default async function ProductDetailPage({
                 <h2 className="text-[1.5rem] font-semibold text-slate-900">{product.name}</h2>
                 <StatusBadge label={product.status} tone={PRODUCT_STATUS_TONE[product.status] ?? "slate"} />
               </div>
-              <p className="mt-2 text-sm text-slate-400">{product.spu}</p>
+              <div className="mt-2 space-y-1 text-sm">
+                <p className="font-medium text-[#2563EB]">{product.displayNumber ? `商品 ${product.displayNumber}` : "商品 --"}</p>
+                <p className="text-slate-400">{product.spu}</p>
+              </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-500">{product.categoryLevel1 ?? "未填写一级类目"}</span>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-500">{product.categoryLevel2 ?? "未填写二级类目"}</span>
@@ -214,7 +217,9 @@ export default async function ProductDetailPage({
         {activeTab === "basic" ? (
           <div className="grid gap-4 px-5 py-5 md:grid-cols-2 xl:grid-cols-3">
             <InfoItem label="商品名称" value={product.name} />
+            <InfoItem label="商品展示编号" value={product.displayNumber ? `商品 ${product.displayNumber}` : "--"} />
             <InfoItem label="SPU" value={product.spu} />
+            <InfoItem label="Product ID" value={String(product.id)} />
             <InfoItem label="当前状态" value={product.status} />
             <InfoItem label="一级类目" value={product.categoryLevel1 ?? "--"} />
             <InfoItem label="二级类目" value={product.categoryLevel2 ?? "--"} />

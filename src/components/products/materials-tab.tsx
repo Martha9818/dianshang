@@ -86,13 +86,16 @@ export function ProductMaterialsTab({
                 materials.map((material) => (
                   <DataTableRow key={material.id}>
                     <DataTableCell>
-                      <div className="flex items-start gap-3">
-                        <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" missing={!material.fileExists} />
-                        <div className="min-w-0 space-y-1">
-                          <p className="truncate text-sm font-medium text-slate-800">{material.product.name}</p>
-                          <p className="truncate text-xs text-slate-500">{material.filePath}</p>
+                        <div className="flex items-start gap-3">
+                          <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" missing={!material.fileExists} />
+                          <div className="min-w-0 space-y-1">
+                            <p className="truncate text-sm font-medium text-slate-800">{material.product.name}</p>
+                            <p className="text-xs font-medium text-[#2563EB]">
+                              {material.displayNumberWithinProduct ? `素材 ${material.displayNumberWithinProduct}` : "素材 --"}
+                            </p>
+                            <p className="truncate text-xs text-slate-500">{material.filePath}</p>
+                          </div>
                         </div>
-                      </div>
                     </DataTableCell>
                     <DataTableCell>{material.platformLabel}</DataTableCell>
                     <DataTableCell>{material.materialTypeLabel}</DataTableCell>
@@ -150,7 +153,6 @@ export function ProductMaterialsTab({
           <div className="flex flex-wrap gap-2">
             <TableActionLink href={`/materials?productId=${product.id}`}>查看素材库</TableActionLink>
             <TableActionLink href={`/copywriting?productId=${product.id}`}>查看文案素材</TableActionLink>
-            <TableActionLink href={`/copywriting?productId=${product.id}`}>去文案列表</TableActionLink>
           </div>
         </div>
       </DashboardCard>

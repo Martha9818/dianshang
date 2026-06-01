@@ -154,6 +154,7 @@ function mapProductCard(
   product: ProductRecord,
   latestScore?: Awaited<ReturnType<typeof getLatestScoreSnapshot>> | null,
   needsRescore = false,
+  displayNumber: number | null = null,
 ) {
   const profitView = buildProfitView(product);
   const recommendationFilterValue = getRecommendationFilterValue(latestScore?.recommendation);
@@ -171,11 +172,30 @@ function mapProductCard(
     latestRecommendationDisplay: getRecommendationDisplayText(latestScore?.recommendation),
     recommendationFilterValue,
     needsRescore,
+    displayNumber,
   };
 }
 
+async function getProductDisplayNumberMap(productIds?: number[]) {
+  const products = await prisma.product.findMany({
+    where: { deletedAt: null },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { id: true },
+  });
+
+  const displayNumberMap = new Map(products.map((product, index) => [product.id, index + 1]));
+  if (!productIds?.length) {
+    return displayNumberMap;
+  }
+
+  return new Map(productIds.map((productId) => [productId, displayNumberMap.get(productId) ?? null]));
+}
+
 async function mapProductsWithLatestScores(products: ProductRecord[]) {
-  const latestScoreMap = await getLatestScoreMap(products.map((product) => product.id));
+  const [latestScoreMap, displayNumberMap] = await Promise.all([
+    getLatestScoreMap(products.map((product) => product.id)),
+    getProductDisplayNumberMap(products.map((product) => product.id)),
+  ]);
 
   return products.map((product) =>
     mapProductCard(
@@ -186,6 +206,7 @@ async function mapProductsWithLatestScores(products: ProductRecord[]) {
         latestCompetitorUpdatedAt: null,
         latestScoreCreatedAt: latestScoreMap.get(product.id)?.createdAt,
       }),
+      displayNumberMap.get(product.id) ?? null,
     ),
   );
 }
@@ -217,7 +238,10 @@ export async function getProductList(filters?: ProductListFilters) {
     });
 
     const typedProducts = products as ProductListRecord[];
-    const latestScoreMap = await getLatestScoreMap(typedProducts.map((product) => product.id));
+    const [latestScoreMap, displayNumberMap] = await Promise.all([
+      getLatestScoreMap(typedProducts.map((product) => product.id)),
+      getProductDisplayNumberMap(typedProducts.map((product) => product.id)),
+    ]);
     const mappedProducts = typedProducts.map((product) => {
       const latestScore = latestScoreMap.get(product.id) ?? null;
       return mapProductCard(
@@ -228,6 +252,7 @@ export async function getProductList(filters?: ProductListFilters) {
           latestCompetitorUpdatedAt: product.competitors[0]?.updatedAt ?? null,
           latestScoreCreatedAt: latestScore?.createdAt,
         }),
+        displayNumberMap.get(product.id) ?? null,
       );
     });
 
@@ -351,8 +376,11 @@ export async function getProductById(productId: number) {
       return null;
     }
 
-    const latestScore = await getLatestScoreSnapshot(product.id);
-    return mapProductCard(product, latestScore);
+    const [latestScore, displayNumberMap] = await Promise.all([
+      getLatestScoreSnapshot(product.id),
+      getProductDisplayNumberMap([product.id]),
+    ]);
+    return mapProductCard(product, latestScore, false, displayNumberMap.get(product.id) ?? null);
   } catch (error) {
     throw normalizeProductReadError(error);
   }

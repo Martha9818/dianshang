@@ -15,6 +15,7 @@ export type FileMaintenanceItem = {
   id: string;
   scope: FileMaintenanceScope;
   relativePath: string;
+  itemKind: "file" | "directory";
   fileName: string;
   fileType: string;
   fileSize: number | null;
@@ -37,6 +38,7 @@ export type TrashFileItem = {
   id: string;
   trashRelativePath: string;
   originalRelativePath: string | null;
+  itemKind: "file" | "directory";
   fileName: string;
   fileType: string;
   fileSize: number | null;

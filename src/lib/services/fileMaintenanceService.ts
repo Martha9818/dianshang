@@ -42,6 +42,13 @@ type ScopedPath = {
   absolutePath: string;
 };
 
+type ScopedFilesystemEntry = {
+  relativePath: string;
+  absolutePath: string;
+  stats: Awaited<ReturnType<typeof stat>>;
+  itemKind: "file" | "directory";
+};
+
 type MoveSelection = {
   scope: FileMaintenanceScope;
   relativePath: string;
@@ -165,7 +172,11 @@ function formatNullableDate(value: Date | null) {
   return value ? formatDateTime(value) : "--";
 }
 
-function getFileType(relativePath: string) {
+function getFileType(relativePath: string, itemKind: "file" | "directory" = "file") {
+  if (itemKind === "directory") {
+    return "DIR";
+  }
+
   const extension = path.extname(relativePath).replace(".", "").toLowerCase();
   return extension ? extension.toUpperCase() : "FILE";
 }
@@ -227,12 +238,13 @@ async function pathExists(absolutePath: string) {
 
 async function listFilesUnderScope(scope: FileMaintenanceScope | "trash") {
   const root = await ensureLocalDirectory(scope as LocalDirectoryKey);
-  const files: Array<{ relativePath: string; absolutePath: string; stats: Awaited<ReturnType<typeof stat>> }> = [];
+  const entries: ScopedFilesystemEntry[] = [];
 
-  async function walk(currentPath: string) {
-    const entries = await readdir(currentPath, { withFileTypes: true });
+  async function walk(currentPath: string): Promise<boolean> {
+    const directoryEntries = await readdir(currentPath, { withFileTypes: true });
+    let hasVisibleChildren = false;
 
-    for (const entry of entries) {
+    for (const entry of directoryEntries) {
       const absolutePath = path.join(currentPath, entry.name);
       const relativeToRoot = normalizeSeparators(path.relative(root, absolutePath));
 
@@ -241,7 +253,16 @@ async function listFilesUnderScope(scope: FileMaintenanceScope | "trash") {
       }
 
       if (entry.isDirectory()) {
-        await walk(absolutePath);
+        const childHasVisibleChildren = await walk(absolutePath);
+        if (!childHasVisibleChildren) {
+          entries.push({
+            relativePath: `${scope}/${relativeToRoot}`,
+            absolutePath,
+            stats: await stat(absolutePath),
+            itemKind: "directory",
+          });
+        }
+        hasVisibleChildren = true;
         continue;
       }
 
@@ -249,16 +270,20 @@ async function listFilesUnderScope(scope: FileMaintenanceScope | "trash") {
         continue;
       }
 
-      files.push({
+      entries.push({
         relativePath: `${scope}/${relativeToRoot}`,
         absolutePath,
         stats: await stat(absolutePath),
+        itemKind: "file",
       });
+      hasVisibleChildren = true;
 
-      if (files.length >= MAX_SCAN_FILES_PER_SCOPE) {
-        return;
+      if (entries.length >= MAX_SCAN_FILES_PER_SCOPE) {
+        return true;
       }
     }
+
+    return hasVisibleChildren;
   }
 
   try {
@@ -267,7 +292,7 @@ async function listFilesUnderScope(scope: FileMaintenanceScope | "trash") {
     await logError(`File maintenance scan failed for ${scope}: ${sanitizeLogMessage(error)}`);
   }
 
-  return files;
+  return entries;
 }
 
 function addReference(map: Map<string, FileReference[]>, relativePath: string | null | undefined, reference: FileReference) {
@@ -371,19 +396,46 @@ function buildUploadItem(input: {
   stats: Awaited<ReturnType<typeof stat>> | null;
   references: FileReference[] | undefined;
   exists: boolean;
+  itemKind: "file" | "directory";
 }): FileMaintenanceItem {
   const primaryReference = getPrimaryReference(input.references);
   const hasActiveReference = Boolean(input.references?.some((reference) => reference.active));
   const hasSoftDeletedReference = Boolean(input.references?.length && !hasActiveReference);
   const fileName = path.basename(input.relativePath);
 
+  if (input.itemKind === "directory") {
+    return {
+      id: input.relativePath,
+      scope: "uploads",
+      relativePath: input.relativePath,
+      itemKind: "directory",
+      fileName,
+      fileType: getFileType(input.relativePath, "directory"),
+      fileSize: null,
+      fileSizeLabel: "--",
+      modifiedAt: input.stats?.mtime.toISOString() ?? null,
+      modifiedAtLabel: formatNullableDate(input.stats?.mtime ?? null),
+      exists: input.exists,
+      relatedType: null,
+      relatedId: null,
+      relationStatus: "orphan",
+      relationStatusLabel: "空目录",
+      recommendation: "move_to_trash",
+      recommendationLabel: "建议移入回收站",
+      reason: "目录中没有文件，也没有活跃业务引用；可通过现有回收站流程手动清理。",
+      canMoveToTrash: true,
+      warningLevel: "warning",
+    };
+  }
+
   if (!input.exists) {
     return {
       id: input.relativePath,
       scope: "uploads",
       relativePath: input.relativePath,
+      itemKind: "file",
       fileName,
-      fileType: getFileType(input.relativePath),
+      fileType: getFileType(input.relativePath, "file"),
       fileSize: null,
       fileSizeLabel: "--",
       modifiedAt: null,
@@ -406,8 +458,9 @@ function buildUploadItem(input: {
       id: input.relativePath,
       scope: "uploads",
       relativePath: input.relativePath,
+      itemKind: "file",
       fileName,
-      fileType: getFileType(input.relativePath),
+      fileType: getFileType(input.relativePath, "file"),
       fileSize: toFileSizeNumber(input.stats?.size),
       fileSizeLabel: formatBytes(input.stats?.size),
       modifiedAt: input.stats?.mtime.toISOString() ?? null,
@@ -430,8 +483,9 @@ function buildUploadItem(input: {
       id: input.relativePath,
       scope: "uploads",
       relativePath: input.relativePath,
+      itemKind: "file",
       fileName,
-      fileType: getFileType(input.relativePath),
+      fileType: getFileType(input.relativePath, "file"),
       fileSize: toFileSizeNumber(input.stats?.size),
       fileSizeLabel: formatBytes(input.stats?.size),
       modifiedAt: input.stats?.mtime.toISOString() ?? null,
@@ -453,8 +507,9 @@ function buildUploadItem(input: {
     id: input.relativePath,
     scope: "uploads",
     relativePath: input.relativePath,
+    itemKind: "file",
     fileName,
-    fileType: getFileType(input.relativePath),
+    fileType: getFileType(input.relativePath, "file"),
     fileSize: toFileSizeNumber(input.stats?.size),
     fileSizeLabel: formatBytes(input.stats?.size),
     modifiedAt: input.stats?.mtime.toISOString() ?? null,
@@ -473,23 +528,24 @@ function buildUploadItem(input: {
 }
 
 async function buildUploadItems() {
-  const [files, references] = await Promise.all([listFilesUnderScope("uploads"), collectUploadReferences()]);
-  const items = files.map((file) =>
+  const [entries, references] = await Promise.all([listFilesUnderScope("uploads"), collectUploadReferences()]);
+  const items = entries.map((entry) =>
     buildUploadItem({
-      relativePath: file.relativePath,
-      stats: file.stats,
-      references: references.get(file.relativePath),
+      relativePath: entry.relativePath,
+      stats: entry.stats,
+      references: references.get(entry.relativePath),
       exists: true,
+      itemKind: entry.itemKind,
     }),
   );
 
-  const existingPaths = new Set(files.map((file) => file.relativePath));
+  const existingPaths = new Set(entries.map((entry) => entry.relativePath));
   for (const [relativePath, fileReferences] of references.entries()) {
     if (existingPaths.has(relativePath)) {
       continue;
     }
 
-    items.push(buildUploadItem({ relativePath, stats: null, references: fileReferences, exists: false }));
+    items.push(buildUploadItem({ relativePath, stats: null, references: fileReferences, exists: false, itemKind: "file" }));
   }
 
   return items;
@@ -510,8 +566,9 @@ function buildGeneratedFileItem(input: {
     id: input.relativePath,
     scope: input.scope,
     relativePath: input.relativePath,
+    itemKind: "file",
     fileName: path.basename(input.relativePath),
-    fileType: getFileType(input.relativePath),
+    fileType: getFileType(input.relativePath, "file"),
     fileSize: toFileSizeNumber(input.stats.size),
     fileSizeLabel: formatBytes(input.stats.size),
     modifiedAt: input.stats.mtime.toISOString(),
@@ -533,6 +590,35 @@ function buildGeneratedFileItem(input: {
   };
 }
 
+function buildDirectoryItem(input: {
+  scope: FileMaintenanceScope;
+  relativePath: string;
+  stats: Awaited<ReturnType<typeof stat>>;
+}): FileMaintenanceItem {
+  return {
+    id: input.relativePath,
+    scope: input.scope,
+    relativePath: input.relativePath,
+    itemKind: "directory",
+    fileName: path.basename(input.relativePath),
+    fileType: getFileType(input.relativePath, "directory"),
+    fileSize: null,
+    fileSizeLabel: "--",
+    modifiedAt: input.stats.mtime.toISOString(),
+    modifiedAtLabel: formatNullableDate(input.stats.mtime),
+    exists: true,
+    relatedType: null,
+    relatedId: null,
+    relationStatus: "orphan",
+    relationStatusLabel: "空目录",
+    recommendation: "move_to_trash",
+    recommendationLabel: "建议移入回收站",
+    reason: "目录中没有文件，保留意义较低；可按现有回收站流程手动清理。",
+    canMoveToTrash: true,
+    warningLevel: "warning",
+  };
+}
+
 function buildMissingLogItem(input: {
   scope: "exports" | "backups";
   relativePath: string;
@@ -543,8 +629,9 @@ function buildMissingLogItem(input: {
     id: input.relativePath,
     scope: input.scope,
     relativePath: input.relativePath,
+    itemKind: "file",
     fileName: path.basename(input.relativePath),
-    fileType: getFileType(input.relativePath),
+    fileType: getFileType(input.relativePath, "file"),
     fileSize: null,
     fileSizeLabel: "--",
     modifiedAt: null,
@@ -617,9 +704,13 @@ async function collectBackupLogReferences() {
 }
 
 async function buildExportItems() {
-  const [files, references] = await Promise.all([listFilesUnderScope("exports"), collectExportLogReferences()]);
+  const [entries, references] = await Promise.all([listFilesUnderScope("exports"), collectExportLogReferences()]);
   const oldCutoff = getOldCutoff(OLD_EXPORT_DAYS);
-  const items = files.map((file) => {
+  const items = entries.map((file) => {
+    if (file.itemKind === "directory") {
+      return buildDirectoryItem({ scope: "exports", relativePath: file.relativePath, stats: file.stats });
+    }
+
     const reference = references.get(file.relativePath) ?? null;
     return buildGeneratedFileItem({
       scope: "exports",
@@ -630,7 +721,7 @@ async function buildExportItems() {
       relatedId: reference?.relatedId ?? null,
     });
   });
-  const existingPaths = new Set(files.map((file) => file.relativePath));
+  const existingPaths = new Set(entries.map((file) => file.relativePath));
 
   for (const [relativePath, reference] of references.entries()) {
     if (!existingPaths.has(relativePath)) {
@@ -642,10 +733,14 @@ async function buildExportItems() {
 }
 
 async function buildBackupItems() {
-  const [files, references] = await Promise.all([listFilesUnderScope("backups"), collectBackupLogReferences()]);
+  const [entries, references] = await Promise.all([listFilesUnderScope("backups"), collectBackupLogReferences()]);
   const oldCutoff = getOldCutoff(OLD_BACKUP_DAYS);
 
-  const items = files.map((file) => {
+  const items = entries.map((file) => {
+    if (file.itemKind === "directory") {
+      return buildDirectoryItem({ scope: "backups", relativePath: file.relativePath, stats: file.stats });
+    }
+
     const reference = Array.from(references.entries()).find(([backupPath]) => file.relativePath === backupPath || file.relativePath.startsWith(`${backupPath}/`));
     return buildGeneratedFileItem({
       scope: "backups",
@@ -656,7 +751,7 @@ async function buildBackupItems() {
       relatedId: reference?.[1].relatedId ?? null,
     });
   });
-  const existingPaths = new Set(files.map((file) => file.relativePath));
+  const existingPaths = new Set(entries.map((file) => file.relativePath));
 
   for (const [relativePath, reference] of references.entries()) {
     if (!reference.exists && !existingPaths.has(relativePath)) {
@@ -684,10 +779,11 @@ async function buildTrashItems(): Promise<TrashFileItem[]> {
       id: file.relativePath,
       trashRelativePath: file.relativePath,
       originalRelativePath: log?.originalRelativePath ?? null,
+      itemKind: file.itemKind,
       fileName: path.basename(file.relativePath),
-      fileType: getFileType(file.relativePath),
-      fileSize: toFileSizeNumber(file.stats.size),
-      fileSizeLabel: formatBytes(file.stats.size),
+      fileType: getFileType(file.relativePath, file.itemKind),
+      fileSize: file.itemKind === "directory" ? null : toFileSizeNumber(file.stats.size),
+      fileSizeLabel: file.itemKind === "directory" ? "--" : formatBytes(file.stats.size),
       modifiedAt: file.stats.mtime.toISOString(),
       modifiedAtLabel: formatNullableDate(file.stats.mtime),
     };
@@ -976,9 +1072,11 @@ export async function permanentlyDeleteTrashFiles(input: {
     try {
       const trash = resolveTrashPath(selection.trashRelativePath);
       const trashStats = await stat(trash.absolutePath);
+      const isTrashFile = trashStats.isFile();
+      const isTrashDirectory = trashStats.isDirectory();
 
-      if (!trashStats.isFile()) {
-        throw new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, "永久删除只允许删除应用回收站中的文件。");
+      if (!isTrashFile && !isTrashDirectory) {
+        throw new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, "永久删除只允许处理应用回收站中的文件或空目录。");
       }
 
       const moveLog = await prisma.cleanupLog.findFirst({
@@ -997,7 +1095,15 @@ export async function permanentlyDeleteTrashFiles(input: {
       });
       logId = log.id;
 
-      await unlink(trash.absolutePath);
+      if (isTrashDirectory) {
+        const nestedEntries = await readdir(trash.absolutePath);
+        if (nestedEntries.length > 0) {
+          throw new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, "目录已不再为空，请重新扫描后再操作。");
+        }
+        await rm(trash.absolutePath, { recursive: true, force: true });
+      } else {
+        await unlink(trash.absolutePath);
+      }
       await removeEmptyTrashParents(trash.absolutePath);
       await updateCleanupLog(log.id, "success", "已从应用内回收站永久删除。");
       summary.successCount += 1;

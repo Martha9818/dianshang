@@ -3,8 +3,8 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: The previous UI-only ID-visibility follow-up is complete locally and verified. A new approved follow-up design now replaces that direction with computed display numbering for products/materials, product-pool spacing cleanup, duplicate material-action removal, and empty-directory support inside the existing file-cleanup system; the design is written and awaiting final spec review before implementation.
-- Next stage: Review the written follow-up spec, then implement only the approved display-number, UI cleanup, and empty-directory extension within the existing V1.5 boundaries.
+- Current task state: The approved display-number and cleanup follow-up is now implemented locally and verified. `/products` uses computed product display numbers inside the product-info cell, `/materials` uses per-product material display numbers with real IDs demoted to detail-only metadata, duplicate copywriting shortcuts are removed, and `/maintenance/files` can now surface empty directories through the existing cleanup flow.
+- Next stage: Review the latest local follow-up on Windows runtime, then continue only with the next explicitly approved V1.5 cleanup thread.
 
 ## Product Direction
 
@@ -43,7 +43,8 @@
 - Latest stabilization batch removes duplicated notification action areas, concentrates selection/read/delete/cleanup controls in the notification list header, makes Prompt tasks switch detail by clicking the whole card, moves high-frequency material detail links above the metadata block, relaxes product material table density, adds collapsed/deletable ScanLog history, and increases the multi-platform copywriting package text timeout without changing schema, migrations, dependencies, or V2 behavior.
 - Latest ID-visibility follow-up keeps V1.5 boundaries and only adjusts UI display: `/products` now shows internal `product.id` beside the existing SPU-driven card row, and `/materials` grid cards now show `material.id` in the card header to help users map screenshot source records to products/materials without changing schema, routing, or business logic.
 - Latest approved design follow-up keeps real IDs unchanged, moves toward computed display numbering (`商品 1`, per-product `素材 1`), restores real IDs to secondary detail-only information, removes duplicate material copywriting actions, and extends the existing cleanup foundation to surface empty directory shells without adding a second cleanup system or touching schema.
+- Latest implementation follow-up keeps real IDs unchanged and fully replaces the temporary primary-ID emphasis: product rows now show computed display numbering, product detail exposes both display number and real `Product ID`, materials show per-product computed numbering with real IDs in detail metadata, the mirrored duplicate copywriting shortcut is removed, and file cleanup now distinguishes empty directories from files while reusing the same guarded trash/delete pipeline.
 
 ## Next Recommended Step
 
-- Review the new display-number and empty-directory cleanup spec, then implement and locally verify the approved `/products`, `/materials`, and `/maintenance/files` follow-up without changing real IDs, schema, or V2 scope.
+- Review the latest `/products`, `/materials`, and `/maintenance/files` follow-up on Windows local runtime, especially display-number continuity after delete/discard and empty-directory cleanup behavior, before opening another stabilization request.

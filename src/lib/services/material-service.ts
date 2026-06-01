@@ -198,6 +198,58 @@ function formatBytes(bytes: number | null | undefined) {
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
+async function getProductDisplayNumberMap(productIds?: number[]) {
+  const products = await prisma.product.findMany({
+    where: { deletedAt: null },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { id: true },
+  });
+
+  const displayNumberMap = new Map(products.map((product, index) => [product.id, index + 1]));
+  if (!productIds?.length) {
+    return displayNumberMap;
+  }
+
+  return new Map(productIds.map((productId) => [productId, displayNumberMap.get(productId) ?? null]));
+}
+
+async function getActiveMaterialDisplayNumberMap(productIds?: number[]) {
+  const materials = await prisma.material.findMany({
+    where: {
+      product: { deletedAt: null },
+      status: { not: MATERIAL_STATUS.DISCARDED },
+      ...(productIds?.length ? { productId: { in: productIds } } : {}),
+    },
+    orderBy: [{ productId: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+    select: { id: true, productId: true },
+  });
+
+  const counters = new Map<number, number>();
+  const displayNumberMap = new Map<number, number>();
+
+  for (const material of materials) {
+    const nextNumber = (counters.get(material.productId) ?? 0) + 1;
+    counters.set(material.productId, nextNumber);
+    displayNumberMap.set(material.id, nextNumber);
+  }
+
+  return displayNumberMap;
+}
+
+type MappedMaterial = Awaited<ReturnType<typeof mapMaterial>>;
+
+function attachDisplayNumbers(
+  materials: MappedMaterial[],
+  materialDisplayNumberMap: Map<number, number>,
+  productDisplayNumberMap: Map<number, number | null>,
+) {
+  return materials.map((material) => ({
+    ...material,
+    displayNumberWithinProduct: materialDisplayNumberMap.get(material.id) ?? null,
+    productDisplayNumber: productDisplayNumberMap.get(material.productId) ?? null,
+  }));
+}
+
 async function mapMaterials(materials: MaterialRecord[]) {
   return Promise.all(materials.map(mapMaterial));
 }
@@ -218,7 +270,17 @@ export async function getMaterialById(materialId: number) {
       select: materialSelect,
     });
 
-    return material ? mapMaterial(material) : null;
+    if (!material) {
+      return null;
+    }
+
+    const [mappedMaterial, materialDisplayNumberMap, productDisplayNumberMap] = await Promise.all([
+      mapMaterial(material),
+      getActiveMaterialDisplayNumberMap([material.productId]),
+      getProductDisplayNumberMap([material.productId]),
+    ]);
+
+    return attachDisplayNumbers([mappedMaterial], materialDisplayNumberMap, productDisplayNumberMap)[0] ?? null;
   } catch (error) {
     throw normalizeProductReadError(error);
   }
@@ -233,7 +295,13 @@ export async function getProductMaterials(productId: number, filters?: Partial<O
       select: materialSelect,
     });
 
-    return mapMaterials(materials);
+    const [mappedMaterials, materialDisplayNumberMap, productDisplayNumberMap] = await Promise.all([
+      mapMaterials(materials),
+      getActiveMaterialDisplayNumberMap([productId]),
+      getProductDisplayNumberMap([productId]),
+    ]);
+
+    return attachDisplayNumbers(mappedMaterials, materialDisplayNumberMap, productDisplayNumberMap);
   } catch (error) {
     throw normalizeProductReadError(error);
   }
@@ -284,16 +352,22 @@ export async function getMaterialLibraryPageData(filters?: MaterialListFilters) 
     const adopted = getCount(MATERIAL_STATUS.ADOPTED);
     const needsEdit = getCount(MATERIAL_STATUS.NEEDS_EDIT);
 
-    const mappedMaterials = await mapMaterials(materials);
+    const productIds = Array.from(new Set(products.map((product) => product.id)));
+    const [mappedMaterials, materialDisplayNumberMap, productDisplayNumberMap] = await Promise.all([
+      mapMaterials(materials),
+      getActiveMaterialDisplayNumberMap(productIds),
+      getProductDisplayNumberMap(productIds),
+    ]);
+    const materialsWithDisplayNumbers = attachDisplayNumbers(mappedMaterials, materialDisplayNumberMap, productDisplayNumberMap);
     const dedupSummaries = await getImageDedupSummariesForTargets(
       "material",
-      mappedMaterials.map((material) => material.id),
+      materialsWithDisplayNumbers.map((material) => material.id),
     ).catch(() => new Map());
     const selectedDedupSummary = selectedMaterial ? await getImageDedupSummary("material", selectedMaterial.id).catch(() => null) : null;
 
     return {
       products,
-      materials: mappedMaterials.map((material) => ({
+      materials: materialsWithDisplayNumbers.map((material) => ({
         ...material,
         imageDedup: dedupSummaries.get(material.id) ?? null,
       })),

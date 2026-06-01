@@ -271,7 +271,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
                         </div>
                       </DataTableCell>
                       <DataTableCell>{item.scope}</DataTableCell>
-                      <DataTableCell>{item.fileType}</DataTableCell>
+                      <DataTableCell>{item.itemKind === "directory" ? "空目录" : item.fileType}</DataTableCell>
                       <DataTableCell>{item.fileSizeLabel}</DataTableCell>
                       <DataTableCell>{item.modifiedAtLabel}</DataTableCell>
                       <DataTableCell>
@@ -374,7 +374,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
                       </DataTableCell>
                       <DataTableCell className="break-all font-medium text-slate-900">{item.trashRelativePath}</DataTableCell>
                       <DataTableCell className="break-all text-slate-500">{item.originalRelativePath ?? "--"}</DataTableCell>
-                      <DataTableCell>{item.fileType}</DataTableCell>
+                      <DataTableCell>{item.itemKind === "directory" ? "空目录" : item.fileType}</DataTableCell>
                       <DataTableCell>{item.fileSizeLabel}</DataTableCell>
                       <DataTableCell>{item.modifiedAtLabel}</DataTableCell>
                     </DataTableRow>
