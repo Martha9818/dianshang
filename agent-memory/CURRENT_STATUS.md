@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: The approved stabilization batch for notifications, products/materials, copywriting package timeout handling, Prompt task card selection, materials detail actions, and inspiration ScanLog tightening is complete locally and verified.
+- Current task state: The approved stabilization batch for notifications, products/materials, copywriting package timeout handling, Prompt task card selection, materials detail actions, and inspiration ScanLog tightening is complete locally and verified. A small UI follow-up now also exposes internal `product.id` in the product pool and `material.id` on material cards to reduce SPU/ID confusion during screenshot-recognition workflows.
 - Next stage: Review the latest local stabilization batch on Windows local runtime, then continue only with the next explicitly approved V1.5 follow-up thread.
 
 ## Product Direction
@@ -41,6 +41,7 @@
 - Latest auto-filter follow-up removed the visible filter submit buttons from notifications, products, copywriting history, Prompt tasks, materials, and inspirations. Select controls update the URL immediately, text/number filters update on Enter or blur, scroll is preserved, multi-filter state is serialized from the whole form, and stale `materialId` / `taskCode` params are cleared on relevant filter changes.
 - Latest dashboard follow-up excludes cancelled Prompt tasks from the home dashboard recent Prompt task list while leaving Prompt task history and status filtering intact.
 - Latest stabilization batch removes duplicated notification action areas, concentrates selection/read/delete/cleanup controls in the notification list header, makes Prompt tasks switch detail by clicking the whole card, moves high-frequency material detail links above the metadata block, relaxes product material table density, adds collapsed/deletable ScanLog history, and increases the multi-platform copywriting package text timeout without changing schema, migrations, dependencies, or V2 behavior.
+- Latest ID-visibility follow-up keeps V1.5 boundaries and only adjusts UI display: `/products` now shows internal `product.id` beside the existing SPU-driven card row, and `/materials` grid cards now show `material.id` in the card header to help users map screenshot source records to products/materials without changing schema, routing, or business logic.
 
 ## Next Recommended Step
 

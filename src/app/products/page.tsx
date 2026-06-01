@@ -229,12 +229,13 @@ export default async function ProductsPage({
           >
           <DashboardCard>
             <TableScrollArea className="py-3">
-              <DataTable className="min-w-[1240px]">
+              <DataTable className="min-w-[1320px]">
                 <DataTableHead>
                   <tr>
                     <DataTableHeaderCell className="w-[5%]">选择</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[28%]">商品信息</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[14%]">类目</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[25%]">商品信息</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[12%]">类目</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[10%]">Product ID</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[12%]">平台</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[10%]">售价</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[10%]">净利润</DataTableHeaderCell>
@@ -271,6 +272,9 @@ export default async function ProductsPage({
                             <p>{product.categoryLevel1 ?? "--"}</p>
                             <p className="text-xs text-slate-400">{product.categoryLevel2 ?? "--"}</p>
                           </div>
+                        </DataTableCell>
+                        <DataTableCell>
+                          <span className="font-medium text-slate-700">{product.id}</span>
                         </DataTableCell>
                         <DataTableCell>{product.targetPlatforms.length > 0 ? product.targetPlatforms.join(" / ") : "--"}</DataTableCell>
                         <DataTableCell>{formatCurrency(product.estimatedPrice)}</DataTableCell>
@@ -309,7 +313,7 @@ export default async function ProductsPage({
                     ))
                   ) : (
                     <DataTableRow>
-                      <DataTableCell colSpan={11} className="py-12">
+                      <DataTableCell colSpan={12} className="py-12">
                         <div className="text-center">
                           <p className="text-base font-medium text-slate-700">
                             {activeFilters ? "当前筛选条件下没有商品记录" : "商品池还没有数据"}

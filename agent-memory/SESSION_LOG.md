@@ -4,6 +4,13 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-01
 
+### V1.5 Stabilization - Product And Material ID Visibility
+
+- Changed: Added an internal `Product ID` column to the `/products` pool table while keeping SPU as the human-facing business code, so users can directly map screenshot/link/material records back to the numeric product primary key.
+- Changed: Added a compact `素材ID {id}` badge to the top-right of `/materials` grid cards, making screenshot-recognition `sourceId` lookup easier without opening the right-side detail pane first.
+- Verification: `npm run lint` and `npm run typecheck`.
+- Boundary: No schema, migration, dependency, routing, filesystem, AI, or business-logic change was added; this is display-only UI clarification within the current V1.5 scope.
+
 ### V1.5 Stabilization - Notifications, Prompt Tasks, Materials, And ScanLog Tightening
 
 - Changed: Removed the duplicated notification action areas, kept only the filter bar plus a unified notification-list toolbar, and moved `全选` / `全部标记已读` / `全部删除` / `清理旧通知` into the list header. Notification delete actions no longer prompt for a second confirmation, while the existing cleanup guard remains in place.

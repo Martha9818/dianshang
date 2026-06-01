@@ -225,7 +225,7 @@ export default async function MaterialsPage({
                     href={buildUrl(params, { view, materialId: String(material.id) })}
                     selected={selectedMaterial?.id === material.id}
                   >
-                    <span className="relative z-10 mb-3 flex items-center gap-2 text-xs text-slate-500">
+                    <span className="relative z-10 mb-3 flex items-start justify-between gap-3 text-xs text-slate-500">
                       <input
                         type="checkbox"
                         form={MATERIAL_BATCH_FORM_ID}
@@ -234,6 +234,9 @@ export default async function MaterialsPage({
                         aria-label={`选择素材 ${material.id}`}
                         className="h-4 w-4 rounded border-slate-300 text-blue-600"
                       />
+                      <span className="rounded-full border border-[#DCE5F2] bg-white/90 px-2.5 py-1 font-medium text-slate-600 shadow-sm">
+                        素材ID {material.id}
+                      </span>
                     </span>
                     <div className="pointer-events-none relative z-10">
                       <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" square missing={!material.fileExists} />
