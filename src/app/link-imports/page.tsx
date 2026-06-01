@@ -9,6 +9,7 @@ import {
 } from "@/components/dashboard/primitives";
 import { ProductImage } from "@/components/products/product-image";
 import { WorkspacePage } from "@/components/ui/workspace-page";
+import { LinkImportFilterControls } from "@/components/link-imports/link-import-filter-controls";
 import {
   createLinkImportDraftAction,
   linkImportDraftToCompetitorAction,
@@ -31,6 +32,7 @@ type SearchParams = {
   draftId?: string;
   status?: string;
   purpose?: string;
+  linkImportMessage?: string;
   linkImportError?: string;
 };
 
@@ -81,6 +83,14 @@ function getSafeLinkImportDisplayUrl(value: string | null | undefined) {
   return value;
 }
 
+function buildDraftHref(input: { draftId: number; purpose?: string | null; status?: string | null }) {
+  const params = new URLSearchParams();
+  params.set("draftId", String(input.draftId));
+  if (input.purpose) params.set("purpose", input.purpose);
+  if (input.status) params.set("status", input.status);
+  return `/link-imports?${params.toString()}`;
+}
+
 export default async function LinkImportsPage({
   searchParams,
 }: {
@@ -111,6 +121,7 @@ export default async function LinkImportsPage({
     >
       {readonlyNotice ? <PageNote>{readonlyNotice}</PageNote> : null}
       {readError ? <PageNote>{readError}</PageNote> : null}
+      {params.linkImportMessage ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{params.linkImportMessage}</div> : null}
       {params.linkImportError ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{params.linkImportError}</div> : null}
 
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
@@ -215,27 +226,23 @@ export default async function LinkImportsPage({
         <DashboardCard>
           <DashboardCardHeader title="草稿列表" description="查看手动保存的链接草稿；默认最多展示最近 80 条。" />
           <div className="border-b border-[#EEF2F8] px-5 py-4">
-            <form action="/link-imports" method="get" className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-              <select name="purpose" defaultValue={pageResult.filters.purpose ?? ""} className={inputClassName}>
-                <option value="">全部用途</option>
-                {linkImportPurposeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-              <select name="status" defaultValue={pageResult.filters.status ?? ""} className={inputClassName}>
-                {linkImportStatusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-              <button type="submit" className={secondaryButtonClassName}>筛选</button>
-            </form>
+            <LinkImportFilterControls
+              purpose={pageResult.filters.purpose ?? ""}
+              status={pageResult.filters.status ?? ""}
+              purposeOptions={linkImportPurposeOptions}
+              statusOptions={linkImportStatusOptions}
+            />
           </div>
           <div className="space-y-3 px-5 py-4">
             {pageResult.drafts.length > 0 ? (
               pageResult.drafts.map((draft) => (
                 <Link
                   key={draft.id}
-                  href={`/link-imports?draftId=${draft.id}`}
+                  href={buildDraftHref({
+                    draftId: draft.id,
+                    purpose: pageResult.filters.purpose,
+                    status: pageResult.filters.status,
+                  })}
                   className={[
                     "block rounded-2xl border px-4 py-4 transition hover:-translate-y-[1px] hover:border-blue-100 hover:bg-[#FBFDFF] hover:shadow-[0_14px_30px_rgba(59,130,246,0.08)]",
                     selectedDraft?.id === draft.id ? "border-blue-200 bg-[#F8FBFF]" : "border-[#EEF2F8] bg-white",
@@ -302,7 +309,9 @@ export default async function LinkImportsPage({
                 <form action={linkImportDraftToInspirationAction} className="grid gap-3 rounded-[24px] border border-[#EEF2F8] bg-white px-4 py-4">
                   <input type="hidden" name="draftId" value={selectedDraft.id} />
                   <p className="text-sm font-semibold text-slate-800">转为灵感</p>
-                  <p className="min-h-12 text-xs leading-6 text-slate-500">需要草稿已上传截图；创建后仍进入灵感箱等待人工处理。</p>
+                  <p className="min-h-12 text-xs leading-6 text-slate-500">
+                    {selectedDraft.screenshotPath ? "创建后仍进入灵感箱等待人工处理。" : "需要先上传辅助截图，才能转为灵感。"}
+                  </p>
                   <button type="submit" className={secondaryButtonClassName} disabled={!pageResult.runtime.isWritable || !selectedDraft.screenshotPath}>
                     确认转灵感
                   </button>
@@ -311,7 +320,7 @@ export default async function LinkImportsPage({
                 <form action={linkImportDraftToProductAction} className="grid gap-3 rounded-[24px] border border-[#EEF2F8] bg-white px-4 py-4">
                   <input type="hidden" name="draftId" value={selectedDraft.id} />
                   <p className="text-sm font-semibold text-slate-800">关联商品</p>
-                  <input name="productId" placeholder="已有商品 ID" className={inputClassName} disabled={!pageResult.runtime.isWritable} />
+                  <input name="productId" placeholder="已有商品 ID" className={inputClassName} disabled={!pageResult.runtime.isWritable} required />
                   <button type="submit" className={secondaryButtonClassName} disabled={!pageResult.runtime.isWritable}>
                     确认关联商品
                   </button>
@@ -320,7 +329,7 @@ export default async function LinkImportsPage({
                 <form action={linkImportDraftToCompetitorAction} className="grid gap-3 rounded-[24px] border border-[#EEF2F8] bg-white px-4 py-4">
                   <input type="hidden" name="draftId" value={selectedDraft.id} />
                   <p className="text-sm font-semibold text-slate-800">关联竞品</p>
-                  <input name="competitorId" placeholder="已有竞品 ID" className={inputClassName} disabled={!pageResult.runtime.isWritable} />
+                  <input name="competitorId" placeholder="已有竞品 ID" className={inputClassName} disabled={!pageResult.runtime.isWritable} required />
                   <button type="submit" className={secondaryButtonClassName} disabled={!pageResult.runtime.isWritable}>
                     确认关联竞品
                   </button>

@@ -4,7 +4,7 @@ import { BUSINESS_ERROR_CODES, ProductBusinessError, OPERATION_LOG_ACTIONS } fro
 import { getImageTypeLabel, getPlatformLabel } from "@/lib/modules/prompt-task";
 import { MATERIAL_SOURCE, MATERIAL_STATUS } from "@/lib/modules/materials";
 import { createAIClient, createAIJob, markAIJobFailed, markAIJobRunning, markAIJobSuccess, sanitizeAIErrorSummary, summarizePrompt } from "@/lib/services/ai";
-import { getDefaultEnabledAIProvider, getImageGenerationSettings } from "@/lib/services/ai-provider-service";
+import { getImageGenerationSettings, getSceneDefaultAIProvider } from "@/lib/services/ai-provider-service";
 import { detectBannedWords, getBannedWords } from "@/lib/services/banned-word-service";
 import { saveMaterialImageBuffer } from "@/lib/services/file-storage-service";
 import { createAppNotification } from "@/lib/services/notificationService";
@@ -20,6 +20,7 @@ export const IMAGE_GENERATION_STATUS = {
 } as const;
 
 const PREVIEW_IMAGE_GENERATION_MESSAGE = "预览环境只读，请在 Windows 本地验收 API 生图。";
+const DEFAULT_PROVIDER_MODEL_LABEL = "Provider 默认模型";
 
 const imageGenerationJobSelect = {
   id: true,
@@ -87,9 +88,18 @@ function isHighCostImageConfig(input: { model?: string | null; quality?: string 
 function mapImageGenerationJob(job: ImageGenerationJobRecord) {
   return {
     ...job,
+    model: normalizeImageModelLabel(job.model),
     statusLabel: getImageGenerationStatusLabel(job.status),
     resultDisplayPath: job.resultMaterial?.thumbnailPath ?? job.resultMaterial?.filePath ?? null,
   };
+}
+
+function normalizeImageModelLabel(model: string | null | undefined) {
+  const trimmed = model?.trim();
+  if (!trimmed || trimmed === "未指定模型") {
+    return DEFAULT_PROVIDER_MODEL_LABEL;
+  }
+  return trimmed;
 }
 
 function getImageGenerationStatusLabel(status: string) {
@@ -154,7 +164,7 @@ export async function getImageGenerationPanelData(promptTaskId: number | null) {
   try {
     const [settings, provider, recentJobs] = await Promise.all([
       getImageGenerationSettings(),
-      getDefaultEnabledAIProvider("image"),
+      getSceneDefaultAIProvider("image"),
       promptTaskId
         ? prisma.imageGenerationJob.findMany({
             where: { promptTaskId },
@@ -205,7 +215,7 @@ export async function generateImageForPromptTask(input: {
 
     const [settings, provider, task, bannedWords] = await Promise.all([
       getImageGenerationSettings(),
-      getDefaultEnabledAIProvider("image"),
+      getSceneDefaultAIProvider("image"),
       prisma.promptTask.findUnique({
         where: { taskCode: input.taskCode },
         select: {
@@ -260,7 +270,7 @@ export async function generateImageForPromptTask(input: {
 
     const promptVersion = input.promptVersion?.trim() || task.version || "v1";
     const promptUse = input.promptUse?.trim() || getImageTypeLabel(task.imageType);
-    const imageModelName = provider.modelName?.trim() || "未指定模型";
+    const imageModelName = provider.modelName?.trim() || DEFAULT_PROVIDER_MODEL_LABEL;
     const parameterSummaryJson = buildParameterSummary({
       provider: provider.name,
       model: imageModelName,

@@ -20,7 +20,7 @@ import {
   validateJsonAIOutput,
 } from "@/lib/services/ai";
 import { sanitizeAIErrorSummary, summarizePrompt } from "@/lib/services/ai/aiPromptSanitizer";
-import { getDefaultEnabledAIProvider } from "@/lib/services/ai-provider-service";
+import { getSceneDefaultAIProvider } from "@/lib/services/ai-provider-service";
 import { getUploadsAbsolutePath } from "@/lib/services/file-storage-service";
 import { ensureProductWritesAllowed, normalizeProductWriteError } from "@/lib/services/product-runtime-service";
 
@@ -162,7 +162,7 @@ async function generateInspirationAiDraft(input: {
       },
     });
 
-    const provider = await getDefaultEnabledAIProvider();
+    const provider = await getSceneDefaultAIProvider("vision");
     if (!provider) {
       throw new ProductBusinessError(BUSINESS_ERROR_CODES.DEFAULT_PROVIDER_REQUIRED, "请先配置可用的默认 AI Provider。");
     }

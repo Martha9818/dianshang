@@ -226,15 +226,6 @@ export default async function PromptTasksPage({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-[#EEF2F8] bg-[#FBFDFF]">
-                  <div className="border-b border-[#EEF2F8] px-4 py-3">
-                    <p className="text-sm font-medium text-slate-900">Prompt 内容</p>
-                  </div>
-                  <pre className="max-h-[360px] overflow-y-auto whitespace-pre-wrap bg-white px-4 py-4 text-sm leading-7 text-slate-600">
-                    {activeTask.promptText}
-                  </pre>
-                </div>
-
                 <div className="sticky bottom-4 z-10 flex flex-wrap items-start gap-3 rounded-2xl border border-[#EEF2F8] bg-white/95 px-4 py-3 shadow-[0_14px_30px_rgba(15,23,42,0.08)] backdrop-blur">
                   <PromptTaskCopyButton
                     taskCode={activeTask.taskCode}
@@ -247,7 +238,7 @@ export default async function PromptTasksPage({
                   <TableActionLink href={`/prompt-tasks/${encodeURIComponent(activeTask.taskCode)}/upload`}>上传生成结果</TableActionLink>
                 </div>
 
-                <div className="space-y-3 rounded-2xl border border-[#EEF2F8] bg-white px-4 py-4">
+                <div className="space-y-3 rounded-2xl border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
                       <p className="text-sm font-medium text-slate-900">API 生图轻量版</p>
@@ -263,7 +254,7 @@ export default async function PromptTasksPage({
                         promptVersionOptions={[activeTask.version ?? "v1"]}
                         promptUseOptions={[activeTask.imageTypeLabel, `${activeTask.platformLabel} / ${activeTask.imageTypeLabel}`]}
                         costHint={imageGenerationPanel.settings.costHint}
-                        providerLabel={`${imageGenerationPanel.provider?.name ?? "Image Provider"} / ${imageGenerationPanel.provider?.modelName ?? "未指定模型"} / ${imageGenerationPanel.settings.defaultSize} / ${imageGenerationPanel.settings.defaultQuality}`}
+                        providerLabel={`${imageGenerationPanel.provider?.name ?? "Image Provider"} / ${imageGenerationPanel.provider?.modelName?.trim() || "Provider 默认模型"} / ${imageGenerationPanel.settings.defaultSize} / ${imageGenerationPanel.settings.defaultQuality}`}
                         disabled={Boolean(runtimeNotice) || activeTask.status === PROMPT_TASK_STATUS.CANCELLED}
                         highCost={imageGenerationPanel.isHighCost}
                       />
@@ -278,7 +269,7 @@ export default async function PromptTasksPage({
                         ? "API 生图当前未启用。请在 AI 设置中启用后，再配置用途为 API 生图的默认 Provider。"
                         : !imageGenerationPanel.provider
                           ? "API 生图已启用，但未配置可用的 API 生图 Provider。请在 AI 设置中新增或设为默认。"
-                          : "API 生图 Provider 缺少 Base URL、API Key 或模型名，请先补齐配置。"}
+                          : "API 生图 Provider 缺少 Base URL 或 API Key，请先补齐配置。"}
                     </PageNote>
                   ) : null}
                   {imageGenerationPanel?.recentJobs.length ? (
@@ -297,6 +288,15 @@ export default async function PromptTasksPage({
                       ))}
                     </div>
                   ) : null}
+                </div>
+
+                <div className="rounded-2xl border border-[#EEF2F8] bg-[#FBFDFF]">
+                  <div className="border-b border-[#EEF2F8] px-4 py-3">
+                    <p className="text-sm font-medium text-slate-900">Prompt 内容</p>
+                  </div>
+                  <pre className="max-h-[360px] overflow-y-auto whitespace-pre-wrap bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+                    {activeTask.promptText}
+                  </pre>
                 </div>
               </div>
             ) : (

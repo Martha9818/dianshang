@@ -34,12 +34,14 @@ function buildRedirectUrl(input: {
   draftId?: number | null;
   status?: string | null;
   purpose?: string | null;
+  linkImportMessage?: string | null;
   linkImportError?: string | null;
 }) {
   const params = new URLSearchParams();
   if (input.draftId) params.set("draftId", String(input.draftId));
   if (input.status) params.set("status", input.status);
   if (input.purpose) params.set("purpose", input.purpose);
+  if (input.linkImportMessage) params.set("linkImportMessage", input.linkImportMessage);
   if (input.linkImportError) params.set("linkImportError", input.linkImportError);
   const query = params.toString();
   return query ? `/link-imports?${query}` : "/link-imports";
@@ -67,7 +69,7 @@ export async function createLinkImportDraftAction(formData: FormData) {
     });
 
     revalidateLinkImportScopes(draft.productId, draft.convertedInspirationId);
-    redirectUrl = buildRedirectUrl({ draftId: draft.id });
+    redirectUrl = buildRedirectUrl({ draftId: draft.id, linkImportMessage: "已创建链接草稿，可在右侧继续确认转化。" });
   } catch (error) {
     redirectUrl = buildRedirectUrl({
       purpose,
@@ -91,7 +93,7 @@ export async function updateLinkImportDraftAction(formData: FormData) {
     });
 
     revalidateLinkImportScopes(draft.productId, draft.convertedInspirationId);
-    redirectUrl = buildRedirectUrl({ draftId: draft.id });
+    redirectUrl = buildRedirectUrl({ draftId: draft.id, linkImportMessage: "链接草稿已保存。" });
   } catch (error) {
     redirectUrl = buildRedirectUrl({
       draftId: Number.isInteger(draftId) && draftId > 0 ? draftId : null,
@@ -109,7 +111,7 @@ export async function rejectLinkImportDraftAction(formData: FormData) {
   try {
     const draft = await rejectLinkImportDraft(parsePositiveId(formData.get("draftId"), "链接导入草稿"));
     revalidateLinkImportScopes(draft.productId, draft.convertedInspirationId);
-    redirectUrl = buildRedirectUrl({ draftId: draft.id });
+    redirectUrl = buildRedirectUrl({ draftId: draft.id, linkImportMessage: "链接草稿已放弃并归档。" });
   } catch (error) {
     redirectUrl = buildRedirectUrl({
       draftId: Number.isInteger(draftId) && draftId > 0 ? draftId : null,
@@ -127,7 +129,7 @@ export async function linkImportDraftToInspirationAction(formData: FormData) {
   try {
     const draft = await linkImportDraftToInspiration(parsePositiveId(formData.get("draftId"), "链接导入草稿"));
     revalidateLinkImportScopes(draft.productId, draft.convertedInspirationId);
-    redirectUrl = buildRedirectUrl({ draftId: draft.id });
+    redirectUrl = buildRedirectUrl({ draftId: draft.id, linkImportMessage: "已转为灵感，可到灵感箱继续处理。" });
   } catch (error) {
     redirectUrl = buildRedirectUrl({
       draftId: Number.isInteger(draftId) && draftId > 0 ? draftId : null,
@@ -148,7 +150,7 @@ export async function linkImportDraftToProductAction(formData: FormData) {
       productId: parsePositiveId(formData.get("productId"), "商品 ID"),
     });
     revalidateLinkImportScopes(draft.productId, draft.convertedInspirationId);
-    redirectUrl = buildRedirectUrl({ draftId: draft.id });
+    redirectUrl = buildRedirectUrl({ draftId: draft.id, linkImportMessage: "已关联到商品。" });
   } catch (error) {
     redirectUrl = buildRedirectUrl({
       draftId: Number.isInteger(draftId) && draftId > 0 ? draftId : null,
@@ -169,7 +171,7 @@ export async function linkImportDraftToCompetitorAction(formData: FormData) {
       competitorId: parsePositiveId(formData.get("competitorId"), "竞品 ID"),
     });
     revalidateLinkImportScopes(draft.productId, draft.convertedInspirationId);
-    redirectUrl = buildRedirectUrl({ draftId: draft.id });
+    redirectUrl = buildRedirectUrl({ draftId: draft.id, linkImportMessage: "已关联到竞品。" });
   } catch (error) {
     redirectUrl = buildRedirectUrl({
       draftId: Number.isInteger(draftId) && draftId > 0 ? draftId : null,

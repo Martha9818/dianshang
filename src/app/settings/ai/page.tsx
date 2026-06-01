@@ -18,6 +18,11 @@ export default async function AISettingsPage() {
       defaultQuality: "standard",
       costHint: "API 生图可能产生额外费用；请确认模型、尺寸和质量后再手动生成。",
     },
+    sceneDefaultSettings: {
+      copywriting: null,
+      vision: null,
+      image: null,
+    },
     readError: getProductErrorMessage(error, "当前预览环境无法读取本地 AI Provider，请在 Windows 本地验收。"),
   }));
 
@@ -32,6 +37,7 @@ export default async function AISettingsPage() {
         providers={pageData.providers}
         defaultProviderId={pageData.defaultProviderId}
         imageGenerationSettings={pageData.imageGenerationSettings}
+        sceneDefaultSettings={pageData.sceneDefaultSettings}
         runtimeNotice={runtime.isWritable ? null : buildReadonlyRuntimeMessage(runtime.mode)}
       />
     </WorkspacePage>

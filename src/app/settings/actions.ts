@@ -9,6 +9,7 @@ import {
   enableAIProvider,
   extractAIProviderFormValues,
   extractImageGenerationSettingsFormValues,
+  updateAISceneDefaultProviders,
   updateAIProvider,
   updateImageGenerationSettings,
 } from "@/lib/services/ai-provider-service";
@@ -92,6 +93,30 @@ export async function saveImageGenerationSettingsAction(formData: FormData) {
     return {
       success: false as const,
       error: getProductErrorMessage(error, "保存 API 生图设置失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function saveAISceneDefaultsAction(formData: FormData) {
+  try {
+    const saved = await updateAISceneDefaultProviders({
+      copywriting: Number(formData.get("copywritingProviderId") ?? "") || null,
+      vision: Number(formData.get("visionProviderId") ?? "") || null,
+      image: Number(formData.get("imageProviderId") ?? "") || null,
+    });
+    revalidatePath("/settings/ai");
+    revalidatePath("/copywriting");
+    revalidatePath("/prompt-tasks");
+    revalidatePath("/screenshots");
+    revalidatePath("/inspirations");
+    return {
+      success: true as const,
+      data: saved,
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "保存场景默认 Provider 失败，请稍后重试。"),
     };
   }
 }

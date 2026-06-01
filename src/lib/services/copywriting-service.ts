@@ -35,7 +35,7 @@ import {
   validateJsonAIOutput,
   type AISchema,
 } from "@/lib/services/ai";
-import { getAIProviderById, getDefaultEnabledAIProvider } from "@/lib/services/ai-provider-service";
+import { getAIProviderById, getSceneDefaultAIProvider } from "@/lib/services/ai-provider-service";
 import {
   ensureProductWritesAllowed,
   getRuntimeModeSummary,
@@ -751,9 +751,14 @@ export async function getCopywritingPageData(filters?: {
   }
 
   try {
-    const [products, providers, existingCopywritings] = await Promise.all([loadProducts(), loadProviders(), loadCopywritings()]);
+    const [products, providers, existingCopywritings, sceneDefaultProvider] = await Promise.all([
+      loadProducts(),
+      loadProviders(),
+      loadCopywritings(),
+      getSceneDefaultAIProvider("copywriting"),
+    ]);
 
-    const defaultProvider = providers.find((provider) => provider.isDefault) ?? null;
+    const defaultProvider = providers.find((provider) => provider.id === sceneDefaultProvider?.id) ?? providers.find((provider) => provider.isDefault) ?? null;
     const selectedProductId = query.productId;
     const selectedPlatform = query.platform;
     const mappedCopywritings = existingCopywritings.map(mapCopywritingRecord);
@@ -842,7 +847,7 @@ export async function generatePlatformCopywriting(input: {
     const provider =
       input.providerId !== null && input.providerId !== undefined
         ? await getAIProviderById(input.providerId)
-        : await getDefaultEnabledAIProvider();
+        : await getSceneDefaultAIProvider("copywriting");
 
     if (!provider) {
       throw new ProductBusinessError(BUSINESS_ERROR_CODES.DEFAULT_PROVIDER_REQUIRED, "当前没有可用的默认 Provider，请先配置 AI 设置。");
@@ -1004,7 +1009,7 @@ export async function generateMultiPlatformCopywritingPackage(input: MultiPlatfo
     const provider =
       input.providerId !== null && input.providerId !== undefined
         ? await getAIProviderById(input.providerId)
-        : await getDefaultEnabledAIProvider();
+        : await getSceneDefaultAIProvider("copywriting");
 
     if (!provider) {
       throw new ProductBusinessError(BUSINESS_ERROR_CODES.DEFAULT_PROVIDER_REQUIRED, "当前没有可用的默认 Provider，请先配置 AI 设置。");

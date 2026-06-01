@@ -23,6 +23,10 @@ export type ImageGenerationSettingsFormValues = {
   costHint: string;
 };
 
+export type AISceneDefault = "copywriting" | "vision" | "image";
+
+export type AISceneDefaultSettings = Record<AISceneDefault, number | null>;
+
 type ProviderMutationInput = {
   name: string;
   providerType: string;
@@ -46,6 +50,12 @@ const IMAGE_GENERATION_SETTING_KEYS = {
   defaultQuality: "imageGeneration.defaultQuality",
   costHint: "imageGeneration.costHint",
 } as const;
+const AI_SCENE_DEFAULT_SETTING_KEYS: Record<AISceneDefault, string> = {
+  copywriting: "ai.sceneDefault.copywritingProviderId",
+  vision: "ai.sceneDefault.visionProviderId",
+  image: "ai.sceneDefault.imageProviderId",
+};
+const AI_SCENE_DEFAULT_KEYS = Object.values(AI_SCENE_DEFAULT_SETTING_KEYS);
 
 const DEFAULT_IMAGE_GENERATION_SETTINGS: ImageGenerationSettingsFormValues = {
   enabled: false,
@@ -75,6 +85,20 @@ function buildMaskedApiKey(apiKey: string | null) {
   }
 
   return "已配置";
+}
+
+function parseProviderId(value: string | null | undefined) {
+  const id = Number(value ?? "");
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+function getSceneProviderPurpose(scene: AISceneDefault) {
+  return scene === "image" ? "image" : "text";
+}
+
+function normalizeSceneProviderId(value: FormDataEntryValue | string | null | undefined) {
+  const id = Number(value ?? "");
+  return Number.isInteger(id) && id > 0 ? id : null;
 }
 
 function normalizeProviderInput(values: AIProviderFormValues): ProviderMutationInput {
@@ -191,7 +215,7 @@ export async function getAISettingsPageData() {
     const settingsRows = await prisma.appSetting.findMany({
       where: {
         key: {
-          in: Object.values(IMAGE_GENERATION_SETTING_KEYS),
+          in: [...Object.values(IMAGE_GENERATION_SETTING_KEYS), ...AI_SCENE_DEFAULT_KEYS],
         },
       },
     });
@@ -203,13 +227,21 @@ export async function getAISettingsPageData() {
         hasApiKey: Boolean(apiKey),
         maskedApiKey: buildMaskedApiKey(apiKey),
       })),
-      defaultProviderId: providers.find((provider) => provider.isDefault && provider.enabled)?.id ?? null,
+      defaultProviderId:
+        providers.find((provider) => provider.isDefault && provider.enabled && (provider.purpose ?? "text") === "text")?.id ??
+        providers.find((provider) => provider.enabled && (provider.purpose ?? "text") === "text")?.id ??
+        null,
       imageGenerationSettings: {
         enabled: settings.get(IMAGE_GENERATION_SETTING_KEYS.enabled) === "true",
         defaultSize: settings.get(IMAGE_GENERATION_SETTING_KEYS.defaultSize) ?? DEFAULT_IMAGE_GENERATION_SETTINGS.defaultSize,
         defaultQuality: settings.get(IMAGE_GENERATION_SETTING_KEYS.defaultQuality) ?? DEFAULT_IMAGE_GENERATION_SETTINGS.defaultQuality,
         costHint: settings.get(IMAGE_GENERATION_SETTING_KEYS.costHint) ?? DEFAULT_IMAGE_GENERATION_SETTINGS.costHint,
       },
+      sceneDefaultSettings: {
+        copywriting: parseProviderId(settings.get(AI_SCENE_DEFAULT_SETTING_KEYS.copywriting)),
+        vision: parseProviderId(settings.get(AI_SCENE_DEFAULT_SETTING_KEYS.vision)),
+        image: parseProviderId(settings.get(AI_SCENE_DEFAULT_SETTING_KEYS.image)),
+      } satisfies AISceneDefaultSettings,
     };
   } catch (error) {
     throw normalizeProductReadError(error);
@@ -243,6 +275,102 @@ export async function getDefaultEnabledAIProvider(purpose = "text") {
     });
   } catch (error) {
     throw normalizeProductReadError(error);
+  }
+}
+
+export async function getAISceneDefaultSettings(): Promise<AISceneDefaultSettings> {
+  try {
+    const settingsRows = await prisma.appSetting.findMany({
+      where: { key: { in: AI_SCENE_DEFAULT_KEYS } },
+    });
+    const settings = new Map(settingsRows.map((item) => [item.key, item.value]));
+
+    return {
+      copywriting: parseProviderId(settings.get(AI_SCENE_DEFAULT_SETTING_KEYS.copywriting)),
+      vision: parseProviderId(settings.get(AI_SCENE_DEFAULT_SETTING_KEYS.vision)),
+      image: parseProviderId(settings.get(AI_SCENE_DEFAULT_SETTING_KEYS.image)),
+    };
+  } catch (error) {
+    throw normalizeProductReadError(error);
+  }
+}
+
+export async function getSceneDefaultAIProvider(scene: AISceneDefault) {
+  try {
+    const settings = await getAISceneDefaultSettings();
+    const providerId = settings[scene];
+    const purpose = getSceneProviderPurpose(scene);
+
+    if (providerId) {
+      const provider = await prisma.aIProvider.findFirst({
+        where: {
+          id: providerId,
+          enabled: true,
+          purpose,
+        },
+      });
+
+      if (provider) {
+        return provider;
+      }
+    }
+
+    return await getDefaultEnabledAIProvider(purpose);
+  } catch (error) {
+    throw normalizeProductReadError(error);
+  }
+}
+
+export async function updateAISceneDefaultProviders(input: Partial<AISceneDefaultSettings>) {
+  ensureProductWritesAllowed();
+
+  try {
+    const entries = (Object.keys(AI_SCENE_DEFAULT_SETTING_KEYS) as AISceneDefault[]).map((scene) => ({
+      scene,
+      providerId: normalizeSceneProviderId(input[scene] ? String(input[scene]) : null),
+      purpose: getSceneProviderPurpose(scene),
+      settingKey: AI_SCENE_DEFAULT_SETTING_KEYS[scene],
+    }));
+
+    const selectedProviderIds = entries.map((entry) => entry.providerId).filter((id): id is number => Boolean(id));
+    const providers = selectedProviderIds.length
+      ? await prisma.aIProvider.findMany({
+          where: { id: { in: selectedProviderIds }, enabled: true },
+          select: { id: true, purpose: true },
+        })
+      : [];
+    const providerById = new Map(providers.map((provider) => [provider.id, provider]));
+
+    for (const entry of entries) {
+      if (!entry.providerId) continue;
+      const provider = providerById.get(entry.providerId);
+      if (!provider || (provider.purpose ?? "text") !== entry.purpose) {
+        throw createValidationError(entry.scene === "image" ? "API 生图默认 Provider 必须是已启用的 API 生图 Provider。" : "文案或识图默认 Provider 必须是已启用的文本 / 识图 Provider。");
+      }
+    }
+
+    await prisma.$transaction(
+      entries.map((entry) =>
+        entry.providerId
+          ? prisma.appSetting.upsert({
+              where: { key: entry.settingKey },
+              create: { key: entry.settingKey, value: String(entry.providerId) },
+              update: { value: String(entry.providerId) },
+            })
+          : prisma.appSetting.deleteMany({
+              where: { key: entry.settingKey },
+            }),
+      ),
+    );
+
+    await tryCreateSettingsOperationLog({
+      action: OPERATION_LOG_ACTIONS.UPDATE_AI_PROVIDER,
+      detail: "更新 AI 场景默认 Provider",
+    });
+
+    return await getAISceneDefaultSettings();
+  } catch (error) {
+    throw normalizeProductWriteError(error);
   }
 }
 

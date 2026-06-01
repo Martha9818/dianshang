@@ -19,6 +19,7 @@ import {
   deleteAIProviderAction,
   disableAIProviderAction,
   enableAIProviderAction,
+  saveAISceneDefaultsAction,
   saveImageGenerationSettingsAction,
   saveAIProviderAction,
   testAIProviderConnectionAction,
@@ -43,6 +44,12 @@ type ImageGenerationSettingsView = {
   defaultSize: string;
   defaultQuality: string;
   costHint: string;
+};
+
+type SceneDefaultSettingsView = {
+  copywriting: number | null;
+  vision: number | null;
+  image: number | null;
 };
 
 type ConnectionResult =
@@ -73,11 +80,13 @@ export function AISettingsManager({
   providers,
   defaultProviderId,
   imageGenerationSettings,
+  sceneDefaultSettings,
   runtimeNotice,
 }: {
   providers: ProviderView[];
   defaultProviderId: number | null;
   imageGenerationSettings: ImageGenerationSettingsView;
+  sceneDefaultSettings: SceneDefaultSettingsView;
   runtimeNotice?: string | null;
 }) {
   const router = useRouter();
@@ -85,6 +94,8 @@ export function AISettingsManager({
   const [connectionResult, setConnectionResult] = useState<ConnectionResult>(null);
   const [imageSettingsResult, setImageSettingsResult] = useState<ConnectionResult>(null);
   const [imageSettings, setImageSettings] = useState(imageGenerationSettings);
+  const [sceneSettingsResult, setSceneSettingsResult] = useState<ConnectionResult>(null);
+  const [sceneSettings, setSceneSettings] = useState(sceneDefaultSettings);
   const [form, setForm] = useState(() => {
     const defaultProvider = providers.find((item) => item.id === defaultProviderId) ?? providers[0];
     return defaultProvider
@@ -115,17 +126,30 @@ export function AISettingsManager({
   );
   const defaultImageProvider = useMemo(
     () =>
+      providers.find((provider) => provider.id === sceneSettings.image && provider.purpose === "image" && provider.enabled) ??
       providers.find((provider) => provider.purpose === "image" && provider.enabled && provider.isDefault) ??
-      providers.find((provider) => provider.purpose === "image" && provider.enabled) ??
       null,
+    [providers, sceneSettings.image],
+  );
+  const textProviderOptions = useMemo(
+    () => providers.filter((provider) => provider.enabled && (provider.purpose ?? "text") !== "image"),
+    [providers],
+  );
+  const imageProviderOptions = useMemo(
+    () => providers.filter((provider) => provider.enabled && provider.purpose === "image"),
     [providers],
   );
   const imageProviderStatus = defaultImageProvider
-    ? `当前生图 Provider：${defaultImageProvider.name} / ${defaultImageProvider.modelName ?? "未指定模型"}`
+    ? `当前生图 Provider：${defaultImageProvider.name} / ${defaultImageProvider.modelName?.trim() || "Provider 默认模型"}`
     : imageSettings.enabled
-      ? "已启用 API 生图，但未配置可用的 API 生图 Provider。请新增或切换一个用途为 API 生图的默认 Provider。"
+      ? "已启用 API 生图，但未配置可用的 API 生图 Provider。请在场景默认中选择 API 生图 Provider，或设为生图默认。"
       : "API 生图当前未启用。启用后仍需要配置用途为 API 生图的 Provider。";
   const isImageProviderForm = form.purpose === "image";
+
+  function getProviderModelLabel(provider: ProviderView) {
+    if (provider.modelName?.trim()) return provider.modelName;
+    return provider.purpose === "image" ? "Provider 默认模型" : "未指定模型";
+  }
 
   function selectProvider(provider: ProviderView) {
     setConnectionResult(null);
@@ -218,6 +242,25 @@ export function AISettingsManager({
     });
   }
 
+  function handleSaveSceneSettings() {
+    const formData = new FormData();
+    if (sceneSettings.copywriting) formData.set("copywritingProviderId", String(sceneSettings.copywriting));
+    if (sceneSettings.vision) formData.set("visionProviderId", String(sceneSettings.vision));
+    if (sceneSettings.image) formData.set("imageProviderId", String(sceneSettings.image));
+
+    startTransition(async () => {
+      const result = await saveAISceneDefaultsAction(formData);
+      if (!result.success) {
+        setSceneSettingsResult({ type: "error", text: result.error });
+        return;
+      }
+
+      setSceneSettings(result.data);
+      setSceneSettingsResult({ type: "success", text: "场景默认 Provider 已保存。" });
+      router.refresh();
+    });
+  }
+
   return (
     <>
       {runtimeNotice ? (
@@ -263,7 +306,7 @@ export function AISettingsManager({
                         <StatusBadge label={provider.enabled ? "已启用" : "已禁用"} tone={provider.enabled ? "green" : "slate"} />
                       </div>
                       <div className="mt-3 space-y-1 text-sm text-slate-500">
-                        <p>模型：{provider.modelName ?? "未指定模型"}</p>
+                        <p>模型：{getProviderModelLabel(provider)}</p>
                         <p className="truncate">Base URL：{provider.baseUrl ?? "--"}</p>
                         <p>API Key：{provider.maskedApiKey}</p>
                       </div>
@@ -442,6 +485,108 @@ export function AISettingsManager({
       <DashboardCard>
         <div className="grid gap-4 px-5 py-5 xl:grid-cols-[0.9fr_1.1fr]">
           <div>
+            <h2 className="text-[1.08rem] font-semibold text-slate-900">场景默认 Provider</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              为常用 AI 场景指定默认 Provider。未选择或 Provider 不可用时，会回退到当前全局默认。
+            </p>
+            <p className="mt-3 rounded-2xl border border-[#E4EAF3] bg-[#FBFDFF] px-4 py-3 text-sm leading-6 text-slate-600">
+              文案生成和 AI 识图使用文本 / 识图 Provider；API 生图使用用途为 API 生图的 Provider。
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-3">
+              <Field label="文案生成">
+                <select
+                  className={inputClassName}
+                  value={sceneSettings.copywriting ?? ""}
+                  onChange={(event) =>
+                    setSceneSettings((current) => ({
+                      ...current,
+                      copywriting: event.target.value ? Number(event.target.value) : null,
+                    }))
+                  }
+                  disabled={Boolean(runtimeNotice)}
+                >
+                  <option value="">使用文本默认</option>
+                  {textProviderOptions.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="AI 识图">
+                <select
+                  className={inputClassName}
+                  value={sceneSettings.vision ?? ""}
+                  onChange={(event) =>
+                    setSceneSettings((current) => ({
+                      ...current,
+                      vision: event.target.value ? Number(event.target.value) : null,
+                    }))
+                  }
+                  disabled={Boolean(runtimeNotice)}
+                >
+                  <option value="">使用文本默认</option>
+                  {textProviderOptions.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="API 生图">
+                <select
+                  className={inputClassName}
+                  value={sceneSettings.image ?? ""}
+                  onChange={(event) =>
+                    setSceneSettings((current) => ({
+                      ...current,
+                      image: event.target.value ? Number(event.target.value) : null,
+                    }))
+                  }
+                  disabled={Boolean(runtimeNotice)}
+                >
+                  <option value="">使用生图默认</option>
+                  {imageProviderOptions.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                disabled={isPending || Boolean(runtimeNotice)}
+                onClick={handleSaveSceneSettings}
+                className="inline-flex h-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-5 text-sm font-medium text-white transition disabled:opacity-70"
+              >
+                {isPending ? "处理中..." : "保存场景默认"}
+              </button>
+            </div>
+
+            {sceneSettingsResult ? (
+              <div
+                className={`rounded-[24px] border px-5 py-4 ${
+                  sceneSettingsResult.type === "success"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-rose-200 bg-rose-50 text-rose-700"
+                }`}
+              >
+                <p className="text-sm font-medium">{sceneSettingsResult.text}</p>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </DashboardCard>
+
+      <DashboardCard>
+        <div className="grid gap-4 px-5 py-5 xl:grid-cols-[0.9fr_1.1fr]">
+          <div>
             <h2 className="text-[1.08rem] font-semibold text-slate-900">API 生图设置</h2>
             <p className="mt-2 text-sm leading-6 text-slate-500">
               生图只在 Prompt 任务详情里由用户手动触发；Vercel 预览不会调用生图 API，也不会写入 uploads。
@@ -568,7 +713,7 @@ export function AISettingsManager({
                 <DataTableRow key={provider.id}>
                   <DataTableCell>{provider.name}</DataTableCell>
                   <DataTableCell>{provider.providerType}</DataTableCell>
-                  <DataTableCell>{provider.modelName ?? "未指定模型"}</DataTableCell>
+                  <DataTableCell>{getProviderModelLabel(provider)}</DataTableCell>
                   <DataTableCell>{provider.purpose ?? "--"}</DataTableCell>
                   <DataTableCell>
                     <StatusBadge label={provider.isDefault ? "默认" : "否"} tone={provider.isDefault ? "blue" : "slate"} />

@@ -12,7 +12,7 @@ import {
   validateJsonAIOutput,
 } from "@/lib/services/ai";
 import { sanitizeAIErrorSummary, summarizePrompt } from "@/lib/services/ai/aiPromptSanitizer";
-import { getDefaultEnabledAIProvider } from "@/lib/services/ai-provider-service";
+import { getSceneDefaultAIProvider } from "@/lib/services/ai-provider-service";
 import { assertSupportedImageFile, getUploadsAbsolutePath, storeImageFile } from "@/lib/services/images";
 import { createShortFileName, toSafeRelativePath } from "@/lib/services/local-paths/pathSafetyService";
 import { getRuntimeModeSummary, normalizeProductReadError, normalizeProductWriteError } from "@/lib/services/product-runtime-service";
@@ -483,7 +483,7 @@ export async function recognizeScreenshotJob(jobId: number) {
       },
     });
 
-    const provider = await getDefaultEnabledAIProvider();
+    const provider = await getSceneDefaultAIProvider("vision");
     if (!provider) {
       throw new ProductBusinessError(BUSINESS_ERROR_CODES.DEFAULT_PROVIDER_REQUIRED, "请先配置可用的默认 AI Provider。");
     }

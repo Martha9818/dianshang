@@ -650,13 +650,6 @@ export function CopywritingManager({
         <div className="rounded-[24px] border border-[#E4EAF3] bg-[#FBFDFF] px-5 py-4 text-sm text-slate-600">{message}</div>
       ) : null}
 
-      <div className="rounded-[24px] border border-[#E4EAF3] bg-white px-5 py-4 text-sm text-slate-600">
-        <div className="grid gap-3 xl:grid-cols-[1fr_1.1fr]">
-          <InfoRow label="核心卖点" value={selectedProduct?.sellingPoints ?? "未填写，仍可生成，但建议后续补充。"} />
-          <InfoRow label="生成规则" value="文案包会产出各平台 A / B / C 草稿；保存和生成后都会重新扫描违禁词。" />
-        </div>
-      </div>
-
       <DashboardCard className="px-5 py-4">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="text-sm text-slate-600">
@@ -879,23 +872,6 @@ export function CopywritingManager({
       ) : (
         <DashboardCard className="px-5 py-5 text-sm text-slate-500">当前商品还没有文案记录，可先生成多平台文案包。</DashboardCard>
       )}
-    </div>
-  );
-}
-
-function InfoRow({
-  label,
-  value,
-  strong = false,
-}: {
-  label: string;
-  value: string;
-  strong?: boolean;
-}) {
-  return (
-    <div className="grid gap-2 md:grid-cols-[100px_1fr]">
-      <span className="text-slate-400">{label}</span>
-      <span className={strong ? "font-medium text-slate-900" : undefined}>{value}</span>
     </div>
   );
 }
