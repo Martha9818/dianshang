@@ -212,9 +212,8 @@ export default async function MaterialsPage({
             view === "grid" ? (
               <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
                 {pageData!.materials.map((material) => (
-                  <Link
+                  <article
                     key={material.id}
-                    href={buildUrl(params, { view, materialId: String(material.id) })}
                     className={[
                       "flex h-full flex-col rounded-[24px] border p-4 transition hover:-translate-y-[1px] hover:shadow-[0_18px_36px_rgba(59,130,246,0.08)]",
                       selectedMaterial?.id === material.id ? "border-blue-200 bg-[#F8FBFF]" : "border-[#EEF2F8] bg-white",
@@ -228,13 +227,19 @@ export default async function MaterialsPage({
                         value={material.id}
                         aria-label={`选择素材 ${material.id}`}
                         className="h-4 w-4 rounded border-slate-300 text-blue-600"
-                        onClick={(event) => event.stopPropagation()}
                       />
                       选择
                     </span>
-                    <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" square missing={!material.fileExists} />
+                    <Link href={buildUrl(params, { view, materialId: String(material.id) })}>
+                      <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" square missing={!material.fileExists} />
+                    </Link>
                     <div className="mt-4 flex flex-1 flex-col">
-                      <h3 className="line-clamp-2 min-h-[48px] text-sm font-medium leading-6 text-slate-900">{material.product.name}</h3>
+                      <Link
+                        href={buildUrl(params, { view, materialId: String(material.id) })}
+                        className="line-clamp-2 min-h-[48px] text-sm font-medium leading-6 text-slate-900 hover:text-[#2563EB]"
+                      >
+                        {material.product.name}
+                      </Link>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <StatusBadge label={material.platformLabel} tone="violet" />
                         <StatusBadge label={material.materialTypeLabel} tone="blue" />
@@ -250,7 +255,7 @@ export default async function MaterialsPage({
                       ) : null}
                       <p className="mt-1 text-xs text-slate-400">{material.formattedCreatedAt}</p>
                     </div>
-                  </Link>
+                  </article>
                 ))}
               </div>
             ) : (
