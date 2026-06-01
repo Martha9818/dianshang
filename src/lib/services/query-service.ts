@@ -119,7 +119,12 @@ function getSingleValue(value: unknown) {
 
 export function normalizeTextQuery(value: unknown, maxLength = 120) {
   const singleValue = getSingleValue(value);
-  const trimmed = typeof singleValue === "string" ? singleValue.trim() : "";
+  const trimmed =
+    typeof singleValue === "string"
+      ? singleValue.trim()
+      : typeof singleValue === "number" && Number.isFinite(singleValue)
+        ? String(singleValue)
+        : "";
   return trimmed ? trimmed.slice(0, maxLength) : null;
 }
 

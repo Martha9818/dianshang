@@ -240,19 +240,13 @@ export default async function LinkImportsPage({
               statusOptions={linkImportStatusOptions}
             />
           </div>
-          <form id={LINK_IMPORT_DELETE_FORM_ID} action={deleteLinkImportDraftsAction} className="flex flex-wrap items-center gap-2 border-b border-[#EEF2F8] px-5 py-3">
-            <input type="hidden" name="purpose" value={pageResult.filters.purpose ?? ""} />
-            <input type="hidden" name="status" value={pageResult.filters.status ?? ""} />
-            {pageResult.drafts.map((draft) => (
-              <input key={draft.id} type="hidden" name="allDraftIds" value={draft.id} />
-            ))}
-            <LinkImportDraftDeleteToolbar
-              formId={LINK_IMPORT_DELETE_FORM_ID}
-              disabled={!pageResult.runtime.isWritable}
-              totalCount={pageResult.drafts.length}
-            />
-            <span className="text-xs leading-5 text-slate-400">只删除链接草稿记录，不删除已转灵感、商品/竞品关联或截图文件。</span>
-          </form>
+          <LinkImportDraftDeleteToolbar
+            formId={LINK_IMPORT_DELETE_FORM_ID}
+            disabled={!pageResult.runtime.isWritable}
+            purpose={pageResult.filters.purpose ?? ""}
+            status={pageResult.filters.status ?? ""}
+            draftIds={pageResult.drafts.map((draft) => draft.id)}
+          />
           <div className="min-h-[420px] space-y-3 px-5 py-4">
             {pageResult.drafts.length > 0 ? (
               pageResult.drafts.map((draft) => (

@@ -16,6 +16,7 @@ import {
   TableScrollArea,
 } from "@/components/dashboard/primitives";
 import { BatchOperationForm } from "@/components/batch/batch-operation-form";
+import { MaterialCardShell } from "@/components/materials/material-card-shell";
 import { MaterialImagePreviewer } from "@/components/materials/material-image-previewer";
 import { MaterialFilterForm } from "@/components/materials/material-filter-form";
 import { MaterialDiscardButton, MaterialStatusButton } from "@/components/materials/material-status-form";
@@ -219,20 +220,12 @@ export default async function MaterialsPage({
             view === "grid" ? (
               <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                 {pageData!.materials.map((material) => (
-                  <article
+                  <MaterialCardShell
                     key={material.id}
-                    className={[
-                      "group relative isolate flex h-full min-h-[320px] cursor-pointer flex-col rounded-[24px] border p-4 transition hover:-translate-y-[1px] hover:shadow-[0_18px_36px_rgba(59,130,246,0.08)]",
-                      selectedMaterial?.id === material.id ? "border-blue-200 bg-[#F8FBFF]" : "border-[#EEF2F8] bg-white",
-                    ].join(" ")}
+                    href={buildUrl(params, { view, materialId: String(material.id) })}
+                    selected={selectedMaterial?.id === material.id}
                   >
-                    <Link
-                      href={buildUrl(params, { view, materialId: String(material.id) })}
-                      scroll={false}
-                      className="absolute inset-0 z-10 rounded-[24px]"
-                      aria-label={`查看素材 ${material.id} 详情`}
-                    />
-                    <span className="relative z-20 mb-3 flex items-center gap-2 text-xs text-slate-500">
+                    <span className="relative z-10 mb-3 flex items-center gap-2 text-xs text-slate-500">
                       <input
                         type="checkbox"
                         form={MATERIAL_BATCH_FORM_ID}
@@ -266,7 +259,7 @@ export default async function MaterialsPage({
                         <p className="text-xs text-slate-400">{material.formattedCreatedAt}</p>
                       </div>
                     </div>
-                  </article>
+                  </MaterialCardShell>
                 ))}
               </div>
             ) : (

@@ -65,6 +65,12 @@ function revalidateLinkImportScopes(productId?: string | number | null, inspirat
   if (inspirationId) revalidatePath("/inspirations");
 }
 
+export type LinkImportDraftDeleteActionState = {
+  success: boolean;
+  message?: string;
+  error?: string;
+};
+
 export async function createLinkImportDraftAction(formData: FormData) {
   const purpose = String(formData.get("purpose") ?? "inspiration");
   let redirectUrl: string;
@@ -154,6 +160,27 @@ export async function deleteLinkImportDraftsAction(formData: FormData) {
   }
 
   redirect(redirectUrl);
+}
+
+export async function deleteLinkImportDraftsInlineAction(
+  _state: LinkImportDraftDeleteActionState,
+  formData: FormData,
+): Promise<LinkImportDraftDeleteActionState> {
+  void _state;
+
+  try {
+    const result = await deleteLinkImportDrafts(parseDraftIds(formData));
+    revalidateLinkImportScopes();
+    return {
+      success: true as const,
+      message: `已删除 ${result.deletedCount} 条链接草稿记录。`,
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "删除链接导入草稿失败，请稍后重试。"),
+    };
+  }
 }
 
 export async function linkImportDraftToInspirationAction(formData: FormData) {

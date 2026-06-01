@@ -37,6 +37,7 @@
 - Prompt task API image failed job rows can be manually removed from the recent history without deleting generated materials or files.
 - Build/acceptance fixture inspirations from local verification were hidden from the default inspiration view and related scan/draft jobs were cleared; uploaded files were not deleted.
 - Latest small-fix batch keeps V1.5 boundaries: no schema, migration, dependency, V2 behavior, background cleanup, or automatic backup deletion. Link-import and inspiration task deletes remove only history rows; file cleanup still uses the existing service, browser confirmation, Vercel read-only guard, and `CleanupLog`.
+- Latest follow-up fixed material `materialId` detail switching by preserving numeric query values through normalization, and made link-import draft `全部删除` submit in place instead of redirecting to the top.
 
 ## Next Recommended Step
 
