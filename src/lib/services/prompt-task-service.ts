@@ -488,7 +488,7 @@ export async function getHomePromptTaskStats() {
         where: { product: { deletedAt: null }, createdAt: { lt: todayStart } },
       }),
       prisma.promptTask.findMany({
-        where: { product: { deletedAt: null } },
+        where: { product: { deletedAt: null }, status: { not: PROMPT_TASK_STATUS.CANCELLED } },
         orderBy: { updatedAt: "desc" },
         take: 5,
         select: promptTaskSelect,

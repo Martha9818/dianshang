@@ -39,6 +39,7 @@
 - Latest small-fix batch keeps V1.5 boundaries: no schema, migration, dependency, V2 behavior, background cleanup, or automatic backup deletion. Link-import and inspiration task deletes remove only history rows; file cleanup still uses the existing service, browser confirmation, Vercel read-only guard, and `CleanupLog`.
 - Latest follow-up fixed material `materialId` detail switching by preserving numeric query values through normalization, and made link-import draft `全部删除` submit in place instead of redirecting to the top.
 - Latest auto-filter follow-up removed the visible filter submit buttons from notifications, products, copywriting history, Prompt tasks, materials, and inspirations. Select controls update the URL immediately, text/number filters update on Enter or blur, scroll is preserved, multi-filter state is serialized from the whole form, and stale `materialId` / `taskCode` params are cleared on relevant filter changes.
+- Latest dashboard follow-up excludes cancelled Prompt tasks from the home dashboard recent Prompt task list while leaving Prompt task history and status filtering intact.
 
 ## Next Recommended Step
 

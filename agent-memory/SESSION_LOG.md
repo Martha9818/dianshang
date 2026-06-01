@@ -8,6 +8,7 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 - Changed: Added a shared client auto-filter form and removed the visible `筛选` submit buttons from notifications, products, copywriting history, Prompt tasks, materials, and inspirations. Select filters now route immediately; text/number filters route on Enter or blur.
 - Changed: Auto-filter navigation serializes the full current form state so multiple filters remain combined, uses `scroll: false`, clears product `analysisError`, clears material `materialId` / material feedback params on material filter changes, and clears Prompt task `taskCode` on Prompt filter changes.
+- Fixed: Home dashboard recent Prompt task list now excludes cancelled Prompt tasks, so cancelled rows no longer appear in the first-screen recent task table.
 - Verification: `npm run encoding:check`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npx prisma validate` passed. HTTP smoke returned 200 for `/notifications`, `/products`, `/copywriting`, `/prompt-tasks`, `/materials`, and `/inspirations`; Chrome DevTools verified product multi-filter preservation without scroll reset, material `materialId` clearing, Prompt `taskCode` clearing, and copywriting input blur behavior with no console errors.
 - Boundary: No schema, migration, dependency, V2 feature, server-side data behavior, Vercel write behavior, or link-import rework was added.
 
