@@ -4,6 +4,12 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-01
 
+### V1.5 Stabilization - Link Import Filter Jump Fix
+
+- Changed: Fixed the remaining `/link-imports` filter jump by preserving the filter controls as a viewport anchor across purpose/status URL updates, blurring the active select before route replacement, reserving stable lower-workspace height for sparse or empty filtered results, and clamping oversized current-draft detail text.
+- Verification: `npm run encoding:check`, `npm run lint`, `npm run typecheck`, and `npm run build` passed. Browser regression on `http://localhost:3000/link-imports` switched `status=draft -> all -> draft` and kept the filter/list viewport position stable; screenshot saved to `tmp/link-imports-filter-stable.png`.
+- Boundary: No schema, migration, dependency, AI behavior, filesystem write behavior, crawler, automatic publishing, V2 feature, or second cleanup system was added.
+
 ### V1.5 Stabilization - UI/AI Follow-up
 
 - Changed: Removed the copywriting note strip, moved Prompt API image generation above long Prompt text, changed empty API image model display to `Provider 默认模型`, improved link-import success feedback and auto-filtering, and added lightweight scene default Provider settings for copywriting, AI vision, and API image generation through existing `AppSetting` keys.

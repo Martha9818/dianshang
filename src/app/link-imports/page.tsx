@@ -233,7 +233,7 @@ export default async function LinkImportsPage({
               statusOptions={linkImportStatusOptions}
             />
           </div>
-          <div className="space-y-3 px-5 py-4">
+          <div className="min-h-[420px] space-y-3 px-5 py-4">
             {pageResult.drafts.length > 0 ? (
               pageResult.drafts.map((draft) => (
                 <Link
@@ -337,7 +337,7 @@ export default async function LinkImportsPage({
               </div>
             </div>
           ) : (
-            <div className="px-5 py-5">
+            <div className="min-h-[420px] px-5 py-5">
               <PageNote>选择一条链接草稿后，可以编辑辅助信息或执行确认转化。</PageNote>
             </div>
           )}
@@ -373,8 +373,8 @@ function DetailRow({
   return (
     <div className="grid gap-1 md:grid-cols-[76px_1fr]">
       <span className="text-slate-400">{label}</span>
-      <div className="min-w-0 break-all">
-        {badgeTone ? <StatusBadge label={value} tone={badgeTone} /> : <span>{value}</span>}
+      <div className="min-w-0">
+        {badgeTone ? <StatusBadge label={value} tone={badgeTone} /> : <span className="line-clamp-2 break-all" title={value}>{value}</span>}
       </div>
     </div>
   );
