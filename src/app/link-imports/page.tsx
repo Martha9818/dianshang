@@ -9,6 +9,7 @@ import {
 } from "@/components/dashboard/primitives";
 import { ProductImage } from "@/components/products/product-image";
 import { WorkspacePage } from "@/components/ui/workspace-page";
+import { LinkImportDraftDeleteToolbar } from "@/components/link-imports/link-import-draft-delete-toolbar";
 import { LinkImportFilterControls } from "@/components/link-imports/link-import-filter-controls";
 import {
   createLinkImportDraftAction,
@@ -242,13 +243,14 @@ export default async function LinkImportsPage({
           <form id={LINK_IMPORT_DELETE_FORM_ID} action={deleteLinkImportDraftsAction} className="flex flex-wrap items-center gap-2 border-b border-[#EEF2F8] px-5 py-3">
             <input type="hidden" name="purpose" value={pageResult.filters.purpose ?? ""} />
             <input type="hidden" name="status" value={pageResult.filters.status ?? ""} />
-            <button
-              type="submit"
-              className="inline-flex h-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-medium text-rose-600 disabled:opacity-60"
-              disabled={!pageResult.runtime.isWritable || pageResult.drafts.length === 0}
-            >
-              批量删除草稿
-            </button>
+            {pageResult.drafts.map((draft) => (
+              <input key={draft.id} type="hidden" name="allDraftIds" value={draft.id} />
+            ))}
+            <LinkImportDraftDeleteToolbar
+              formId={LINK_IMPORT_DELETE_FORM_ID}
+              disabled={!pageResult.runtime.isWritable}
+              totalCount={pageResult.drafts.length}
+            />
             <span className="text-xs leading-5 text-slate-400">只删除链接草稿记录，不删除已转灵感、商品/竞品关联或截图文件。</span>
           </form>
           <div className="min-h-[420px] space-y-3 px-5 py-4">

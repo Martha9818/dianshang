@@ -32,8 +32,10 @@ function parsePositiveId(value: FormDataEntryValue | null, label: string) {
 }
 
 function parseDraftIds(formData: FormData) {
-  return formData
-    .getAll("draftIds")
+  const selectedIds = formData.getAll("draftIds");
+  const fallbackIds = selectedIds.length > 0 ? selectedIds : formData.getAll("allDraftIds");
+
+  return fallbackIds
     .map((value) => Number(value))
     .filter((id) => Number.isInteger(id) && id > 0);
 }
