@@ -102,7 +102,7 @@ export default async function MaterialsPage({
   const sourceUrl = buildSourceUrl({ ...params, view });
   const pageData = await getMaterialLibraryPageData(query).catch(() => null);
 
-  const selectedMaterial = pageData?.selectedMaterial ?? null;
+  const selectedMaterial = pageData?.selectedMaterial ?? pageData?.materials[0] ?? null;
   const readonlyNotice = runtime.isWritable ? null : buildReadonlyRuntimeMessage(runtime.mode);
   const readUnavailableNotice = pageData ? null : buildProductReadUnavailableMessage(runtime.mode);
   const statusButtons = [
@@ -228,7 +228,7 @@ export default async function MaterialsPage({
                         aria-label={`选择素材 ${material.id}`}
                         className="h-4 w-4 rounded border-slate-300 text-blue-600"
                       />
-                      选择
+                      批量选择
                     </span>
                     <Link href={buildUrl(params, { view, materialId: String(material.id) })}>
                       <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" square missing={!material.fileExists} />
@@ -253,7 +253,15 @@ export default async function MaterialsPage({
                           该图片仅作为灵感和分析参考，不建议直接用于商品发布。
                         </p>
                       ) : null}
-                      <p className="mt-1 text-xs text-slate-400">{material.formattedCreatedAt}</p>
+                      <div className="mt-auto pt-3">
+                        <p className="text-xs text-slate-400">{material.formattedCreatedAt}</p>
+                        <Link
+                          href={buildUrl(params, { view, materialId: String(material.id) })}
+                          className="mt-2 inline-flex h-9 items-center justify-center rounded-xl border border-[#DCE5F2] bg-white px-3 text-xs font-medium text-[#2563EB] hover:bg-blue-50"
+                        >
+                          查看详情
+                        </Link>
+                      </div>
                     </div>
                   </article>
                 ))}
@@ -322,7 +330,7 @@ export default async function MaterialsPage({
         <DashboardCard>
           <DashboardCardHeader
             title="素材详情"
-            description={selectedMaterial ? "查看文件路径、尺寸、来源和状态流转。" : "从左侧选择一个素材查看详情。"}
+            description={selectedMaterial ? "查看文件路径、尺寸、来源和状态流转。" : "点击左侧素材图片、标题或查看详情入口。勾选框仅用于批量操作。"}
           />
           {selectedMaterial ? (
             <div className="space-y-5 px-5 py-5">
