@@ -30,7 +30,7 @@ export function LinkImportFilterControls({
       params.delete(key);
     }
     const query = params.toString();
-    router.push(query ? `/link-imports?${query}` : "/link-imports");
+    router.push(query ? `/link-imports?${query}` : "/link-imports", { scroll: false });
   }
 
   return (
