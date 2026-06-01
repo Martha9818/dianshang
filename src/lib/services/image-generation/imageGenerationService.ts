@@ -429,3 +429,39 @@ export async function generateImageForPromptTask(input: {
     throw safeError;
   }
 }
+
+export async function deleteFailedImageGenerationJob(input: { jobId: number; taskCode: string }) {
+  try {
+    ensureImageGenerationWritesAllowed();
+
+    const job = await prisma.imageGenerationJob.findUnique({
+      where: { id: input.jobId },
+      select: {
+        id: true,
+        promptTask: {
+          select: {
+            taskCode: true,
+          },
+        },
+        status: true,
+        resultMaterialId: true,
+      },
+    });
+
+    if (!job || job.promptTask.taskCode !== input.taskCode) {
+      throw createValidationError("找不到可删除的 API 生图失败记录。");
+    }
+
+    if (job.status !== IMAGE_GENERATION_STATUS.FAILED || job.resultMaterialId) {
+      throw createValidationError("只能删除未生成素材的失败记录。");
+    }
+
+    await prisma.imageGenerationJob.delete({
+      where: { id: job.id },
+    });
+
+    return { deletedId: job.id };
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}

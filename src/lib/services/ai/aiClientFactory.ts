@@ -225,8 +225,8 @@ export function sanitizeProviderErrorMessage(message: string) {
     // Keep the original text and sanitize below.
   }
 
-  if (/^\s*<(?:!doctype\s+html|html|head|body)\b/i.test(normalized)) {
-    normalized = "接口返回网页 HTML，请确认 Base URL 是 OpenAI-compatible API 地址，通常需要以 /v1 结尾。";
+  if (/^\s*<(?:!doctype\s+html|html|head|body)\b/i.test(normalized) || normalized.trim() === "<html>") {
+    normalized = "接口返回网页 HTML，请确认 Provider 类型和 Base URL 是否匹配。Nova 请使用“Nova 聊天流式生图”，AtlasCloud 请使用“AtlasCloud 异步任务生图”。";
   }
 
   normalized = normalized

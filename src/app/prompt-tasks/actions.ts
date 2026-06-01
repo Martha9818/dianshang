@@ -10,7 +10,7 @@ import {
   uploadManualMaterial,
   uploadPromptTaskResult,
 } from "@/lib/services/prompt-task-service";
-import { generateImageForPromptTask } from "@/lib/services/image-generation";
+import { deleteFailedImageGenerationJob, generateImageForPromptTask } from "@/lib/services/image-generation";
 
 type ActionResult<T = null> = {
   success: boolean;
@@ -108,6 +108,23 @@ export async function generatePromptTaskImageAction(input: {
     return {
       success: false,
       error: getProductErrorMessage(error, "API 生图失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function deleteFailedImageGenerationJobAction(input: {
+  jobId: number;
+  taskCode: string;
+}): Promise<ActionResult<{ deletedId: number }>> {
+  try {
+    const result = await deleteFailedImageGenerationJob(input);
+    revalidatePromptScopes(null, input.taskCode);
+
+    return { success: true, data: result };
+  } catch (error) {
+    return {
+      success: false,
+      error: getProductErrorMessage(error, "删除失败记录失败，请稍后重试。"),
     };
   }
 }

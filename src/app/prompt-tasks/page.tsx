@@ -9,7 +9,12 @@ import {
   StatusBadge,
   TableActionLink,
 } from "@/components/dashboard/primitives";
-import { PromptTaskCopyButton, PromptTaskCancelButton, PromptTaskImageGenerationButton } from "@/components/prompt-tasks/prompt-task-actions";
+import {
+  FailedImageGenerationJobDeleteButton,
+  PromptTaskCancelButton,
+  PromptTaskCopyButton,
+  PromptTaskImageGenerationButton,
+} from "@/components/prompt-tasks/prompt-task-actions";
 import { PromptTaskCreateForm } from "@/components/prompt-tasks/prompt-task-form";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { getProductErrorMessage } from "@/lib/modules/products";
@@ -275,7 +280,10 @@ export default async function PromptTasksPage({
                   {imageGenerationPanel?.recentJobs.length ? (
                     <div className="space-y-2 border-t border-[#EEF2F8] pt-3">
                       {imageGenerationPanel.recentJobs.map((job) => (
-                        <div key={job.id} className="grid gap-2 rounded-xl bg-[#FBFDFF] px-3 py-2 text-xs text-slate-500 md:grid-cols-[72px_1fr]">
+                        <div
+                          key={job.id}
+                          className="group/job grid gap-2 rounded-xl bg-[#FBFDFF] px-3 py-2 text-xs text-slate-500 md:grid-cols-[72px_1fr_auto]"
+                        >
                           <StatusBadge label={job.statusLabel} tone={job.status === "success" ? "green" : job.status === "failed" ? "red" : "amber"} />
                           <div className="min-w-0">
                             <p className="truncate">
@@ -284,6 +292,9 @@ export default async function PromptTasksPage({
                             {job.resultMaterialId ? <p className="mt-0.5">素材 #{job.resultMaterialId}</p> : null}
                             {job.errorSummary ? <p className="mt-0.5 text-rose-600">{job.errorSummary}</p> : null}
                           </div>
+                          {job.status === "failed" ? (
+                            <FailedImageGenerationJobDeleteButton jobId={job.id} taskCode={activeTask.taskCode} />
+                          ) : null}
                         </div>
                       ))}
                     </div>

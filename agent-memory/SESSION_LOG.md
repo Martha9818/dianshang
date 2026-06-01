@@ -7,6 +7,7 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 ### V1.5 Stabilization - API Image Provider Adaptation
 
 - Changed: Added approved lightweight API image Provider modes for Nova chat/SSE image generation and AtlasCloud async prediction image generation, while preserving the existing OpenAI-compatible Images path. AI settings now exposes Provider-type-specific model presets, including Nova Firefly/Nano Banana choices and AtlasCloud `OpenAI GPT Image 2 Text-to-Image`.
+- Changed: Added manual deletion for failed Prompt task API image job rows with no material result, and clarified HTML provider errors so mis-matched Provider type/Base URL failures no longer surface as raw `<html>`.
 - Verification: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, and `npm run typecheck` passed. Root `npm test` remains unavailable because the project has no `test` script. Browser smoke on `/settings/ai` confirmed the Nova and AtlasCloud Provider type options, model presets, and no console errors; `/prompt-tasks` returned 200 with API image UI present.
 - Boundary: No schema, migration, dependency, V2 generic provider framework, background batch generation, crawler, publishing, or filesystem delete behavior was added. API keys remain server-side and Vercel/read-only AI guards remain in the service layer.
 

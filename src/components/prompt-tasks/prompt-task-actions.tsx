@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { cancelPromptTaskAction, generatePromptTaskImageAction, markPromptTaskCopiedAction } from "@/app/prompt-tasks/actions";
+import {
+  cancelPromptTaskAction,
+  deleteFailedImageGenerationJobAction,
+  generatePromptTaskImageAction,
+  markPromptTaskCopiedAction,
+} from "@/app/prompt-tasks/actions";
 
 const buttonClassName =
   "group inline-flex h-11 min-w-[128px] cursor-pointer items-center justify-center rounded-2xl border border-[#DCE5F2] bg-white px-4 text-sm font-medium text-[#2563EB] transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-blue-200 hover:bg-blue-50 hover:text-[#1D4ED8] hover:shadow-[0_12px_24px_rgba(59,130,246,0.10)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none motion-reduce:transform-none";
@@ -185,6 +190,41 @@ export function PromptTaskImageGenerationButton({
         {isPending ? "生成中..." : "使用 API 生图"}
       </button>
       {message ? <p className="text-xs leading-5 text-slate-500">{message}</p> : null}
+    </div>
+  );
+}
+
+export function FailedImageGenerationJobDeleteButton({
+  jobId,
+  taskCode,
+}: {
+  jobId: number;
+  taskCode: string;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const [message, setMessage] = useState<string | null>(null);
+
+  function handleDelete() {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await deleteFailedImageGenerationJobAction({ jobId, taskCode });
+      if (!result.success) {
+        setMessage(result.error ?? "删除失败记录失败。");
+      }
+    });
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={handleDelete}
+        className="opacity-0 transition-opacity group-hover/job:opacity-100 group-focus-within/job:opacity-100 rounded-lg px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+      >
+        {isPending ? "删除中..." : "删除"}
+      </button>
+      {message ? <span className="text-xs text-rose-600">{message}</span> : null}
     </div>
   );
 }

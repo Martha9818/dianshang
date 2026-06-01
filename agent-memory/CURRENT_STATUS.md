@@ -31,6 +31,7 @@
 - Link-import auto filters now preserve the filter controls as a viewport anchor, keep the draft workspace height stable for sparse/empty filter results, and clamp oversized current-draft detail text so status/purpose switching no longer jumps.
 - API image generation retries `/v1/images/generations` when a provider root URL returns an HTML page instead of JSON.
 - API image generation now supports approved lightweight Provider modes for OpenAI-compatible Images, Nova chat/SSE image generation, and AtlasCloud async prediction image generation; AI settings offers model presets while continuing to use the existing `AIProvider.modelName` field.
+- Prompt task API image failed job rows can be manually removed from the recent history without deleting generated materials or files.
 - Build/acceptance fixture inspirations from local verification were hidden from the default inspiration view and related scan/draft jobs were cleared; uploaded files were not deleted.
 
 ## Next Recommended Step

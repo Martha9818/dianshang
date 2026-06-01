@@ -12,4 +12,5 @@ V1.5 Thread 06 owns lightweight, user-triggered API image generation from an exi
   or `atlascloud-image` (`/api/v1/model/generateImage` plus prediction polling).
 - Saves successful results through managed uploads/local-path image services, then creates a `Material` marked `sourceType=ai_generated`.
 - Records `ImageGenerationJob`, `AIJob`, `AIRequestLog`, operation log, and sanitized notifications.
+- Failed `ImageGenerationJob` rows with no material result may be manually removed from the Prompt task panel; this only removes the failed job row and does not delete materials or files.
 - Does not batch generate, retry in the background, publish, open browsers, crawl platforms, or bypass model safety limits.
