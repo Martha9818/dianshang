@@ -16,6 +16,7 @@ import {
   TableScrollArea,
 } from "@/components/dashboard/primitives";
 import { BatchOperationForm } from "@/components/batch/batch-operation-form";
+import { MaterialImagePreviewer } from "@/components/materials/material-image-previewer";
 import { MaterialFilterForm } from "@/components/materials/material-filter-form";
 import { MaterialDiscardButton, MaterialStatusButton } from "@/components/materials/material-status-form";
 import { ProductImage } from "@/components/products/product-image";
@@ -342,7 +343,7 @@ export default async function MaterialsPage({
           {selectedMaterial ? (
             <div className="space-y-5 px-5 py-5">
               {selectedMaterialPreviewUrl ? (
-                <a href={selectedMaterialPreviewUrl} target="_blank" rel="noreferrer" className="block" title="点击查看大图">
+                <MaterialImagePreviewer src={selectedMaterialPreviewUrl} alt={selectedMaterial.product.name}>
                   <ProductImage
                     src={selectedMaterial.displayPath}
                     alt={selectedMaterial.filePath}
@@ -350,7 +351,7 @@ export default async function MaterialsPage({
                     large
                     missing={!selectedMaterial.fileExists}
                   />
-                </a>
+                </MaterialImagePreviewer>
               ) : (
                 <ProductImage
                   src={selectedMaterial.displayPath}

@@ -4,6 +4,14 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-01
 
+### V1.5 Stabilization - Materials, Prompt Tasks, And CodesOnline Preset
+
+- Changed: Added an in-page material image previewer with wheel zoom, drag pan, backdrop/Esc close, and no new dependency; material detail images no longer open a separate browser page for large preview.
+- Changed: Refined Prompt task selection feedback by adding a detail anchor, `当前查看` active state, Task ID in the detail title, and separated primary actions from the upload action in the sticky operation row.
+- Changed: Refined AI image settings by making the API image enable toggle a full setting row and adding a CodesOnline OpenAI-compatible preset with `https://image.codesonline.dev/v1` and `gpt-image-2`.
+- Verification: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, and `npm run typecheck` passed. Root `npm test` remains unavailable because the project has no `test` script. HTTP smoke returned 200 for `/materials`, `/prompt-tasks`, and `/settings/ai`; Playwright CLI screenshots were captured for the same pages without triggering real API image generation.
+- Boundary: No schema, migration, dependency, V2 feature, batch/background image generation, image edit workflow, filesystem delete behavior, or API key exposure was added.
+
 ### V1.5 Stabilization - API Image Provider Adaptation
 
 - Changed: Added approved lightweight API image Provider modes for Nova chat/SSE image generation and AtlasCloud async prediction image generation, while preserving the existing OpenAI-compatible Images path. AI settings now exposes Provider-type-specific model presets, including Nova Firefly/Nano Banana choices and AtlasCloud `OpenAI GPT Image 2 Text-to-Image`.

@@ -66,7 +66,7 @@ export default async function PromptTasksPage({
       if (value) next.set(key, value);
     }
     next.set("taskCode", taskCode);
-    return `/prompt-tasks?${next.toString()}`;
+    return `/prompt-tasks?${next.toString()}#prompt-task-detail`;
   };
 
   return (
@@ -184,7 +184,13 @@ export default async function PromptTasksPage({
                         </div>
 
                         <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
-                          <TableActionLink href={buildTaskHref(task.taskCode)}>查看</TableActionLink>
+                          {isActive ? (
+                            <span className="inline-flex h-10 items-center rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-medium text-[#2563EB]">
+                              当前查看
+                            </span>
+                          ) : (
+                            <TableActionLink href={buildTaskHref(task.taskCode)}>查看</TableActionLink>
+                          )}
                           <TableActionLink href={`/prompt-tasks/${encodeURIComponent(task.taskCode)}/upload`}>上传</TableActionLink>
                         </div>
                       </div>
@@ -213,8 +219,9 @@ export default async function PromptTasksPage({
             </div>
           </DashboardCard>
 
+          <div id="prompt-task-detail" className="scroll-mt-6">
           <DashboardCard>
-            <DashboardCardHeader title="任务详情" />
+            <DashboardCardHeader title={activeTask ? `任务详情 · ${activeTask.taskCode}` : "任务详情"} />
             {activeTask ? (
               <div className="space-y-4 px-4 py-4">
                 <div className="grid gap-3 rounded-2xl border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4 text-sm text-slate-600 sm:grid-cols-2">
@@ -231,16 +238,20 @@ export default async function PromptTasksPage({
                   </div>
                 </div>
 
-                <div className="sticky bottom-4 z-10 flex flex-wrap items-start gap-3 rounded-2xl border border-[#EEF2F8] bg-white/95 px-4 py-3 shadow-[0_14px_30px_rgba(15,23,42,0.08)] backdrop-blur">
-                  <PromptTaskCopyButton
-                    taskCode={activeTask.taskCode}
-                    promptText={activeTask.promptText ?? ""}
-                    disabled={Boolean(runtimeNotice)}
-                  />
-                  {activeTask.status !== PROMPT_TASK_STATUS.RETURNED ? (
-                    <PromptTaskCancelButton taskCode={activeTask.taskCode} disabled={Boolean(runtimeNotice)} />
-                  ) : null}
-                  <TableActionLink href={`/prompt-tasks/${encodeURIComponent(activeTask.taskCode)}/upload`}>上传生成结果</TableActionLink>
+                <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-2xl border border-[#EEF2F8] bg-white/95 px-4 py-3 shadow-[0_14px_30px_rgba(15,23,42,0.08)] backdrop-blur md:flex-row md:items-center md:justify-between">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <PromptTaskCopyButton
+                      taskCode={activeTask.taskCode}
+                      promptText={activeTask.promptText ?? ""}
+                      disabled={Boolean(runtimeNotice)}
+                    />
+                    {activeTask.status !== PROMPT_TASK_STATUS.RETURNED ? (
+                      <PromptTaskCancelButton taskCode={activeTask.taskCode} disabled={Boolean(runtimeNotice)} />
+                    ) : null}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <TableActionLink href={`/prompt-tasks/${encodeURIComponent(activeTask.taskCode)}/upload`}>上传生成结果</TableActionLink>
+                  </div>
                 </div>
 
                 <div className="space-y-3 rounded-2xl border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4">
@@ -316,6 +327,7 @@ export default async function PromptTasksPage({
               </div>
             )}
           </DashboardCard>
+          </div>
         </div>
       </section>
     </WorkspacePage>

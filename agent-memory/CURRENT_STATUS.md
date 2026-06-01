@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: V1.5 API image Provider adaptation for Nova and AtlasCloud is complete locally, verified, and ready for review.
+- Current task state: V1.5 Stabilization UI/API image follow-up for materials preview, Prompt task viewing, AI image settings layout, and CodesOnline preset is complete locally and verified.
 - Next stage: Continue with the next approved Stabilization follow-up thread before any V2 planning thread.
 
 ## Product Direction
@@ -31,6 +31,9 @@
 - Link-import auto filters now preserve the filter controls as a viewport anchor, keep the draft workspace height stable for sparse/empty filter results, and clamp oversized current-draft detail text so status/purpose switching no longer jumps.
 - API image generation retries `/v1/images/generations` when a provider root URL returns an HTML page instead of JSON.
 - API image generation now supports approved lightweight Provider modes for OpenAI-compatible Images, Nova chat/SSE image generation, and AtlasCloud async prediction image generation; AI settings offers model presets while continuing to use the existing `AIProvider.modelName` field.
+- AI settings now offers a CodesOnline API image preset through the existing OpenAI-compatible image path and includes `gpt-image-2` in the image model presets; no new provider protocol or schema was added.
+- Materials detail image preview now opens in-page with zoom, pan, and Esc/close controls instead of navigating to a new tab.
+- Prompt task viewing now uses a detail anchor and current-view state so selecting a task gives visible feedback and lands near the detail panel.
 - Prompt task API image failed job rows can be manually removed from the recent history without deleting generated materials or files.
 - Build/acceptance fixture inspirations from local verification were hidden from the default inspiration view and related scan/draft jobs were cleared; uploaded files were not deleted.
 

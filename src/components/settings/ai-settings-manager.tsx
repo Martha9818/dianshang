@@ -69,6 +69,7 @@ const providerTypeOptions = [
 const modelPresetOptions: Record<string, Array<{ value: string; label: string }>> = {
   "openai-compatible": [
     { value: "gpt-image-1", label: "GPT Image 1" },
+    { value: "gpt-image-2", label: "CodesOnline GPT Image 2" },
     { value: "dall-e-3", label: "DALL-E 3" },
     { value: "dall-e-2", label: "DALL-E 2" },
   ],
@@ -86,6 +87,14 @@ const modelPresetOptions: Record<string, Array<{ value: string; label: string }>
     { value: "openai/gpt-image-2/text-to-image", label: "OpenAI GPT Image 2 Text-to-Image" },
     { value: "seedream-3.0", label: "Seedream 3.0" },
   ],
+};
+
+const codesOnlineImagePreset = {
+  name: "CodesOnline API 生图",
+  providerType: "openai-compatible",
+  baseUrl: "https://image.codesonline.dev/v1",
+  modelName: "gpt-image-2",
+  purpose: "image",
 };
 
 function getProviderTypeLabel(providerType: string) {
@@ -396,6 +405,34 @@ export function AISettingsManager({
                     ))}
                   </select>
                 </Field>
+                {isImageProviderForm ? (
+                  <div className="rounded-2xl border border-blue-100 bg-[#F8FBFF] px-4 py-4">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">CodesOnline API 生图预设</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                          套用 OpenAI 兼容接口、Base URL 和 gpt-image-2 模型，API Key 仍需单独填写。
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            name: current.name.trim() ? current.name : codesOnlineImagePreset.name,
+                            providerType: codesOnlineImagePreset.providerType,
+                            baseUrl: codesOnlineImagePreset.baseUrl,
+                            modelName: codesOnlineImagePreset.modelName,
+                            purpose: codesOnlineImagePreset.purpose,
+                          }))
+                        }
+                        className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-white px-3 text-sm font-medium text-[#2563EB] transition hover:bg-blue-50"
+                      >
+                        套用预设
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
                 <Field label="Base URL">
                   <input className={inputClassName} value={form.baseUrl} onChange={(event) => setForm((current) => ({ ...current, baseUrl: event.target.value }))} />
                 </Field>
@@ -702,10 +739,12 @@ export function AISettingsManager({
           </div>
 
           <div className="space-y-4">
-            <ToggleField
-              label="启用 API 生图"
+            <SettingSwitchRow
+              title="启用 API 生图"
+              description="仅在 Windows 本地手动触发；Vercel 预览环境不会调用生图 API，也不会写入 uploads。"
               checked={imageSettings.enabled}
               onChange={(checked) => setImageSettings((current) => ({ ...current, enabled: checked }))}
+              disabled={Boolean(runtimeNotice)}
             />
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="默认尺寸">
@@ -856,6 +895,45 @@ function ToggleField({
     >
       <span className="text-sm font-medium text-slate-700">{label}</span>
       <span className={`inline-flex h-7 w-12 items-center rounded-full px-1 ${checked ? "bg-[#2B73FF]" : "bg-slate-200"}`}>
+        <span className={`h-5 w-5 rounded-full bg-white transition ${checked ? "translate-x-5" : ""}`} />
+      </span>
+    </button>
+  );
+}
+
+function SettingSwitchRow({
+  title,
+  description,
+  checked,
+  disabled = false,
+  onChange,
+}: {
+  title: string;
+  description: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={[
+        "flex w-full items-center justify-between gap-4 rounded-2xl border px-4 py-4 text-left transition",
+        checked
+          ? "border-blue-200 bg-[#F8FBFF] shadow-[0_12px_28px_rgba(43,115,255,0.10)]"
+          : "border-[#E4EAF3] bg-white",
+        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-blue-200 hover:bg-[#FBFDFF]",
+      ].join(" ")}
+    >
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-slate-900">{title}</span>
+        <span className="mt-1 block text-xs leading-5 text-slate-500">{description}</span>
+      </span>
+      <span className={`inline-flex h-7 w-12 shrink-0 items-center rounded-full px-1 ${checked ? "bg-[#2B73FF]" : "bg-slate-200"}`}>
         <span className={`h-5 w-5 rounded-full bg-white transition ${checked ? "translate-x-5" : ""}`} />
       </span>
     </button>
