@@ -1,7 +1,11 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime } from "@/lib/modules/products";
-import { normalizeProductReadError, normalizeProductWriteError } from "@/lib/services/product-runtime-service";
+import {
+  ensureProductWritesAllowed,
+  normalizeProductReadError,
+  normalizeProductWriteError,
+} from "@/lib/services/product-runtime-service";
 
 const scanLogSelect = {
   id: true,
@@ -18,6 +22,10 @@ const scanLogSelect = {
 } satisfies Prisma.ScanLogSelect;
 
 type ScanLogRecord = Prisma.ScanLogGetPayload<{ select: typeof scanLogSelect }>;
+
+function normalizeIds(ids: number[]) {
+  return Array.from(new Set(ids.filter((id) => Number.isInteger(id) && id > 0)));
+}
 
 function getScanLogTone(status: string) {
   if (status === "success") return "green" as const;
@@ -154,5 +162,43 @@ export async function getRecentInspirationTaskSummaries(limit = 8) {
     };
   } catch (error) {
     throw normalizeProductReadError(error);
+  }
+}
+
+export async function deleteInspirationScanJobs(ids: number[]) {
+  ensureProductWritesAllowed();
+
+  try {
+    const normalizedIds = normalizeIds(ids);
+    if (normalizedIds.length === 0) {
+      return { deletedCount: 0 };
+    }
+
+    const result = await prisma.inspirationScanJob.deleteMany({
+      where: { id: { in: normalizedIds } },
+    });
+
+    return { deletedCount: result.count };
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}
+
+export async function deleteInspirationAiDraftJobs(ids: number[]) {
+  ensureProductWritesAllowed();
+
+  try {
+    const normalizedIds = normalizeIds(ids);
+    if (normalizedIds.length === 0) {
+      return { deletedCount: 0 };
+    }
+
+    const result = await prisma.inspirationAiDraftJob.deleteMany({
+      where: { id: { in: normalizedIds } },
+    });
+
+    return { deletedCount: result.count };
+  } catch (error) {
+    throw normalizeProductWriteError(error);
   }
 }

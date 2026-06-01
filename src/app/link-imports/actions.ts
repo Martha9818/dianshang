@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getProductErrorMessage } from "@/lib/modules/products";
 import {
   createLinkImportDraft,
+  deleteLinkImportDrafts,
   linkImportDraftToCompetitor,
   linkImportDraftToInspiration,
   linkImportDraftToProduct,
@@ -28,6 +29,13 @@ function parsePositiveId(value: FormDataEntryValue | null, label: string) {
   }
 
   return id;
+}
+
+function parseDraftIds(formData: FormData) {
+  return formData
+    .getAll("draftIds")
+    .map((value) => Number(value))
+    .filter((id) => Number.isInteger(id) && id > 0);
 }
 
 function buildRedirectUrl(input: {
@@ -116,6 +124,30 @@ export async function rejectLinkImportDraftAction(formData: FormData) {
     redirectUrl = buildRedirectUrl({
       draftId: Number.isInteger(draftId) && draftId > 0 ? draftId : null,
       linkImportError: getProductErrorMessage(error, "放弃或归档链接导入草稿失败，请稍后重试。"),
+    });
+  }
+
+  redirect(redirectUrl);
+}
+
+export async function deleteLinkImportDraftsAction(formData: FormData) {
+  let redirectUrl: string;
+  const status = String(formData.get("status") ?? "");
+  const purpose = String(formData.get("purpose") ?? "");
+
+  try {
+    const result = await deleteLinkImportDrafts(parseDraftIds(formData));
+    revalidateLinkImportScopes();
+    redirectUrl = buildRedirectUrl({
+      status,
+      purpose,
+      linkImportMessage: `已删除 ${result.deletedCount} 条链接草稿记录。`,
+    });
+  } catch (error) {
+    redirectUrl = buildRedirectUrl({
+      status,
+      purpose,
+      linkImportError: getProductErrorMessage(error, "删除链接导入草稿失败，请稍后重试。"),
     });
   }
 

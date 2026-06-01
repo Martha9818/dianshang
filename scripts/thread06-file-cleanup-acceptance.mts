@@ -2,10 +2,6 @@ import { access, mkdir, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "../src/lib/prisma";
 import {
-  MOVE_TO_TRASH_CONFIRM_TEXT,
-  PERMANENT_DELETE_CONFIRM_TEXT,
-} from "../src/lib/modules/cleanup/fileMaintenanceTypes";
-import {
   clearAcceptanceFiles,
   moveFilesToTrash,
   permanentlyDeleteTrashFiles,
@@ -118,7 +114,6 @@ async function main() {
     pass("旧备份文件可识别并提示风险", oldBackup.relativePath);
 
     const moveResult = await moveFilesToTrash({
-      confirmText: MOVE_TO_TRASH_CONFIRM_TEXT,
       selections: [
         { scope: "uploads", relativePath: orphanPath },
         { scope: "exports", relativePath: oldExportPath },
@@ -137,7 +132,6 @@ async function main() {
     pass("回收站保留原相对路径和回收站相对路径", `trash=${trashItems.length}`);
 
     const deleteResult = await permanentlyDeleteTrashFiles({
-      confirmText: PERMANENT_DELETE_CONFIRM_TEXT,
       selections: trashItems.map((item) => ({ trashRelativePath: item.trashRelativePath })),
     });
     assert(deleteResult.successCount === 3 && deleteResult.failedCount === 0, "permanent delete did not succeed");

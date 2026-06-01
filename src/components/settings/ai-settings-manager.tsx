@@ -249,7 +249,12 @@ export function AISettingsManager({
         isDefault: result.data.isDefault,
         hasApiKey: result.data.hasApiKey,
       }));
-      setConnectionResult({ type: "success", text: "Provider 已保存。" });
+      if (result.data.purpose === "image" && result.data.isDefault) {
+        setSceneSettings((current) => ({ ...current, image: result.data.id }));
+        setConnectionResult({ type: "success", text: "Provider 已保存，并已设为 API 生图场景默认。" });
+      } else {
+        setConnectionResult({ type: "success", text: "Provider 已保存。" });
+      }
       router.refresh();
     });
   }

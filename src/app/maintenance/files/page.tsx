@@ -11,7 +11,7 @@ export default async function FileMaintenancePage() {
     <WorkspacePage
       eyebrow="Maintenance"
       title="文件清理与回收站"
-      description="手动扫描 uploads、exports、backups，按建议移入应用内回收站，并二次确认永久删除。"
+      description="手动扫描 uploads、exports、backups，按建议移入应用内回收站；删除操作保留浏览器确认。"
     >
       <FileMaintenancePanel initialData={initialData} />
     </WorkspacePage>

@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: V1.5 Stabilization UI/API image follow-up for materials preview, Prompt task viewing, AI image settings layout, and CodesOnline preset is complete locally and verified.
+- Current task state: V1.5 Stabilization small-fix batch for materials selection/detail, AI image default Provider sync, inspiration/link-import task cleanup, export layout, backup guidance, and file-cleanup confirmation simplification is complete locally and verified.
 - Next stage: Continue with the next approved Stabilization follow-up thread before any V2 planning thread.
 
 ## Product Direction
@@ -36,7 +36,8 @@
 - Prompt task viewing now uses a detail anchor and current-view state so selecting a task gives visible feedback and lands near the detail panel.
 - Prompt task API image failed job rows can be manually removed from the recent history without deleting generated materials or files.
 - Build/acceptance fixture inspirations from local verification were hidden from the default inspiration view and related scan/draft jobs were cleared; uploaded files were not deleted.
+- Latest small-fix batch keeps V1.5 boundaries: no schema, migration, dependency, V2 behavior, background cleanup, or automatic backup deletion. Link-import and inspiration task deletes remove only history rows; file cleanup still uses the existing service, browser confirmation, Vercel read-only guard, and `CleanupLog`.
 
 ## Next Recommended Step
 
-- Review the V1.5 Stabilization UI/UX follow-up locally, then open the next approved stabilization thread if more cleanup is desired. Do not enter V2 until explicitly approved.
+- Review the latest V1.5 Stabilization small-fix batch locally, then open the next approved stabilization thread if more cleanup is desired. Do not enter V2 until explicitly approved.

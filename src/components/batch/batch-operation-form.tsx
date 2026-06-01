@@ -44,6 +44,7 @@ export function BatchOperationForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, isPending] = useActionState(action, {});
   const [selectedCount, setSelectedCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedAction, setSelectedAction] = useState(operations[0]?.value ?? "");
 
   const selectedOperation = useMemo(
@@ -52,7 +53,9 @@ export function BatchOperationForm({
   );
 
   const updateSelectedCount = useCallback(() => {
-    setSelectedCount(document.querySelectorAll<HTMLInputElement>(`input[name="ids"][form="${formId}"]:checked`).length);
+    const checkboxes = document.querySelectorAll<HTMLInputElement>(`input[name="ids"][form="${formId}"]`);
+    setTotalCount(checkboxes.length);
+    setSelectedCount(Array.from(checkboxes).filter((checkbox) => checkbox.checked).length);
   }, [formId]);
 
   function setAllChecked(checked: boolean) {
@@ -60,7 +63,13 @@ export function BatchOperationForm({
     checkboxes.forEach((checkbox) => {
       checkbox.checked = checked;
     });
+    setTotalCount(checkboxes.length);
     setSelectedCount(checked ? checkboxes.length : 0);
+  }
+
+  function toggleAllChecked() {
+    const checkboxes = document.querySelectorAll<HTMLInputElement>(`input[name="ids"][form="${formId}"]`);
+    setAllChecked(!(checkboxes.length > 0 && selectedCount === checkboxes.length));
   }
 
   useEffect(() => {
@@ -72,7 +81,11 @@ export function BatchOperationForm({
     };
 
     document.addEventListener("change", handleChange);
-    return () => document.removeEventListener("change", handleChange);
+    const initialCountTimer = window.setTimeout(updateSelectedCount, 0);
+    return () => {
+      window.clearTimeout(initialCountTimer);
+      document.removeEventListener("change", handleChange);
+    };
   }, [formId, updateSelectedCount]);
 
   return (
@@ -98,9 +111,9 @@ export function BatchOperationForm({
           }
         }}
       >
-      <DashboardCard className="px-4 py-4">
+      <DashboardCard className="px-4 py-3">
         <div className="flex flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-end">
-          <div className="min-w-[150px]">
+          <div className="min-w-[120px]">
             <p className="mb-2 px-1 text-sm text-slate-500">已选择</p>
             <div className="flex h-12 items-center rounded-2xl border border-[#E4EAF3] bg-white px-4 text-sm font-semibold text-slate-800">
               {selectedCount} 条
@@ -153,15 +166,17 @@ export function BatchOperationForm({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setAllChecked(true)}
-              className="inline-flex h-12 cursor-pointer items-center justify-center rounded-2xl border border-[#E4EAF3] bg-white px-5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              onClick={toggleAllChecked}
+              disabled={isPending || disabled || totalCount === 0}
+              className="inline-flex h-12 cursor-pointer items-center justify-center rounded-2xl border border-[#E4EAF3] bg-white px-5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {selectAllLabel}
+              {totalCount > 0 && selectedCount === totalCount ? "取消选择" : selectAllLabel}
             </button>
             <button
               type="button"
               onClick={() => setAllChecked(false)}
-              className="inline-flex h-12 cursor-pointer items-center justify-center rounded-2xl border border-[#E4EAF3] bg-white px-5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              disabled={isPending || disabled || selectedCount === 0}
+              className="inline-flex h-12 cursor-pointer items-center justify-center rounded-2xl border border-[#E4EAF3] bg-white px-5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               清空
             </button>

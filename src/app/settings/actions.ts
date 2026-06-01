@@ -39,6 +39,7 @@ export async function saveAIProviderAction(formData: FormData) {
       success: true as const,
       data: {
         id: savedProvider.id,
+        purpose: savedProvider.purpose ?? "text",
         enabled: savedProvider.enabled,
         isDefault: savedProvider.isDefault,
         hasApiKey: Boolean(savedProvider.apiKey),

@@ -167,6 +167,16 @@ async function ensureSingleDefaultProvider(tx: Prisma.TransactionClient, provide
   });
 }
 
+async function syncImageSceneDefaultProvider(tx: Prisma.TransactionClient, providerId: number, purpose: string | null) {
+  if ((purpose ?? "text") !== "image") return;
+
+  await tx.appSetting.upsert({
+    where: { key: AI_SCENE_DEFAULT_SETTING_KEYS.image },
+    create: { key: AI_SCENE_DEFAULT_SETTING_KEYS.image, value: String(providerId) },
+    update: { value: String(providerId) },
+  });
+}
+
 export function extractAIProviderFormValues(formData: FormData): AIProviderFormValues {
   return {
     id: String(formData.get("providerId") ?? ""),
@@ -463,6 +473,7 @@ export async function createAIProvider(values: AIProviderFormValues) {
 
       if (provider.isDefault) {
         await ensureSingleDefaultProvider(tx, provider.id, provider.purpose ?? "text");
+        await syncImageSceneDefaultProvider(tx, provider.id, provider.purpose);
       }
 
       return provider;
@@ -510,6 +521,7 @@ export async function updateAIProvider(providerId: number, values: AIProviderFor
 
       if (updated.isDefault) {
         await ensureSingleDefaultProvider(tx, updated.id, updated.purpose ?? "text");
+        await syncImageSceneDefaultProvider(tx, updated.id, updated.purpose);
       }
 
       return updated;

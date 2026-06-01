@@ -631,6 +631,30 @@ export async function rejectLinkImportDraft(draftId: number) {
   }
 }
 
+export async function deleteLinkImportDrafts(draftIds: number[]) {
+  ensureLinkImportWritesAllowed();
+
+  try {
+    const ids = Array.from(new Set(draftIds.filter((id) => Number.isInteger(id) && id > 0)));
+    if (ids.length === 0) {
+      return { deletedCount: 0 };
+    }
+
+    const result = await prisma.linkImportDraft.deleteMany({
+      where: { id: { in: ids } },
+    });
+
+    await recordLinkImportOperation({
+      action: "DELETE_LINK_IMPORT_DRAFTS",
+      detail: `删除链接导入草稿记录：${result.count} 条`,
+    });
+
+    return { deletedCount: result.count };
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}
+
 export async function linkImportDraftToProduct(input: { draftId: number; productId: number }) {
   ensureLinkImportWritesAllowed();
 

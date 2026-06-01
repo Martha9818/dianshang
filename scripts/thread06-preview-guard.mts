@@ -1,9 +1,5 @@
 import { prisma } from "../src/lib/prisma";
 import {
-  MOVE_TO_TRASH_CONFIRM_TEXT,
-  PERMANENT_DELETE_CONFIRM_TEXT,
-} from "../src/lib/modules/cleanup/fileMaintenanceTypes";
-import {
   moveFilesToTrash,
   permanentlyDeleteTrashFiles,
   scanFileMaintenance,
@@ -53,13 +49,11 @@ async function main() {
 
   await expectBlocked("Vercel 预览阻止移入回收站", () =>
     moveFilesToTrash({
-      confirmText: MOVE_TO_TRASH_CONFIRM_TEXT,
       selections: [{ scope: "uploads", relativePath: "uploads/example.png" }],
     }),
   );
   await expectBlocked("Vercel 预览阻止永久删除", () =>
     permanentlyDeleteTrashFiles({
-      confirmText: PERMANENT_DELETE_CONFIRM_TEXT,
       selections: [{ trashRelativePath: "trash/uploads/example.png" }],
     }),
   );

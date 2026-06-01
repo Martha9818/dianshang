@@ -79,6 +79,9 @@ export default async function BackupPage() {
                   <p className="mt-1 font-medium text-slate-900">{backupCount} 条记录</p>
                 </div>
               </div>
+              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-700">
+                当前为手动备份，无自动备份间隔。旧备份请通过“文件清理与回收站”按人工确认流程清理，本页不会后台自动删除备份。
+              </div>
             </div>
           </div>
           <BackupSubmitForm />
@@ -177,6 +180,7 @@ export default async function BackupPage() {
             <li>• uploads 不存在时会自动创建空目录，再进入备份流程。</li>
             <li>• 如果存在 dev.db-wal / dev.db-shm，备份会与 dev.db 一起复制；仍建议停止本地服务后执行重要备份。</li>
             <li>• SQLite 数据库可能包含 AI Provider 配置，请按敏感数据妥善保管。</li>
+            <li>• 建议保留最近 10 个或最近 30 天内的成功备份；超出的旧备份继续走文件清理页移入回收站，不做静默自动删除。</li>
             <li>• 如果备份失败，请检查磁盘空间、文件权限、数据库文件占用和目录可写状态。</li>
           </ul>
         </DashboardCard>

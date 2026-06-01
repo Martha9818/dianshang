@@ -183,7 +183,7 @@ export default async function ExportPage() {
       <DashboardCard>
         <DashboardCardHeader title="最近导出记录" />
         <TableScrollArea>
-          <DataTable className="min-w-[860px]">
+          <DataTable className="min-w-[1040px]">
             <DataTableHead>
               <tr>
                 <DataTableHeaderCell className="w-[16%]">导出时间</DataTableHeaderCell>
@@ -198,8 +198,12 @@ export default async function ExportPage() {
                 history.map((row) => (
                   <DataTableRow key={row.id}>
                     <DataTableCell className="text-slate-500">{formatDateTime(row.createdAt)}</DataTableCell>
-                    <DataTableCell className="font-medium text-slate-900">{row.fileName}</DataTableCell>
-                    <DataTableCell>{row.includedSheets}</DataTableCell>
+                    <DataTableCell className="font-medium text-slate-900">
+                      <span className="block truncate" title={row.fileName}>{row.fileName}</span>
+                    </DataTableCell>
+                    <DataTableCell>
+                      <span className="block line-clamp-2 break-words" title={row.includedSheets}>{row.includedSheets}</span>
+                    </DataTableCell>
                     <DataTableCell>
                       <StatusBadge label={row.status} tone={getStatusTone(row.status)} />
                     </DataTableCell>
@@ -209,7 +213,7 @@ export default async function ExportPage() {
                           <TableActionLink href={`/api/exports/${row.id}`}>下载</TableActionLink>
                         </div>
                       ) : (
-                        <span className="text-sm text-rose-500">{row.errorMessage ?? "--"}</span>
+                        <span className="block line-clamp-2 break-words text-sm text-rose-500" title={row.errorMessage ?? "--"}>{row.errorMessage ?? "--"}</span>
                       )}
                     </DataTableCell>
                   </DataTableRow>

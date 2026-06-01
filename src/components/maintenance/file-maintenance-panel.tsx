@@ -23,8 +23,6 @@ import {
   type FileMaintenanceActionState,
 } from "@/app/maintenance/files/actions";
 import {
-  MOVE_TO_TRASH_CONFIRM_TEXT,
-  PERMANENT_DELETE_CONFIRM_TEXT,
   type FileMaintenancePageData,
   type FileMaintenanceRecommendation,
   type FileMaintenanceScope,
@@ -106,7 +104,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
 
       <section className="grid gap-4 xl:grid-cols-4">
         <StatCard label="扫描文件项" value={String(data.stats.total)} delta="手动扫描" tone="blue" icon={<MiniIcon name="database" className="h-7 w-7" />} />
-        <StatCard label="建议清理" value={String(data.stats.movable)} delta="需二次确认" tone="amber" icon={<MiniIcon name="shield" className="h-7 w-7" />} />
+        <StatCard label="建议清理" value={String(data.stats.movable)} delta="人工确认" tone="amber" icon={<MiniIcon name="shield" className="h-7 w-7" />} />
         <StatCard label="文件缺失" value={String(data.stats.missing)} delta="不改数据库" tone="red" icon={<MiniIcon name="ban" className="h-7 w-7" />} />
         <StatCard label="回收站文件" value={String(data.stats.trash)} delta="仅本应用" tone="violet" icon={<MiniIcon name="backup" className="h-7 w-7" />} />
       </section>
@@ -225,15 +223,6 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
             ) : null;
           })}
           <div className="flex flex-col gap-3 border-b border-[#EEF2F8] px-5 py-4 xl:flex-row xl:items-end">
-            <div className="min-w-[220px]">
-              <p className="mb-2 px-1 text-sm text-slate-500">二次确认</p>
-              <input
-                name="confirmText"
-                placeholder={MOVE_TO_TRASH_CONFIRM_TEXT}
-                disabled={movePending || Boolean(data.readonlyMessage)}
-                className="h-12 w-full rounded-2xl border border-amber-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-amber-300 focus:ring-4 focus:ring-amber-50 disabled:opacity-60"
-              />
-            </div>
             <button
               type="submit"
               disabled={movePending || Boolean(data.readonlyMessage)}
@@ -349,15 +338,6 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
             />
           ))}
           <div className="flex flex-col gap-3 border-b border-[#EEF2F8] px-5 py-4 xl:flex-row xl:items-end">
-            <div className="min-w-[220px]">
-              <p className="mb-2 px-1 text-sm text-slate-500">永久删除确认</p>
-              <input
-                name="confirmText"
-                placeholder={PERMANENT_DELETE_CONFIRM_TEXT}
-                disabled={deletePending || Boolean(data.readonlyMessage)}
-                className="h-12 w-full rounded-2xl border border-rose-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-50 disabled:opacity-60"
-              />
-            </div>
             <button
               type="submit"
               disabled={deletePending || Boolean(data.readonlyMessage)}

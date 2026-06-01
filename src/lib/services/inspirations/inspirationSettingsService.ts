@@ -14,7 +14,7 @@ import {
 const INSPIRATION_FOLDER_SETTING_KEY = "inspirationFolderPath";
 const INSPIRATION_SCAN_ENABLED_SETTING_KEY = "inspirationScanEnabled";
 const INSPIRATION_SCAN_INTERVAL_SETTING_KEY = "inspirationScanIntervalMinutes";
-export const INSPIRATION_SCAN_INTERVAL_OPTIONS = [10, 30, 60] as const;
+export const INSPIRATION_SCAN_INTERVAL_OPTIONS = [5, 10, 15, 30, 60, 120, 240, 1440] as const;
 
 function createValidationError(message: string) {
   return new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, message);
@@ -82,9 +82,11 @@ function normalizeScanEnabled(value: string | null | undefined) {
 
 function normalizeScanInterval(value: string | number | null | undefined) {
   const interval = Number(value ?? 30);
-  return INSPIRATION_SCAN_INTERVAL_OPTIONS.includes(interval as (typeof INSPIRATION_SCAN_INTERVAL_OPTIONS)[number])
-    ? interval
-    : 30;
+  if (INSPIRATION_SCAN_INTERVAL_OPTIONS.includes(interval as (typeof INSPIRATION_SCAN_INTERVAL_OPTIONS)[number])) {
+    return interval;
+  }
+
+  throw createValidationError("扫描间隔不在支持范围内，请重新选择。");
 }
 
 export async function getInspirationScanConfig() {

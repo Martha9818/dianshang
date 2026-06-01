@@ -19,6 +19,8 @@ import {
   archiveInspirationAction,
   batchInspirationOperationAction,
   convertInspirationToProductAction,
+  deleteInspirationAiDraftJobsAction,
+  deleteInspirationScanJobsAction,
   generateInspirationAiSuggestionAction,
   ignoreInspirationAiDraftAction,
   ignoreInspirationImageReviewLogAction,
@@ -359,6 +361,14 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
     error: "",
   });
   const [, retryScanAction, retryScanPending] = useActionState(retryInspirationScanJobAction, {
+    success: false,
+    error: "",
+  });
+  const [deleteScanJobsState, deleteScanJobsAction, deleteScanJobsPending] = useActionState(deleteInspirationScanJobsAction, {
+    success: false,
+    error: "",
+  });
+  const [deleteAiDraftJobsState, deleteAiDraftJobsAction, deleteAiDraftJobsPending] = useActionState(deleteInspirationAiDraftJobsAction, {
     success: false,
     error: "",
   });
@@ -894,6 +904,11 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           retryAction={retryScanAction}
           retryPending={retryScanPending}
           retryFieldName="scanJobId"
+          deleteAction={deleteScanJobsAction}
+          deletePending={deleteScanJobsPending}
+          deleteFieldName="scanJobIds"
+          actionMessage={deleteScanJobsState.message}
+          actionError={deleteScanJobsState.error}
         />
         <TaskTable
           title="最近 AI 草稿任务"
@@ -902,6 +917,11 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           retryAction={retryAiAction}
           retryPending={retryAiPending}
           retryFieldName="aiDraftJobId"
+          deleteAction={deleteAiDraftJobsAction}
+          deletePending={deleteAiDraftJobsPending}
+          deleteFieldName="aiDraftJobIds"
+          actionMessage={deleteAiDraftJobsState.message}
+          actionError={deleteAiDraftJobsState.error}
           redactAiFailureDetails
         />
       </section>
@@ -1061,6 +1081,11 @@ function TaskTable({
   retryAction,
   retryPending,
   retryFieldName,
+  deleteAction,
+  deletePending,
+  deleteFieldName,
+  actionMessage,
+  actionError,
   redactAiFailureDetails = false,
 }: {
   title: string;
@@ -1069,11 +1094,54 @@ function TaskTable({
   retryAction: (payload: FormData) => void;
   retryPending: boolean;
   retryFieldName: string;
+  deleteAction: (payload: FormData) => void;
+  deletePending: boolean;
+  deleteFieldName: string;
+  actionMessage?: string;
+  actionError?: string;
   redactAiFailureDetails?: boolean;
 }) {
+  const [selectedTaskIds, setSelectedTaskIds] = useState<number[]>([]);
+  const effectiveSelectedTaskIds = selectedTaskIds.filter((id) => tasks.some((task) => task.id === id));
+
+  function toggleTask(id: number, checked: boolean) {
+    setSelectedTaskIds((current) => (checked ? Array.from(new Set([...current, id])) : current.filter((item) => item !== id)));
+  }
+
   return (
     <DashboardCard>
-      <DashboardCardHeader title={title} description="失败任务支持手动重试，不做无限自动重试。" />
+      <DashboardCardHeader title={title} description={"\u5931\u8d25\u4efb\u52a1\u652f\u6301\u624b\u52a8\u91cd\u8bd5\uff1b\u4efb\u52a1\u5386\u53f2\u53ef\u624b\u52a8\u5220\u9664\u3002"} />
+      <form action={deleteAction} className="flex flex-wrap items-center gap-2 border-b border-[#EEF2F8] px-5 py-3">
+        {effectiveSelectedTaskIds.map((id) => (
+          <input key={id} type="hidden" name={deleteFieldName} value={id} />
+        ))}
+        <span className="text-sm text-slate-500">{"\u5df2\u9009"} {effectiveSelectedTaskIds.length} {"\u6761"}</span>
+        <button
+          type="button"
+          onClick={() => setSelectedTaskIds(tasks.map((task) => task.id))}
+          className="inline-flex h-9 items-center rounded-xl border border-[#DCE5F2] px-3 text-xs font-medium text-[#2563EB] hover:bg-blue-50 disabled:opacity-50"
+          disabled={deletePending || tasks.length === 0}
+        >
+          {"\u5168\u9009"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setSelectedTaskIds([])}
+          className="inline-flex h-9 items-center rounded-xl border border-[#DCE5F2] px-3 text-xs font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+          disabled={deletePending || effectiveSelectedTaskIds.length === 0}
+        >
+          {"\u6e05\u7a7a"}
+        </button>
+        <button
+          type="submit"
+          className="inline-flex h-9 items-center rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-medium text-rose-600 disabled:opacity-50"
+          disabled={deletePending || effectiveSelectedTaskIds.length === 0}
+        >
+          {"\u6279\u91cf\u5220\u9664"}
+        </button>
+        {actionMessage ? <span className="text-sm text-emerald-600">{actionMessage}</span> : null}
+        {actionError ? <span className="text-sm text-rose-600">{actionError}</span> : null}
+      </form>
       <div className="space-y-3 px-5 py-4">
         {tasks.length > 0 ? (
           tasks.map((task) => {
@@ -1082,21 +1150,42 @@ function TaskTable({
               : task.failureReasonSummary;
 
             return (
-              <form key={task.id} action={retryAction} className="rounded-2xl border border-[#EEF2F8] bg-white px-4 py-4 text-sm text-slate-600">
-                <input type="hidden" name={retryFieldName} value={task.id} />
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusBadge label={task.status} tone={getTaskTone(task.status)} />
-                    <span>#{task.id}</span>
-                    <span className="break-all">{task.sourceRelativePath}</span>
+              <div key={task.id} className="rounded-2xl border border-[#EEF2F8] bg-white px-4 py-4 text-sm text-slate-600">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={effectiveSelectedTaskIds.includes(task.id)}
+                      onChange={(event) => toggleTask(task.id, event.target.checked)}
+                      aria-label={`select task ${task.id}`}
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusBadge label={task.status} tone={getTaskTone(task.status)} />
+                        <span>#{task.id}</span>
+                        <span className="line-clamp-1 break-all">{task.sourceRelativePath}</span>
+                      </div>
+                      <p className="mt-2 text-slate-400">{task.formattedCreatedAt} / {task.formattedUpdatedAt} / retry {task.retryCount}</p>
+                      {summary ? <p className="mt-2 line-clamp-2 text-rose-600">{summary}</p> : null}
+                    </div>
                   </div>
-                  <button type="submit" className={secondaryButtonClassName} disabled={retryPending || task.status !== "failed"}>
-                    重试
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <form action={retryAction}>
+                      <input type="hidden" name={retryFieldName} value={task.id} />
+                      <button type="submit" className={secondaryButtonClassName} disabled={retryPending || task.status !== "failed"}>
+                        {"\u91cd\u8bd5"}
+                      </button>
+                    </form>
+                    <form action={deleteAction}>
+                      <input type="hidden" name={deleteFieldName} value={task.id} />
+                      <button type="submit" className="inline-flex h-12 items-center justify-center rounded-2xl border border-rose-200 bg-white px-4 text-sm font-medium text-rose-600 disabled:opacity-50" disabled={deletePending}>
+                        {"\u5220\u9664"}
+                      </button>
+                    </form>
+                  </div>
                 </div>
-                <p className="mt-2 text-slate-400">创建 {task.formattedCreatedAt}，更新 {task.formattedUpdatedAt}，重试 {task.retryCount}</p>
-                {summary ? <p className="mt-2 text-rose-600">{summary}</p> : null}
-              </form>
+              </div>
             );
           })
         ) : (

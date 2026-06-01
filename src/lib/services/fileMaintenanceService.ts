@@ -4,8 +4,6 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   FILE_MAINTENANCE_SCOPES,
-  MOVE_TO_TRASH_CONFIRM_TEXT,
-  PERMANENT_DELETE_CONFIRM_TEXT,
   PREVIEW_FILE_MAINTENANCE_MESSAGE,
   type CleanupOperationSummary,
   type FileMaintenanceItem,
@@ -886,16 +884,11 @@ async function removeEmptyTrashParents(startPath: string) {
 
 export async function moveFilesToTrash(input: {
   selections: MoveSelection[];
-  confirmText: string;
 }): Promise<CleanupOperationSummary> {
   const runtime = getRuntimeModeSummary();
 
   if (!runtime.isWritable) {
     throw new ProductBusinessError(BUSINESS_ERROR_CODES.PREVIEW_READONLY, buildReadonlyRuntimeMessage(runtime.mode));
-  }
-
-  if (input.confirmText !== MOVE_TO_TRASH_CONFIRM_TEXT) {
-    throw new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, `请输入“${MOVE_TO_TRASH_CONFIRM_TEXT}”后再继续。`);
   }
 
   if (input.selections.length === 0) {
@@ -964,16 +957,11 @@ export async function moveFilesToTrash(input: {
 
 export async function permanentlyDeleteTrashFiles(input: {
   selections: DeleteSelection[];
-  confirmText: string;
 }): Promise<CleanupOperationSummary> {
   const runtime = getRuntimeModeSummary();
 
   if (!runtime.isWritable) {
     throw new ProductBusinessError(BUSINESS_ERROR_CODES.PREVIEW_READONLY, buildReadonlyRuntimeMessage(runtime.mode));
-  }
-
-  if (input.confirmText !== PERMANENT_DELETE_CONFIRM_TEXT) {
-    throw new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, `请输入“${PERMANENT_DELETE_CONFIRM_TEXT}”后再继续。`);
   }
 
   if (input.selections.length === 0) {

@@ -12,6 +12,7 @@ import { WorkspacePage } from "@/components/ui/workspace-page";
 import { LinkImportFilterControls } from "@/components/link-imports/link-import-filter-controls";
 import {
   createLinkImportDraftAction,
+  deleteLinkImportDraftsAction,
   linkImportDraftToCompetitorAction,
   linkImportDraftToInspirationAction,
   linkImportDraftToProductAction,
@@ -46,6 +47,7 @@ const primaryButtonClassName =
   "inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#2B73FF,#1B56E3)] px-5 text-sm font-medium text-white shadow-[0_16px_36px_rgba(43,115,255,0.20)] disabled:opacity-60";
 const dangerButtonClassName =
   "inline-flex h-12 items-center justify-center rounded-2xl border border-rose-200 bg-white px-5 text-sm font-medium text-rose-600 disabled:opacity-60";
+const LINK_IMPORT_DELETE_FORM_ID = "link-import-draft-delete-form";
 
 function parseDraftId(value?: string) {
   const id = Number(value ?? "");
@@ -123,6 +125,10 @@ export default async function LinkImportsPage({
       {readError ? <PageNote>{readError}</PageNote> : null}
       {params.linkImportMessage ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{params.linkImportMessage}</div> : null}
       {params.linkImportError ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{params.linkImportError}</div> : null}
+      <div className="flex flex-wrap gap-2">
+        <ActionButton href="/inspirations" variant="ghost">返回灵感箱</ActionButton>
+        <ActionButton href="/products" variant="ghost">返回商品池</ActionButton>
+      </div>
 
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <DashboardCard>
@@ -233,33 +239,70 @@ export default async function LinkImportsPage({
               statusOptions={linkImportStatusOptions}
             />
           </div>
+          <form id={LINK_IMPORT_DELETE_FORM_ID} action={deleteLinkImportDraftsAction} className="flex flex-wrap items-center gap-2 border-b border-[#EEF2F8] px-5 py-3">
+            <input type="hidden" name="purpose" value={pageResult.filters.purpose ?? ""} />
+            <input type="hidden" name="status" value={pageResult.filters.status ?? ""} />
+            <button
+              type="submit"
+              className="inline-flex h-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-medium text-rose-600 disabled:opacity-60"
+              disabled={!pageResult.runtime.isWritable || pageResult.drafts.length === 0}
+            >
+              批量删除草稿
+            </button>
+            <span className="text-xs leading-5 text-slate-400">只删除链接草稿记录，不删除已转灵感、商品/竞品关联或截图文件。</span>
+          </form>
           <div className="min-h-[420px] space-y-3 px-5 py-4">
             {pageResult.drafts.length > 0 ? (
               pageResult.drafts.map((draft) => (
-                <Link
+                <article
                   key={draft.id}
-                  href={buildDraftHref({
-                    draftId: draft.id,
-                    purpose: pageResult.filters.purpose,
-                    status: pageResult.filters.status,
-                  })}
                   className={[
-                    "block rounded-2xl border px-4 py-4 transition hover:-translate-y-[1px] hover:border-blue-100 hover:bg-[#FBFDFF] hover:shadow-[0_14px_30px_rgba(59,130,246,0.08)]",
+                    "relative rounded-2xl border px-4 py-4 transition hover:-translate-y-[1px] hover:border-blue-100 hover:bg-[#FBFDFF] hover:shadow-[0_14px_30px_rgba(59,130,246,0.08)]",
                     selectedDraft?.id === draft.id ? "border-blue-200 bg-[#F8FBFF]" : "border-[#EEF2F8] bg-white",
                   ].join(" ")}
                 >
+                  <Link
+                    href={buildDraftHref({
+                      draftId: draft.id,
+                      purpose: pageResult.filters.purpose,
+                      status: pageResult.filters.status,
+                    })}
+                    className="absolute inset-0 z-0 rounded-2xl"
+                    aria-label={`查看草稿 ${draft.id}`}
+                  />
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-slate-900">草稿 #{draft.id}</span>
-                    <span className="text-xs text-slate-400">{draft.formattedCreatedAt}</span>
+                    <div className="relative z-10 flex items-center gap-2">
+                      <input
+                        form={LINK_IMPORT_DELETE_FORM_ID}
+                        type="checkbox"
+                        name="draftIds"
+                        value={draft.id}
+                        disabled={!pageResult.runtime.isWritable}
+                        aria-label={`选择草稿 ${draft.id}`}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 disabled:opacity-50"
+                      />
+                      <span className="text-sm font-semibold text-slate-900">草稿 #{draft.id}</span>
+                    </div>
+                    <div className="relative z-10 flex items-center gap-2">
+                      <span className="text-xs text-slate-400">{draft.formattedCreatedAt}</span>
+                      <form action={deleteLinkImportDraftsAction}>
+                        <input type="hidden" name="purpose" value={pageResult.filters.purpose ?? ""} />
+                        <input type="hidden" name="status" value={pageResult.filters.status ?? ""} />
+                        <input type="hidden" name="draftIds" value={draft.id} />
+                        <button type="submit" className="inline-flex h-8 items-center rounded-xl border border-rose-200 bg-white px-3 text-xs font-medium text-rose-600 disabled:opacity-60" disabled={!pageResult.runtime.isWritable}>
+                          删除
+                        </button>
+                      </form>
+                    </div>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="pointer-events-none relative z-10 mt-3 flex flex-wrap gap-2">
                     <StatusBadge label={draft.purposeLabel} tone="blue" />
                     <StatusBadge label={draft.sourcePlatformLabel} tone="violet" />
                     <StatusBadge label={draft.statusLabel} tone={draft.statusTone} />
                     <StatusBadge label={draft.qualityLabel} tone={draft.qualityTone} />
                   </div>
-                  <p className="mt-3 line-clamp-2 break-all text-xs leading-5 text-slate-500">{getSafeLinkImportDisplayUrl(draft.normalizedUrl ?? draft.url)}</p>
-                </Link>
+                  <p className="pointer-events-none relative z-10 mt-3 line-clamp-2 break-all text-xs leading-5 text-slate-500">{getSafeLinkImportDisplayUrl(draft.normalizedUrl ?? draft.url)}</p>
+                </article>
               ))
             ) : (
               <PageNote>暂无链接导入草稿。</PageNote>
@@ -343,11 +386,6 @@ export default async function LinkImportsPage({
           )}
         </DashboardCard>
       </section>
-
-      <div className="flex flex-wrap gap-2">
-        <ActionButton href="/inspirations" variant="ghost">返回灵感箱</ActionButton>
-        <ActionButton href="/products" variant="ghost">返回商品池</ActionButton>
-      </div>
     </WorkspacePage>
   );
 }

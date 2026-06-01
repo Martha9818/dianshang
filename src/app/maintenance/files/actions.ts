@@ -2,12 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getProductErrorMessage } from "@/lib/modules/products";
-import {
-  MOVE_TO_TRASH_CONFIRM_TEXT,
-  PERMANENT_DELETE_CONFIRM_TEXT,
-  type CleanupOperationSummary,
-  type FileMaintenancePageData,
-} from "@/lib/modules/cleanup/fileMaintenanceTypes";
+import { type CleanupOperationSummary, type FileMaintenancePageData } from "@/lib/modules/cleanup/fileMaintenanceTypes";
 import {
   moveFilesToTrash,
   parseDeleteSelections,
@@ -61,7 +56,6 @@ export async function moveFilesToTrashAction(
   try {
     const result = await moveFilesToTrash({
       selections: parseMoveSelections(formData.getAll("items")),
-      confirmText: String(formData.get("confirmText") ?? ""),
     });
     const data = await scanFileMaintenance();
     revalidateMaintenancePaths();
@@ -75,7 +69,7 @@ export async function moveFilesToTrashAction(
   } catch (error) {
     return {
       ok: false,
-      message: getProductErrorMessage(error, `移入回收站失败，请确认已输入“${MOVE_TO_TRASH_CONFIRM_TEXT}”。`),
+      message: getProductErrorMessage(error, "移入回收站失败，请重新扫描后再试。"),
     };
   }
 }
@@ -89,7 +83,6 @@ export async function permanentlyDeleteTrashFilesAction(
   try {
     const result = await permanentlyDeleteTrashFiles({
       selections: parseDeleteSelections(formData.getAll("items")),
-      confirmText: String(formData.get("confirmText") ?? ""),
     });
     const data = await scanFileMaintenance();
     revalidateMaintenancePaths();
@@ -103,7 +96,7 @@ export async function permanentlyDeleteTrashFilesAction(
   } catch (error) {
     return {
       ok: false,
-      message: getProductErrorMessage(error, `永久删除失败，请确认已输入“${PERMANENT_DELETE_CONFIRM_TEXT}”。`),
+      message: getProductErrorMessage(error, "永久删除失败，请重新扫描后再试。"),
     };
   }
 }

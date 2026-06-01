@@ -13,6 +13,8 @@ import {
   applyInspirationAiSuggestion,
   archiveInspiration,
   convertInspirationToProduct,
+  deleteInspirationAiDraftJobs,
+  deleteInspirationScanJobs,
   generateInspirationAiSuggestion,
   ignoreInspirationAiDraft,
   ignoreInspiration,
@@ -53,6 +55,13 @@ function parsePositiveId(value: FormDataEntryValue | null, label: string) {
 function parseBatchIds(formData: FormData) {
   return formData
     .getAll("ids")
+    .map((value) => Number(value))
+    .filter((id) => Number.isInteger(id) && id > 0);
+}
+
+function parseTaskIds(formData: FormData, fieldName: string) {
+  return formData
+    .getAll(fieldName)
     .map((value) => Number(value))
     .filter((id) => Number.isInteger(id) && id > 0);
 }
@@ -219,6 +228,34 @@ export async function retryInspirationScanJobAction(_prevState: unknown, formDat
     return {
       success: false as const,
       error: getProductErrorMessage(error, "重试扫描任务失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function deleteInspirationScanJobsAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const result = await deleteInspirationScanJobs(parseTaskIds(formData, "scanJobIds"));
+    revalidateInspirations();
+    return { success: true as const, data: result, message: `已删除 ${result.deletedCount} 条扫描任务记录。` };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "删除扫描任务记录失败，请稍后重试。"),
+    };
+  }
+}
+
+export async function deleteInspirationAiDraftJobsAction(_prevState: unknown, formData: FormData) {
+  void _prevState;
+  try {
+    const result = await deleteInspirationAiDraftJobs(parseTaskIds(formData, "aiDraftJobIds"));
+    revalidateInspirations();
+    return { success: true as const, data: result, message: `已删除 ${result.deletedCount} 条 AI 草稿任务记录。` };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: getProductErrorMessage(error, "删除 AI 草稿任务记录失败，请稍后重试。"),
     };
   }
 }

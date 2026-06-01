@@ -217,16 +217,22 @@ export default async function MaterialsPage({
         <DashboardCard className="p-4">
           {(pageData?.materials.length ?? 0) > 0 ? (
             view === "grid" ? (
-              <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                 {pageData!.materials.map((material) => (
                   <article
                     key={material.id}
                     className={[
-                      "flex h-full flex-col rounded-[24px] border p-4 transition hover:-translate-y-[1px] hover:shadow-[0_18px_36px_rgba(59,130,246,0.08)]",
+                      "group relative flex h-full min-h-[320px] cursor-pointer flex-col rounded-[24px] border p-4 transition hover:-translate-y-[1px] hover:shadow-[0_18px_36px_rgba(59,130,246,0.08)]",
                       selectedMaterial?.id === material.id ? "border-blue-200 bg-[#F8FBFF]" : "border-[#EEF2F8] bg-white",
                     ].join(" ")}
                   >
-                    <span className="mb-3 flex items-center gap-2 text-xs text-slate-500">
+                    <Link
+                      href={buildUrl(params, { view, materialId: String(material.id) })}
+                      scroll={false}
+                      className="absolute inset-0 z-0 rounded-[24px]"
+                      aria-label={`查看素材 ${material.id} 详情`}
+                    />
+                    <span className="relative z-10 mb-3 flex items-center gap-2 text-xs text-slate-500">
                       <input
                         type="checkbox"
                         form={MATERIAL_BATCH_FORM_ID}
@@ -236,39 +242,28 @@ export default async function MaterialsPage({
                         className="h-4 w-4 rounded border-slate-300 text-blue-600"
                       />
                     </span>
-                    <Link href={buildUrl(params, { view, materialId: String(material.id) })} scroll={false}>
+                    <div className="pointer-events-none relative z-10">
                       <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" square missing={!material.fileExists} />
-                    </Link>
-                    <div className="mt-4 flex flex-1 flex-col">
-                      <Link
-                        href={buildUrl(params, { view, materialId: String(material.id) })}
-                        scroll={false}
-                        className="line-clamp-2 min-h-[48px] text-sm font-medium leading-6 text-slate-900 hover:text-[#2563EB]"
-                      >
+                    </div>
+                    <div className="pointer-events-none relative z-10 mt-4 flex flex-1 flex-col">
+                      <p className="pointer-events-none relative z-10 line-clamp-2 min-h-[48px] text-sm font-medium leading-6 text-slate-900 group-hover:text-[#2563EB]">
                         {material.product.name}
-                      </Link>
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      </p>
+                      <div className="pointer-events-none relative z-10 mt-3 flex flex-wrap gap-2">
                         <StatusBadge label={material.platformLabel} tone="violet" />
                         <StatusBadge label={material.materialTypeLabel} tone="blue" />
                         <StatusBadge label={material.usagePermissionLabel} tone={material.isReferenceOnly ? "amber" : "green"} />
                         <StatusBadge label={material.status ?? "--"} tone={material.statusTone} />
                         {material.imageDedup?.warningLabel ? <StatusBadge label={material.imageDedup.warningLabel} tone="amber" /> : null}
                       </div>
-                      <p className="mt-3 text-sm text-slate-400">{material.sourceTypeLabel} / {material.sourceLabel}</p>
+                      <p className="pointer-events-none relative z-10 mt-3 text-sm text-slate-400">{material.sourceTypeLabel} / {material.sourceLabel}</p>
                       {material.isReferenceOnly ? (
-                        <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-700">
+                        <p className="pointer-events-none relative z-10 mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-700">
                           该图片仅作为灵感和分析参考，不建议直接用于商品发布。
                         </p>
                       ) : null}
-                      <div className="mt-auto pt-3">
+                      <div className="pointer-events-none relative z-10 mt-auto pt-3">
                         <p className="text-xs text-slate-400">{material.formattedCreatedAt}</p>
-                        <Link
-                          href={buildUrl(params, { view, materialId: String(material.id) })}
-                          scroll={false}
-                          className="mt-2 inline-flex h-9 items-center justify-center rounded-xl border border-[#DCE5F2] bg-white px-3 text-xs font-medium text-[#2563EB] hover:bg-blue-50"
-                        >
-                          查看详情
-                        </Link>
                       </div>
                     </div>
                   </article>
