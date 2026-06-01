@@ -4,6 +4,14 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-01
 
+### V1.5 Stabilization - Display Numbering, Product Pool Cleanup, And Empty Directory Cleanup Design
+
+- Changed: Wrote the approved follow-up design spec at `docs/superpowers/specs/2026-06-01-products-materials-display-number-and-cleanup-design.md`.
+- Changed: Locked the direction to computed display numbering instead of real-ID reset: `/products` will show global active-product display numbers, `/materials` will show per-product active-material display numbers, and real `product.id` / `material.id` remain secondary detail-only information.
+- Changed: Locked the UI cleanup scope to remove the standalone `Product ID` table column, fold product numbering into the product-info cell, remove the duplicate material copywriting action, and extend the existing file-cleanup surface to detect empty directory shells rather than creating a second cleanup tool.
+- Verification: Spec self-review only; no code, schema, dependency, or runtime verification was run in this step.
+- Boundary: The approved design keeps V1.5 constraints: no schema migration, no real-ID reindex/reset, no background cleanup, and no second cleanup system.
+
 ### V1.5 Stabilization - Product And Material ID Visibility
 
 - Changed: Added an internal `Product ID` column to the `/products` pool table while keeping SPU as the human-facing business code, so users can directly map screenshot/link/material records back to the numeric product primary key.

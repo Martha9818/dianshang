@@ -3,8 +3,8 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: The approved stabilization batch for notifications, products/materials, copywriting package timeout handling, Prompt task card selection, materials detail actions, and inspiration ScanLog tightening is complete locally and verified. A small UI follow-up now also exposes internal `product.id` in the product pool and `material.id` on material cards to reduce SPU/ID confusion during screenshot-recognition workflows.
-- Next stage: Review the latest local stabilization batch on Windows local runtime, then continue only with the next explicitly approved V1.5 follow-up thread.
+- Current task state: The previous UI-only ID-visibility follow-up is complete locally and verified. A new approved follow-up design now replaces that direction with computed display numbering for products/materials, product-pool spacing cleanup, duplicate material-action removal, and empty-directory support inside the existing file-cleanup system; the design is written and awaiting final spec review before implementation.
+- Next stage: Review the written follow-up spec, then implement only the approved display-number, UI cleanup, and empty-directory extension within the existing V1.5 boundaries.
 
 ## Product Direction
 
@@ -42,7 +42,8 @@
 - Latest dashboard follow-up excludes cancelled Prompt tasks from the home dashboard recent Prompt task list while leaving Prompt task history and status filtering intact.
 - Latest stabilization batch removes duplicated notification action areas, concentrates selection/read/delete/cleanup controls in the notification list header, makes Prompt tasks switch detail by clicking the whole card, moves high-frequency material detail links above the metadata block, relaxes product material table density, adds collapsed/deletable ScanLog history, and increases the multi-platform copywriting package text timeout without changing schema, migrations, dependencies, or V2 behavior.
 - Latest ID-visibility follow-up keeps V1.5 boundaries and only adjusts UI display: `/products` now shows internal `product.id` beside the existing SPU-driven card row, and `/materials` grid cards now show `material.id` in the card header to help users map screenshot source records to products/materials without changing schema, routing, or business logic.
+- Latest approved design follow-up keeps real IDs unchanged, moves toward computed display numbering (`商品 1`, per-product `素材 1`), restores real IDs to secondary detail-only information, removes duplicate material copywriting actions, and extends the existing cleanup foundation to surface empty directory shells without adding a second cleanup system or touching schema.
 
 ## Next Recommended Step
 
-- Review the latest V1.5 stabilization batch locally on `/notifications`, `/prompt-tasks`, `/materials`, `/products`, and `/inspirations`, then open only the next approved stabilization thread if more cleanup is still desired. Do not enter V2 until explicitly approved.
+- Review the new display-number and empty-directory cleanup spec, then implement and locally verify the approved `/products`, `/materials`, and `/maintenance/files` follow-up without changing real IDs, schema, or V2 scope.
