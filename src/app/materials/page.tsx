@@ -222,17 +222,17 @@ export default async function MaterialsPage({
                   <article
                     key={material.id}
                     className={[
-                      "group relative flex h-full min-h-[320px] cursor-pointer flex-col rounded-[24px] border p-4 transition hover:-translate-y-[1px] hover:shadow-[0_18px_36px_rgba(59,130,246,0.08)]",
+                      "group relative isolate flex h-full min-h-[320px] cursor-pointer flex-col rounded-[24px] border p-4 transition hover:-translate-y-[1px] hover:shadow-[0_18px_36px_rgba(59,130,246,0.08)]",
                       selectedMaterial?.id === material.id ? "border-blue-200 bg-[#F8FBFF]" : "border-[#EEF2F8] bg-white",
                     ].join(" ")}
                   >
                     <Link
                       href={buildUrl(params, { view, materialId: String(material.id) })}
                       scroll={false}
-                      className="absolute inset-0 z-0 rounded-[24px]"
+                      className="absolute inset-0 z-10 rounded-[24px]"
                       aria-label={`查看素材 ${material.id} 详情`}
                     />
-                    <span className="relative z-10 mb-3 flex items-center gap-2 text-xs text-slate-500">
+                    <span className="relative z-20 mb-3 flex items-center gap-2 text-xs text-slate-500">
                       <input
                         type="checkbox"
                         form={MATERIAL_BATCH_FORM_ID}

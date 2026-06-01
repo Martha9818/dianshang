@@ -7,6 +7,7 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 ### V1.5 Stabilization - Small Fix Batch
 
 - Changed: Refined materials selection/detail behavior so batch selection toggles cleanly, grid cards open right-side detail by clicking the card, and the extra detail button was removed while keeping the layout denser.
+- Fixed: Follow-up corrected the material grid card click layer so clicking non-checkbox card content updates the selected detail panel.
 - Changed: Synced API image default Provider saves to the existing `ai.sceneDefault.imageProviderId` AppSetting and refreshed the AI image scene dropdown immediately after save.
 - Changed: Unified inspiration scan intervals to 5/10/15/30/60/120/240/1440 minutes, added manual deletion for inspiration scan and AI draft task history rows, and added single/batch deletion for link-import drafts without deleting converted business records or screenshot files.
 - Changed: Moved link-import return shortcuts to the top, tightened export record wrapping/truncation, clarified backup as manual-only with retention guidance, and removed the two typed confirmation inputs from file cleanup while preserving browser confirmation, Vercel read-only guards, trash limits, and CleanupLog.
