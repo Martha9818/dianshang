@@ -31,6 +31,7 @@ export function BatchOperationForm({
   operations,
   statusOptions = [],
   disabled = false,
+  selectAllLabel = "全选",
 }: {
   children: ReactNode;
   formId: string;
@@ -38,6 +39,7 @@ export function BatchOperationForm({
   operations: BatchOperationOption[];
   statusOptions?: StatusOption[];
   disabled?: boolean;
+  selectAllLabel?: string;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, isPending] = useActionState(action, {});
@@ -154,7 +156,7 @@ export function BatchOperationForm({
               onClick={() => setAllChecked(true)}
               className="inline-flex h-12 cursor-pointer items-center justify-center rounded-2xl border border-[#E4EAF3] bg-white px-5 text-sm font-medium text-slate-600 hover:bg-slate-50"
             >
-              全选
+              {selectAllLabel}
             </button>
             <button
               type="button"

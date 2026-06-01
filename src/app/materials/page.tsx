@@ -25,7 +25,6 @@ import {
   batchMaterialOperationAction,
   ignoreImageReviewLogAndRedirectAction,
   markImageReviewLogArchiveSuggestedAndRedirectAction,
-  rebuildMaterialFingerprintAndRedirectAction,
   rebuildMaterialLibraryFingerprintsAndRedirectAction,
 } from "@/app/materials/actions";
 import {
@@ -90,6 +89,11 @@ function buildUrl(params: SearchParams, patch: Record<string, string | null>) {
   return query ? `/materials?${query}` : "/materials";
 }
 
+function buildUploadPreviewUrl(src?: string | null) {
+  if (!src) return null;
+  return `/api/uploads/${src.replace(/^uploads[\\/]/, "")}`;
+}
+
 export default async function MaterialsPage({
   searchParams,
 }: {
@@ -103,6 +107,7 @@ export default async function MaterialsPage({
   const pageData = await getMaterialLibraryPageData(query).catch(() => null);
 
   const selectedMaterial = pageData?.selectedMaterial ?? pageData?.materials[0] ?? null;
+  const selectedMaterialPreviewUrl = selectedMaterial?.fileExists ? buildUploadPreviewUrl(selectedMaterial.filePath) : null;
   const readonlyNotice = runtime.isWritable ? null : buildReadonlyRuntimeMessage(runtime.mode);
   const readUnavailableNotice = pageData ? null : buildProductReadUnavailableMessage(runtime.mode);
   const statusButtons = [
@@ -161,7 +166,7 @@ export default async function MaterialsPage({
               className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#E4EAF3] bg-white px-3 text-sm font-medium text-[#2563EB] disabled:opacity-50"
             >
               <MiniIcon name="spark" className="h-4 w-4" />
-              检查素材相似度
+              批量检查素材相似度
             </button>
           </form>
           <TableActionLink href="/maintenance/files">文件清理与回收站</TableActionLink>
@@ -206,6 +211,7 @@ export default async function MaterialsPage({
           operations={materialBatchOperations}
           statusOptions={(pageData?.statuses ?? []).map((status) => ({ value: status, label: status }))}
           disabled={Boolean(readonlyNotice)}
+          selectAllLabel="批量选择"
         >
         <DashboardCard className="p-4">
           {(pageData?.materials.length ?? 0) > 0 ? (
@@ -228,14 +234,14 @@ export default async function MaterialsPage({
                         aria-label={`选择素材 ${material.id}`}
                         className="h-4 w-4 rounded border-slate-300 text-blue-600"
                       />
-                      批量选择
                     </span>
-                    <Link href={buildUrl(params, { view, materialId: String(material.id) })}>
+                    <Link href={buildUrl(params, { view, materialId: String(material.id) })} scroll={false}>
                       <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" square missing={!material.fileExists} />
                     </Link>
                     <div className="mt-4 flex flex-1 flex-col">
                       <Link
                         href={buildUrl(params, { view, materialId: String(material.id) })}
+                        scroll={false}
                         className="line-clamp-2 min-h-[48px] text-sm font-medium leading-6 text-slate-900 hover:text-[#2563EB]"
                       >
                         {material.product.name}
@@ -257,6 +263,7 @@ export default async function MaterialsPage({
                         <p className="text-xs text-slate-400">{material.formattedCreatedAt}</p>
                         <Link
                           href={buildUrl(params, { view, materialId: String(material.id) })}
+                          scroll={false}
                           className="mt-2 inline-flex h-9 items-center justify-center rounded-xl border border-[#DCE5F2] bg-white px-3 text-xs font-medium text-[#2563EB] hover:bg-blue-50"
                         >
                           查看详情
@@ -296,7 +303,7 @@ export default async function MaterialsPage({
                           />
                         </DataTableCell>
                         <DataTableCell>
-                          <Link href={buildUrl(params, { view, materialId: String(material.id) })} className="flex items-center gap-3">
+                          <Link href={buildUrl(params, { view, materialId: String(material.id) })} scroll={false} className="flex items-center gap-3">
                             <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" missing={!material.fileExists} />
                             <span className="truncate font-medium text-slate-900">{material.product.name}</span>
                           </Link>
@@ -334,13 +341,25 @@ export default async function MaterialsPage({
           />
           {selectedMaterial ? (
             <div className="space-y-5 px-5 py-5">
-              <ProductImage
-                src={selectedMaterial.displayPath}
-                alt={selectedMaterial.filePath}
-                label="IMG"
-                large
-                missing={!selectedMaterial.fileExists}
-              />
+              {selectedMaterialPreviewUrl ? (
+                <a href={selectedMaterialPreviewUrl} target="_blank" rel="noreferrer" className="block" title="点击查看大图">
+                  <ProductImage
+                    src={selectedMaterial.displayPath}
+                    alt={selectedMaterial.filePath}
+                    label="IMG"
+                    large
+                    missing={!selectedMaterial.fileExists}
+                  />
+                </a>
+              ) : (
+                <ProductImage
+                  src={selectedMaterial.displayPath}
+                  alt={selectedMaterial.filePath}
+                  label="IMG"
+                  large
+                  missing={!selectedMaterial.fileExists}
+                />
+              )}
               <div className="grid gap-3 text-sm text-slate-600">
                 <DetailRow label="文件路径" value={selectedMaterial.filePath} />
                 <DetailRow label="缩略图" value={selectedMaterial.thumbnailPath ?? "--"} />
@@ -364,19 +383,9 @@ export default async function MaterialsPage({
                   badgeTone={selectedMaterial.imageDedup?.warningLabel ? "amber" : "slate"}
                 />
               </div>
-              <form action={rebuildMaterialFingerprintAndRedirectAction} className="flex flex-wrap gap-2">
-                <input type="hidden" name="materialId" value={selectedMaterial.id} />
-                <input type="hidden" name="sourceUrl" value={sourceUrl} />
-                <button
-                  type="submit"
-                  disabled={Boolean(readonlyNotice)}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#DCE5F2] bg-white px-3 text-sm font-medium text-[#2563EB] disabled:opacity-50"
-                >
-                  <MiniIcon name="spark" className="h-4 w-4" />
-                  检测此素材
-                </button>
+              <div className="flex flex-wrap gap-2">
                 <TableActionLink href="/maintenance/files">去文件清理与回收站</TableActionLink>
-              </form>
+              </div>
               <ImageDedupPanel summary={selectedMaterial.imageDedup ?? null} sourceUrl={sourceUrl} readonly={Boolean(readonlyNotice)} />
               {selectedMaterial.isReferenceOnly ? (
                 <PageNote>该图片仅作为灵感和分析参考，不建议直接用于商品发布。</PageNote>

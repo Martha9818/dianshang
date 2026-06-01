@@ -169,18 +169,20 @@ export async function rebuildMaterialFingerprintAndRedirectAction(formData: Form
 
 export async function rebuildMaterialLibraryFingerprintsAndRedirectAction(formData: FormData) {
   const sourceUrl = normalizeSourceUrl(String(formData.get("sourceUrl") ?? ""));
+  let message = "";
 
   try {
     const result = await rebuildImageFingerprintsForLibrary("material");
     revalidateMaterialScopes();
-    const message =
+    message =
       result.total === 0
         ? "当前没有素材图片可检查。"
         : `已检查 ${result.total} 个素材，疑似重复 ${result.exactCount}，高度相似 ${result.similarCount}，失败 ${result.failedCount}。`;
-    redirectWithMaterialMessage(sourceUrl, message);
   } catch (error) {
     redirectWithMaterialError(sourceUrl, getProductErrorMessage(error, "素材相似度检查失败，请稍后重试。"));
   }
+
+  redirectWithMaterialMessage(sourceUrl, message);
 }
 
 export async function ignoreImageReviewLogAndRedirectAction(formData: FormData) {
