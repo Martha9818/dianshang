@@ -686,19 +686,6 @@ export function CopywritingManager({
             >
               删除已选
             </button>
-            <button
-              type="button"
-              className={dangerButtonClassName}
-              disabled={visibleRecordIds.length === 0 || isPending}
-              onClick={() =>
-                handleDeleteMany(
-                  visibleRecordIds,
-                  `确认删除当前筛选结果中的 ${visibleRecordIds.length} 条文案记录？不会删除商品、AIJob 或素材文件。`,
-                )
-              }
-            >
-              一键删除当前全部
-            </button>
           </div>
         </div>
       </DashboardCard>

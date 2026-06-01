@@ -419,6 +419,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
   const selectedIsClosed = selectedInspiration?.status === "archived" || selectedInspiration?.status === "rejected";
   const latestFailedAiDraft = selectedInspiration?.aiDraftJobs.find((job) => job.status === "failed") ?? null;
   const visibleScanLogs = scanLogExpanded ? data.recentScanLogs : data.recentScanLogs.slice(0, 4);
+  const recentScanLogIds = useMemo(() => data.recentScanLogs.map((log) => log.id), [data.recentScanLogs]);
 
   useEffect(() => {
     if (convertState.success && convertState.data?.id) {
@@ -936,15 +937,31 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           title="最近 ScanLog"
           description="只显示脱敏摘要，不展示完整本地路径。默认先展示最近 4 条，避免扫描历史占满页面。"
           action={
-            data.recentScanLogs.length > 4 ? (
-              <button
-                type="button"
-                onClick={() => setScanLogExpanded((current) => !current)}
-                className="inline-flex h-10 items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:bg-blue-50"
-              >
-                {scanLogExpanded ? "收起" : `展开全部 ${data.recentScanLogs.length} 条`}
-              </button>
-            ) : null
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {data.recentScanLogs.length > 0 ? (
+                <form action={deleteScanLogsAction}>
+                  {recentScanLogIds.map((id) => (
+                    <input key={id} type="hidden" name="scanLogIds" value={id} />
+                  ))}
+                  <button
+                    type="submit"
+                    disabled={deleteScanLogsPending || !data.runtime.isWritable}
+                    className="inline-flex h-10 items-center rounded-xl border border-rose-200 bg-white px-3 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                  >
+                    {"\u5168\u90e8\u5220\u9664"}
+                  </button>
+                </form>
+              ) : null}
+              {data.recentScanLogs.length > 4 ? (
+                <button
+                  type="button"
+                  onClick={() => setScanLogExpanded((current) => !current)}
+                  className="inline-flex h-10 items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:bg-blue-50"
+                >
+                  {scanLogExpanded ? "\u6536\u8d77" : `\u5c55\u5f00\u5168\u90e8 ${data.recentScanLogs.length} \u6761`}
+                </button>
+              ) : null}
+            </div>
           }
         />
         {deleteScanLogsState.message ? <p className="px-5 pt-4 text-sm text-emerald-600">{deleteScanLogsState.message}</p> : null}
