@@ -228,20 +228,20 @@ export default async function ProductsPage({
           >
           <DashboardCard>
             <TableScrollArea className="py-3">
-              <DataTable className="min-w-[1240px]">
+              <DataTable className="min-w-[1580px]">
                 <DataTableHead>
                   <tr>
-                    <DataTableHeaderCell className="w-[5%]">选择</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[25%]">商品信息</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[12%]">类目</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[12%]">平台</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[10%]">售价</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[10%]">净利润</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[10%]">状态</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[8%]">评分</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[10%]">结论</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[12%]">更新时间</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[16%]">操作</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[64px]">选择</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[310px]">商品信息</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[150px]">类目</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[150px]">平台</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[120px]">售价</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[120px]">净利润</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[132px]">状态</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[110px]">评分</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[140px]">结论</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[170px]">更新时间</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[214px]">操作</DataTableHeaderCell>
                   </tr>
                 </DataTableHead>
                 <DataTableBody>
@@ -277,8 +277,8 @@ export default async function ProductsPage({
                           </div>
                         </DataTableCell>
                         <DataTableCell>{product.targetPlatforms.length > 0 ? product.targetPlatforms.join(" / ") : "--"}</DataTableCell>
-                        <DataTableCell>{formatCurrency(product.estimatedPrice)}</DataTableCell>
-                        <DataTableCell>{getEstimatedProfitText(product.estimatedNetProfit)}</DataTableCell>
+                        <DataTableCell className="whitespace-nowrap">{formatCurrency(product.estimatedPrice)}</DataTableCell>
+                        <DataTableCell className="whitespace-nowrap">{getEstimatedProfitText(product.estimatedNetProfit)}</DataTableCell>
                         <DataTableCell>
                           <StatusBadge label={product.status} tone={PRODUCT_STATUS_TONE[product.status] ?? "slate"} />
                         </DataTableCell>
@@ -301,9 +301,9 @@ export default async function ProductsPage({
                             }
                           />
                         </DataTableCell>
-                        <DataTableCell className="text-slate-500">{product.formattedUpdatedAt}</DataTableCell>
+                        <DataTableCell className="whitespace-nowrap text-slate-500">{product.formattedUpdatedAt}</DataTableCell>
                         <DataTableCell>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex min-w-[190px] flex-wrap gap-2">
                             <TableActionLink href={`/products/${product.id}`}>详情</TableActionLink>
                             <TableActionLink href={`/products/${product.id}/edit`}>编辑</TableActionLink>
                             <DeleteProductButton productId={product.id} deleteAction={deleteProductAction} />

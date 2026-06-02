@@ -179,11 +179,16 @@ export default async function PromptTasksPage({
                                 {task.taskCode}
                               </Link>
                               <StatusBadge label={task.status} tone={getPromptTaskStatusTone(task.status)} />
-                              {isActive ? (
-                                <span className="inline-flex h-7 items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 text-xs font-medium text-[#2563EB]">
-                                  当前查看
-                                </span>
-                              ) : null}
+                              <span
+                                className={[
+                                  "inline-flex h-7 items-center rounded-full border px-2.5 text-xs font-medium",
+                                  isActive
+                                    ? "border-blue-200 bg-blue-50 text-[#2563EB]"
+                                    : "pointer-events-none invisible border-transparent bg-transparent text-transparent",
+                                ].join(" ")}
+                              >
+                                当前查看
+                              </span>
                             </div>
                             <p className="mt-1 text-xs text-slate-400">{task.formattedUpdatedAt}</p>
                           </div>

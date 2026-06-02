@@ -8,6 +8,7 @@ import {
   parseDeleteSelections,
   parseMoveSelections,
   permanentlyDeleteTrashFiles,
+  refreshFileMaintenanceData,
   scanFileMaintenance,
 } from "@/lib/services/fileMaintenanceService";
 
@@ -57,7 +58,7 @@ export async function moveFilesToTrashAction(
     const result = await moveFilesToTrash({
       selections: parseMoveSelections(formData.getAll("items")),
     });
-    const data = await scanFileMaintenance();
+    const data = await refreshFileMaintenanceData();
     revalidateMaintenancePaths();
 
     return {
@@ -84,7 +85,7 @@ export async function permanentlyDeleteTrashFilesAction(
     const result = await permanentlyDeleteTrashFiles({
       selections: parseDeleteSelections(formData.getAll("items")),
     });
-    const data = await scanFileMaintenance();
+    const data = await refreshFileMaintenanceData();
     revalidateMaintenancePaths();
 
     return {

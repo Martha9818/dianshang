@@ -11,6 +11,7 @@ import { ProductImage } from "@/components/products/product-image";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import { LinkImportDraftDeleteToolbar } from "@/components/link-imports/link-import-draft-delete-toolbar";
 import { LinkImportFilterControls } from "@/components/link-imports/link-import-filter-controls";
+import { ScreenshotUploadField } from "@/components/link-imports/screenshot-upload-field";
 import {
   createLinkImportDraftAction,
   deleteLinkImportDraftsAction,
@@ -155,13 +156,7 @@ export default async function LinkImportsPage({
               </select>
             </Field>
             <Field label="辅助截图">
-              <input
-                type="file"
-                name="screenshot"
-                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                className={inputClassName}
-                disabled={!pageResult.runtime.isWritable}
-              />
+              <ScreenshotUploadField disabled={!pageResult.runtime.isWritable} />
             </Field>
             <Field label="页面文本">
               <textarea

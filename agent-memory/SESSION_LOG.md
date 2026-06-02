@@ -4,6 +4,16 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-02
 
+### V1.5 Stabilization - UI Density And File Cleanup Speed
+
+- Changed: Stabilized the requested dense UI areas without changing schema, routes, dependencies, or business data meaning. Dashboard, products, export, AI settings, and file-cleanup tables now use stronger minimum widths and fixed narrow columns for status/time/actions; long text gets readable wrapping or clamping instead of squeezing adjacent columns.
+- Changed: Separated the too-similar stat-card colors by moving home `已生成文案数量` to indigo and inspiration `已放弃` to sky, while preserving the non-black/non-gray stat emphasis preference.
+- Changed: Prompt task cards now reserve the `当前查看` badge space even when inactive, so switching selected tasks changes border/background/shadow only and does not change card height.
+- Changed: Inspiration ScanLog history now renders as readable record cards with a first row for time/type/status/count/action and a second row for folder/error summaries. Link-import auxiliary screenshot upload now uses a Chinese icon control while preserving the real `input type="file" name="screenshot"` and accepted image types.
+- Changed: File cleanup performance now avoids repeated full scans during move-to-trash by collecting movable items once into a lookup map. App-trash enumeration now prefers successful `move_to_trash` log roots and uses bounded package-level fallback enumeration instead of deep-recursing through trash contents; move/delete refreshes no longer write extra scan logs or scan notifications.
+- Verification: `npm run encoding:check`, `npm run typecheck`, `npm run lint`, `npm run build`, and `npx prisma validate` passed. HTTP smoke returned 200 for `/`, `/products`, `/prompt-tasks`, `/inspirations`, `/link-imports`, `/export`, `/maintenance/files`, and `/settings/ai`. Browser QA confirmed table min-widths, no console warnings/errors on the checked pages, Prompt card height stability after switching, preserved link-import file input, and readable file-cleanup trash columns.
+- Boundary: Permanent delete remains limited to application-managed `trash/` through `resolveTrashPath` and `assertInsideDirectory`; no schema migration, dependency change, background cleanup, timed cleanup, second cleanup system, Windows recycle-bin integration, AI behavior, crawler, or V2 scope was added.
+
 ### V1.5 Stabilization - Notification Nested Form Hydration Fix
 
 - Fixed: `/notifications` no longer renders the batch-operation form around the notification table, which had nested the row-level mark-read/delete forms and triggered Next.js hydration errors (`<form> cannot contain a nested <form>`).

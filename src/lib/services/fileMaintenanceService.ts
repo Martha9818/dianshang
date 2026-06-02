@@ -1,4 +1,5 @@
 import { access, mkdir, readdir, rename, rm, rmdir, stat, unlink } from "node:fs/promises";
+import type { Dirent } from "node:fs";
 import path from "node:path";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -47,6 +48,11 @@ type ScopedFilesystemEntry = {
   absolutePath: string;
   stats: Awaited<ReturnType<typeof stat>>;
   itemKind: "file" | "directory";
+};
+
+type TrashMoveLog = {
+  originalRelativePath: string | null;
+  trashRelativePath: string | null;
 };
 
 type MoveSelection = {
@@ -855,32 +861,115 @@ async function buildBackupItems() {
   return items;
 }
 
-async function buildTrashItems(): Promise<TrashFileItem[]> {
-  const files = await listFilesUnderScope("trash");
+function buildTrashFileItem(file: ScopedFilesystemEntry, log: TrashMoveLog | null): TrashFileItem {
+  return {
+    id: file.relativePath,
+    trashRelativePath: file.relativePath,
+    originalRelativePath: log?.originalRelativePath ?? null,
+    itemKind: file.itemKind,
+    fileName: path.basename(file.relativePath),
+    fileType: getFileType(file.relativePath, file.itemKind),
+    fileSize: file.itemKind === "directory" ? null : toFileSizeNumber(file.stats.size),
+    fileSizeLabel: file.itemKind === "directory" ? "--" : formatBytes(file.stats.size),
+    modifiedAt: file.stats.mtime.toISOString(),
+    modifiedAtLabel: formatNullableDate(file.stats.mtime),
+  };
+}
+
+async function getLoggedTrashEntries() {
   const moveLogs = await prisma.cleanupLog.findMany({
     where: {
       action: "move_to_trash",
-      trashRelativePath: { in: files.map((file) => file.relativePath) },
+      status: "success",
+      trashRelativePath: { not: null },
     },
     orderBy: { createdAt: "desc" },
+    take: MAX_SCAN_FILES_PER_SCOPE,
+    select: {
+      originalRelativePath: true,
+      trashRelativePath: true,
+    },
   });
+  const entries: ScopedFilesystemEntry[] = [];
+  const logsByPath = new Map<string, TrashMoveLog>();
+  const seen = new Set<string>();
 
-  return files.map((file) => {
-    const log = moveLogs.find((item) => item.trashRelativePath === file.relativePath) ?? null;
+  for (const log of moveLogs) {
+    if (!log.trashRelativePath || seen.has(log.trashRelativePath)) {
+      continue;
+    }
+    seen.add(log.trashRelativePath);
 
-    return {
-      id: file.relativePath,
-      trashRelativePath: file.relativePath,
-      originalRelativePath: log?.originalRelativePath ?? null,
-      itemKind: file.itemKind,
-      fileName: path.basename(file.relativePath),
-      fileType: getFileType(file.relativePath, file.itemKind),
-      fileSize: file.itemKind === "directory" ? null : toFileSizeNumber(file.stats.size),
-      fileSizeLabel: file.itemKind === "directory" ? "--" : formatBytes(file.stats.size),
-      modifiedAt: file.stats.mtime.toISOString(),
-      modifiedAtLabel: formatNullableDate(file.stats.mtime),
-    };
-  });
+    try {
+      const trash = resolveTrashPath(log.trashRelativePath);
+      const stats = await stat(trash.absolutePath);
+      if (!stats.isFile() && !stats.isDirectory()) {
+        continue;
+      }
+      entries.push({
+        relativePath: trash.trashRelativePath,
+        absolutePath: trash.absolutePath,
+        stats,
+        itemKind: stats.isDirectory() ? "directory" : "file",
+      });
+      logsByPath.set(trash.trashRelativePath, log);
+    } catch {
+      // The item may have already been permanently deleted; keep the trash view focused on existing files.
+    }
+  }
+
+  return { entries, logsByPath };
+}
+
+async function listTrashScopePackageEntries(excludedPaths: Set<string>) {
+  const trashRoot = await ensureLocalDirectory("trash");
+  const entries: ScopedFilesystemEntry[] = [];
+
+  for (const scope of [...FILE_MAINTENANCE_SCOPES, "logs"] as const) {
+    const scopeRoot = path.join(trashRoot, scope);
+    let directoryEntries: Dirent[];
+
+    try {
+      directoryEntries = await readdir(scopeRoot, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of directoryEntries) {
+      if (entries.length >= MAX_SCAN_FILES_PER_SCOPE) {
+        return entries;
+      }
+
+      const absolutePath = path.join(scopeRoot, entry.name);
+      const relativePath = `trash/${scope}/${normalizeSeparators(entry.name)}`;
+
+      if (hasUnsafeSegment(relativePath) || Array.from(excludedPaths).some((existing) => existing === relativePath || existing.startsWith(`${relativePath}/`))) {
+        continue;
+      }
+
+      if (!entry.isFile() && !entry.isDirectory()) {
+        continue;
+      }
+
+      entries.push({
+        relativePath,
+        absolutePath,
+        stats: await stat(absolutePath),
+        itemKind: entry.isDirectory() ? "directory" : "file",
+      });
+    }
+  }
+
+  return entries;
+}
+
+async function buildTrashItems(): Promise<TrashFileItem[]> {
+  const { entries: loggedEntries, logsByPath } = await getLoggedTrashEntries();
+  const loggedPaths = new Set(loggedEntries.map((file) => file.relativePath));
+  const fallbackEntries = await listTrashScopePackageEntries(loggedPaths);
+  const allEntries = [...loggedEntries, ...fallbackEntries].slice(0, MAX_SCAN_FILES_PER_SCOPE);
+
+  return allEntries.map((file) => buildTrashFileItem(file, logsByPath.get(file.relativePath) ?? null));
 }
 
 export async function getRecentCleanupLogs(limit = 10) {
@@ -919,6 +1008,16 @@ export async function getInitialFileMaintenancePageData(): Promise<FileMaintenan
   }
 }
 
+async function collectMaintenanceItems() {
+  const [uploads, exports, backups] = await Promise.all([
+    buildUploadItems(),
+    buildExportItems(),
+    buildBackupItems(),
+  ]);
+
+  return [...uploads, ...exports, ...backups].sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+}
+
 async function collectFileMaintenanceData(): Promise<Omit<FileMaintenancePageData, "scannedAt" | "logs">> {
   const runtime = getRuntimeModeSummary();
 
@@ -933,13 +1032,7 @@ async function collectFileMaintenanceData(): Promise<Omit<FileMaintenancePageDat
     };
   }
 
-  const [uploads, exports, backups, trashItems] = await Promise.all([
-    buildUploadItems(),
-    buildExportItems(),
-    buildBackupItems(),
-    buildTrashItems(),
-  ]);
-  const items = [...uploads, ...exports, ...backups].sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+  const [items, trashItems] = await Promise.all([collectMaintenanceItems(), buildTrashItems()]);
   const stats = buildStats(items, trashItems);
 
   return {
@@ -949,6 +1042,25 @@ async function collectFileMaintenanceData(): Promise<Omit<FileMaintenancePageDat
     trashItems,
     stats,
   };
+}
+
+export async function refreshFileMaintenanceData(scannedAt: string | null = null): Promise<FileMaintenancePageData> {
+  const runtime = getRuntimeModeSummary();
+
+  if (!runtime.isWritable) {
+    return getReadonlyMaintenanceData(runtime);
+  }
+
+  try {
+    const data = await collectFileMaintenanceData();
+    return {
+      ...data,
+      scannedAt,
+      logs: await getRecentCleanupLogs(),
+    };
+  } catch (error) {
+    throw normalizeProductReadError(error);
+  }
 }
 
 export async function scanFileMaintenance(): Promise<FileMaintenancePageData> {
@@ -1046,9 +1158,8 @@ async function updateCleanupLog(logId: number, status: "success" | "failed" | "s
   }
 }
 
-async function assertMoveAllowed(selection: MoveSelection) {
-  const data = await collectFileMaintenanceData();
-  const item = data.items.find((candidate) => candidate.scope === selection.scope && candidate.relativePath === selection.relativePath);
+function getMoveAllowedItem(selection: MoveSelection, itemsByKey: Map<string, FileMaintenanceItem>) {
+  const item = itemsByKey.get(`${selection.scope}:${selection.relativePath}`);
 
   if (!item || !item.canMoveToTrash || !item.exists) {
     throw new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, "该文件当前不允许移入回收站，请重新扫描后再操作。");
@@ -1085,13 +1196,15 @@ export async function moveFilesToTrash(input: {
   }
 
   const summary: CleanupOperationSummary = { successCount: 0, failedCount: 0, skippedCount: 0, errors: [] };
+  const movableItems = await collectMaintenanceItems();
+  const itemsByKey = new Map(movableItems.map((item) => [`${item.scope}:${item.relativePath}`, item]));
 
   for (const selection of input.selections) {
     let logId: number | null = null;
     let original: ScopedPath | null = null;
 
     try {
-      const item = await assertMoveAllowed(selection);
+      const item = getMoveAllowedItem(selection, itemsByKey);
       original = resolveScopedPath(selection.scope, selection.relativePath);
       const originalStats = await stat(original.absolutePath);
       const destination = buildTrashDestination(selection.scope, original.scopeRelativePath);

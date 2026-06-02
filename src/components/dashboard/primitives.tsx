@@ -11,7 +11,7 @@ const interactiveBaseClassName =
 const iconMotionClassName =
   "transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-hover:scale-110 group-active:translate-y-0 group-active:scale-100 motion-reduce:transition-none motion-reduce:transform-none";
 
-type Tone = "blue" | "amber" | "green" | "violet" | "red" | "slate" | "teal" | "cyan";
+type Tone = "blue" | "amber" | "green" | "violet" | "red" | "slate" | "teal" | "cyan" | "indigo" | "sky";
 
 const toneStyles: Record<Tone, { chip: string; soft: string; text: string }> = {
   blue: {
@@ -53,6 +53,16 @@ const toneStyles: Record<Tone, { chip: string; soft: string; text: string }> = {
     chip: "border-cyan-200/80 bg-cyan-50 text-cyan-600",
     soft: "bg-cyan-50/80 text-cyan-600",
     text: "text-cyan-600",
+  },
+  indigo: {
+    chip: "border-indigo-200/80 bg-indigo-50 text-indigo-600",
+    soft: "bg-indigo-50/80 text-indigo-600",
+    text: "text-indigo-600",
+  },
+  sky: {
+    chip: "border-sky-200/80 bg-sky-50 text-sky-600",
+    soft: "bg-sky-50/80 text-sky-600",
+    text: "text-sky-600",
   },
 };
 
@@ -351,7 +361,7 @@ export function DataTable({
   className?: string;
 }) {
   return (
-    <table className={cn("w-full min-w-full table-fixed text-left text-sm text-slate-600", className)}>
+    <table className={cn("w-full table-fixed text-left text-sm text-slate-600", className)}>
       {children}
     </table>
   );
@@ -439,6 +449,8 @@ export function MockThumb({
         tone === "slate" && "bg-[linear-gradient(135deg,#F4F7FB,#E4EAF3)] text-slate-600",
         tone === "teal" && "bg-[linear-gradient(135deg,#E6FFFA,#B9F5EC)] text-teal-700",
         tone === "cyan" && "bg-[linear-gradient(135deg,#E8FAFF,#BCEFFF)] text-cyan-700",
+        tone === "indigo" && "bg-[linear-gradient(135deg,#EEF2FF,#D7DEFF)] text-indigo-700",
+        tone === "sky" && "bg-[linear-gradient(135deg,#EAF7FF,#CBEAFF)] text-sky-700",
       )}
     >
       {label}

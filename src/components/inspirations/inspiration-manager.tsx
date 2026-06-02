@@ -438,7 +438,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         <StatCard label="待处理" value={String(data.stats.pending)} delta="扫描后进入草稿" tone="amber" />
         <StatCard label="已查看" value={String(data.stats.reviewed)} delta="等待后续判断" tone="violet" />
         <StatCard label="已转商品" value={String(data.stats.converted)} delta="必须用户确认" tone="green" />
-        <StatCard label="已放弃" value={String(data.stats.rejected)} delta={`归档 ${data.stats.archived}`} tone="teal" />
+        <StatCard label="已放弃" value={String(data.stats.rejected)} delta={`归档 ${data.stats.archived}`} tone="sky" />
       </section>
 
       <DashboardCard className="px-5 py-5">
@@ -966,60 +966,58 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         />
         {deleteScanLogsState.message ? <p className="px-5 pt-4 text-sm text-emerald-600">{deleteScanLogsState.message}</p> : null}
         {deleteScanLogsState.error ? <p className="px-5 pt-4 text-sm text-rose-600">{deleteScanLogsState.error}</p> : null}
-        <div className="overflow-x-auto px-5 py-4">
-          <table className="min-w-full table-fixed text-left text-sm text-slate-600">
-            <thead className="text-slate-400">
-              <tr>
-                <th className="pb-3 text-xs font-medium">时间</th>
-                <th className="pb-3 text-xs font-medium">类型</th>
-                <th className="pb-3 text-xs font-medium">文件夹摘要</th>
-                <th className="pb-3 text-xs font-medium">状态</th>
-                <th className="pb-3 text-xs font-medium">新增</th>
-                <th className="pb-3 text-xs font-medium">重复</th>
-                <th className="pb-3 text-xs font-medium">失败</th>
-                <th className="pb-3 text-xs font-medium">错误摘要</th>
-                <th className="pb-3 text-xs font-medium">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleScanLogs.length > 0 ? (
-                visibleScanLogs.map((log) => (
-                  <tr key={log.id} className="border-t border-[#F0F3F8]">
-                    <td className="py-4">{log.formattedStartedAt}</td>
-                    <td className="py-4">{log.scanType}</td>
-                    <td className="py-4 break-all">{log.folderSummary}</td>
-                    <td className="py-4">
-                      <StatusBadge label={log.status} tone={log.statusTone} />
-                    </td>
-                    <td className="py-4">{log.newFiles}</td>
-                    <td className="py-4">{log.skippedDuplicates}</td>
-                    <td className="py-4">{log.failedFiles}</td>
-                    <td className="py-4">
-                      <p className="line-clamp-2 text-rose-600">{log.errorSummary ?? "--"}</p>
-                    </td>
-                    <td className="py-4">
-                      <form action={deleteScanLogsAction}>
-                        <input type="hidden" name="scanLogIds" value={log.id} />
-                        <button
-                          type="submit"
-                          disabled={deleteScanLogsPending || !data.runtime.isWritable}
-                          className="inline-flex h-9 items-center rounded-xl border border-rose-200 bg-white px-3 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                        >
-                          删除
-                        </button>
-                      </form>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr className="border-t border-[#F0F3F8]">
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
-                    暂无 ScanLog。
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="space-y-3 px-5 py-4">
+          {visibleScanLogs.length > 0 ? (
+            visibleScanLogs.map((log) => (
+              <article key={log.id} className="rounded-2xl border border-[#EEF2F8] bg-white px-4 py-4 text-sm text-slate-600">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-[150px_110px_120px_1fr]">
+                    <div>
+                      <p className="text-xs text-slate-400">时间</p>
+                      <p className="mt-1 font-medium text-slate-700">{log.formattedStartedAt}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">类型</p>
+                      <p className="mt-1 font-medium text-slate-700">{log.scanType}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">状态</p>
+                      <div className="mt-1"><StatusBadge label={log.status} tone={log.statusTone} /></div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 rounded-2xl bg-[#F8FBFF] px-3 py-2 text-center">
+                      <div><p className="text-xs text-slate-400">新增</p><p className="font-semibold text-slate-700">{log.newFiles}</p></div>
+                      <div><p className="text-xs text-slate-400">重复</p><p className="font-semibold text-slate-700">{log.skippedDuplicates}</p></div>
+                      <div><p className="text-xs text-slate-400">失败</p><p className="font-semibold text-slate-700">{log.failedFiles}</p></div>
+                    </div>
+                  </div>
+                  <form action={deleteScanLogsAction} className="shrink-0">
+                    <input type="hidden" name="scanLogIds" value={log.id} />
+                    <button
+                      type="submit"
+                      disabled={deleteScanLogsPending || !data.runtime.isWritable}
+                      className="inline-flex h-9 items-center rounded-xl border border-rose-200 bg-white px-3 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                    >
+                      删除
+                    </button>
+                  </form>
+                </div>
+                <div className="mt-3 grid gap-3 border-t border-[#F0F3F8] pt-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                  <div>
+                    <p className="text-xs text-slate-400">文件夹摘要</p>
+                    <p className="mt-1 line-clamp-2 break-all text-slate-600">{log.folderSummary}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">错误摘要</p>
+                    <p className="mt-1 line-clamp-3 break-words text-rose-600">{log.errorSummary ?? "--"}</p>
+                  </div>
+                </div>
+              </article>
+            ))
+          ) : (
+            <div className="rounded-2xl border border-dashed border-[#D8E3F2] px-4 py-8 text-center text-sm text-slate-400">
+              暂无 ScanLog。
+            </div>
+          )}
         </div>
       </DashboardCard>
     </div>
@@ -1289,7 +1287,7 @@ function ActionMessages({ messages }: { messages: Array<string | undefined> }) {
   );
 }
 
-function StatCard({ label, value, delta, tone }: { label: string; value: string; delta: string; tone: "blue" | "amber" | "green" | "violet" | "slate" | "teal" }) {
+function StatCard({ label, value, delta, tone }: { label: string; value: string; delta: string; tone: "blue" | "amber" | "green" | "violet" | "slate" | "teal" | "sky" }) {
   const textClassName =
     tone === "green"
       ? "text-emerald-600"
@@ -1301,7 +1299,9 @@ function StatCard({ label, value, delta, tone }: { label: string; value: string;
             ? "text-violet-600"
             : tone === "teal"
               ? "text-teal-600"
-              : "text-slate-600";
+              : tone === "sky"
+                ? "text-sky-600"
+                : "text-slate-600";
 
   return (
     <DashboardCard className="h-full p-5">

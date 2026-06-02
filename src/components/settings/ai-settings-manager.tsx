@@ -834,15 +834,15 @@ export function AISettingsManager({
           <h2 className="text-[1.08rem] font-semibold text-slate-900">当前 Provider 列表</h2>
         </div>
         <TableScrollArea>
-          <DataTable className="min-w-[760px]">
+          <DataTable className="min-w-[1040px]">
             <DataTableHead>
               <tr>
-                <DataTableHeaderCell>名称</DataTableHeaderCell>
-                <DataTableHeaderCell>类型</DataTableHeaderCell>
-                <DataTableHeaderCell>模型</DataTableHeaderCell>
-                <DataTableHeaderCell>用途</DataTableHeaderCell>
-                <DataTableHeaderCell>默认</DataTableHeaderCell>
-                <DataTableHeaderCell>状态</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[170px]">名称</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[230px]">类型</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[300px]">模型</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[130px]">用途</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[100px]">默认</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[110px]">状态</DataTableHeaderCell>
               </tr>
             </DataTableHead>
             <DataTableBody>
@@ -850,8 +850,8 @@ export function AISettingsManager({
                 <DataTableRow key={provider.id}>
                   <DataTableCell>{provider.name}</DataTableCell>
                   <DataTableCell>{getProviderTypeLabel(provider.providerType)}</DataTableCell>
-                  <DataTableCell>{getProviderModelLabel(provider)}</DataTableCell>
-                  <DataTableCell>{provider.purpose ?? "--"}</DataTableCell>
+                  <DataTableCell><span className="block break-words">{getProviderModelLabel(provider)}</span></DataTableCell>
+                  <DataTableCell className="whitespace-nowrap">{provider.purpose ?? "--"}</DataTableCell>
                   <DataTableCell>
                     <StatusBadge label={provider.isDefault ? "默认" : "否"} tone={provider.isDefault ? "blue" : "slate"} />
                   </DataTableCell>

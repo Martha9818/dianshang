@@ -388,15 +388,15 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
             </button>
           </div>
           <TableScrollArea>
-            <DataTable className="min-w-[980px]">
+            <DataTable className="min-w-[1280px]">
               <DataTableHead>
                 <tr>
-                  <DataTableHeaderCell className="w-[6%]">选择</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[34%]">回收站相对路径</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[30%]">原相对路径</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[10%]">类型</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[10%]">大小</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[10%]">修改时间</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[72px]">选择</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[430px]">回收站相对路径</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[360px]">原相对路径</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[130px]">类型</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[110px]">大小</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[178px]">修改时间</DataTableHeaderCell>
                 </tr>
               </DataTableHead>
               <DataTableBody>
@@ -412,11 +412,19 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
                           className="h-4 w-4 rounded border-slate-300 text-blue-600"
                         />
                       </DataTableCell>
-                      <DataTableCell className="break-all font-medium text-slate-900">{item.trashRelativePath}</DataTableCell>
-                      <DataTableCell className="break-all text-slate-500">{item.originalRelativePath ?? "--"}</DataTableCell>
-                      <DataTableCell>{getTrashItemTypeLabel(item)}</DataTableCell>
-                      <DataTableCell>{item.fileSizeLabel}</DataTableCell>
-                      <DataTableCell>{item.modifiedAtLabel}</DataTableCell>
+                      <DataTableCell>
+                        <span className="block line-clamp-2 break-all font-medium leading-6 text-slate-900" title={item.trashRelativePath}>
+                          {item.trashRelativePath}
+                        </span>
+                      </DataTableCell>
+                      <DataTableCell>
+                        <span className="block line-clamp-2 break-all leading-6 text-slate-500" title={item.originalRelativePath ?? "--"}>
+                          {item.originalRelativePath ?? "--"}
+                        </span>
+                      </DataTableCell>
+                      <DataTableCell className="whitespace-nowrap">{getTrashItemTypeLabel(item)}</DataTableCell>
+                      <DataTableCell className="whitespace-nowrap">{item.fileSizeLabel}</DataTableCell>
+                      <DataTableCell className="whitespace-nowrap">{item.modifiedAtLabel}</DataTableCell>
                     </DataTableRow>
                   ))
                 ) : (
