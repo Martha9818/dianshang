@@ -74,7 +74,7 @@ export default async function NotificationsPage({
           label="通知总数"
           value={String(pageData?.totalCount ?? 0)}
           delta="本地记录"
-          tone="slate"
+          tone="amber"
           icon={<MiniIcon name="list" className="h-6 w-6" />}
         />
         <StatCard

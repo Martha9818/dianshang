@@ -11,7 +11,7 @@ const interactiveBaseClassName =
 const iconMotionClassName =
   "transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-hover:scale-110 group-active:translate-y-0 group-active:scale-100 motion-reduce:transition-none motion-reduce:transform-none";
 
-type Tone = "blue" | "amber" | "green" | "violet" | "red" | "slate";
+type Tone = "blue" | "amber" | "green" | "violet" | "red" | "slate" | "teal" | "cyan";
 
 const toneStyles: Record<Tone, { chip: string; soft: string; text: string }> = {
   blue: {
@@ -43,6 +43,16 @@ const toneStyles: Record<Tone, { chip: string; soft: string; text: string }> = {
     chip: "border-slate-200/90 bg-slate-50 text-slate-600",
     soft: "bg-slate-50/90 text-slate-600",
     text: "text-slate-600",
+  },
+  teal: {
+    chip: "border-teal-200/80 bg-teal-50 text-teal-600",
+    soft: "bg-teal-50/80 text-teal-600",
+    text: "text-teal-600",
+  },
+  cyan: {
+    chip: "border-cyan-200/80 bg-cyan-50 text-cyan-600",
+    soft: "bg-cyan-50/80 text-cyan-600",
+    text: "text-cyan-600",
   },
 };
 
@@ -427,6 +437,8 @@ export function MockThumb({
         tone === "violet" && "bg-[linear-gradient(135deg,#F1EBFF,#DDD0FF)] text-violet-700",
         tone === "red" && "bg-[linear-gradient(135deg,#FFEAE9,#FFD2CE)] text-rose-700",
         tone === "slate" && "bg-[linear-gradient(135deg,#F4F7FB,#E4EAF3)] text-slate-600",
+        tone === "teal" && "bg-[linear-gradient(135deg,#E6FFFA,#B9F5EC)] text-teal-700",
+        tone === "cyan" && "bg-[linear-gradient(135deg,#E8FAFF,#BCEFFF)] text-cyan-700",
       )}
     >
       {label}

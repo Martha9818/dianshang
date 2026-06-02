@@ -4,6 +4,13 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-02
 
+### V1.5 Stabilization - Circled Stat Card Color Follow-up
+
+- Changed: Replaced the circled gray/red stat-card accents without changing data or layout. Home `已生成文案数量` now uses teal, home `已上传素材数量` now uses cyan, notifications `通知总数` now uses amber, and inspirations `已放弃` now uses teal.
+- Changed: Extended the shared dashboard stat-card tone set with teal/cyan so future top rows can avoid repeated gray/red fallback tones while keeping stat numbers colored by their accent.
+- Verification: `npm run encoding:check`, `npm run typecheck`, `npm run lint`, and `npm run build` passed. HTTP smoke returned 200 for `/`, `/notifications`, and `/inspirations`; browser DOM checks confirmed `text-teal-600`, `text-cyan-600`, and `text-amber-600` on the changed stat values with no console warnings/errors.
+- Boundary: No schema migration, dependency change, data write behavior, cleanup behavior, AI behavior, or V2 scope was added.
+
 ### V1.5 Stabilization - File Cleanup Backup Scan And Stat Card Colors
 
 - Changed: `/maintenance/files` no longer deep-scans inside `backups/` packages. Backup cleanup entries are now top-level backup packages, which prevents thousands of internal backup paths from filling the scan result.
