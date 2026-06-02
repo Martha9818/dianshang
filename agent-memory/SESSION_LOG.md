@@ -4,6 +4,13 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-02
 
+### V1.5 Stabilization - Remove New Table Scrollbars
+
+- Fixed: Reworked the latest table-density pass so the affected dashboard/product/export/AI/file-cleanup tables no longer rely on oversized `min-width` values that create horizontal scrollbars on normal desktop layouts.
+- Changed: Restored shared `DataTable` to `min-w-full`, kept necessary overflow behavior for older genuinely wide tables, and made the newly touched tables use balanced percentage columns plus cell/header overflow clipping so long Task IDs or badges cannot create tiny horizontal scrollbars.
+- Verification: `npm run encoding:check`, `npm run typecheck`, `npm run lint`, and `npm run build` passed. Browser checks confirmed no horizontal overflow on `/`, `/products`, `/export`, `/settings/ai`, and `/maintenance/files`, and no console warnings/errors on the checked page.
+- Boundary: UI spacing-only correction; no schema, migration, dependency, route contract, cleanup behavior, AI behavior, or V2 scope change.
+
 ### V1.5 Stabilization - UI Density And File Cleanup Speed
 
 - Changed: Stabilized the requested dense UI areas without changing schema, routes, dependencies, or business data meaning. Dashboard, products, export, AI settings, and file-cleanup tables now use stronger minimum widths and fixed narrow columns for status/time/actions; long text gets readable wrapping or clamping instead of squeezing adjacent columns.

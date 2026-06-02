@@ -183,14 +183,14 @@ export default async function ExportPage() {
       <DashboardCard>
         <DashboardCardHeader title="最近导出记录" />
         <TableScrollArea>
-          <DataTable className="min-w-[1180px]">
+          <DataTable>
             <DataTableHead>
               <tr>
-                <DataTableHeaderCell className="w-[170px]">导出时间</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[330px]">文件名</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[360px]">包含 Sheet</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[120px]">状态</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[200px]">操作 / 错误</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[15%]">导出时间</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[27%]">文件名</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[31%]">包含 Sheet</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[11%]">状态</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[16%]">操作 / 错误</DataTableHeaderCell>
               </tr>
             </DataTableHead>
             <DataTableBody>

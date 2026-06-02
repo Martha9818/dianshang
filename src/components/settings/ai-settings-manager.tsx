@@ -834,15 +834,15 @@ export function AISettingsManager({
           <h2 className="text-[1.08rem] font-semibold text-slate-900">当前 Provider 列表</h2>
         </div>
         <TableScrollArea>
-          <DataTable className="min-w-[1040px]">
+          <DataTable>
             <DataTableHead>
               <tr>
-                <DataTableHeaderCell className="w-[170px]">名称</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[230px]">类型</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[300px]">模型</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[130px]">用途</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[100px]">默认</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[110px]">状态</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[16%]">名称</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[22%]">类型</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[30%]">模型</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[12%]">用途</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[10%]">默认</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[10%]">状态</DataTableHeaderCell>
               </tr>
             </DataTableHead>
             <DataTableBody>

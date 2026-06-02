@@ -150,14 +150,14 @@ export default async function Home() {
         <DashboardCard>
           <DashboardCardHeader title="最近商品" action={<TableActionLink href="/products">查看全部</TableActionLink>} />
           <TableScrollArea>
-            <DataTable className="min-w-[860px]">
+            <DataTable>
               <DataTableHead>
                 <tr>
-                  <DataTableHeaderCell className="w-[34%]">商品信息</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[18%]">类目</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[16%]">状态</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[40%]">商品信息</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[17%]">类目</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[15%]">状态</DataTableHeaderCell>
                   <DataTableHeaderCell className="w-[14%]">综合评分</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[18%]">更新时间</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[14%]">更新时间</DataTableHeaderCell>
                 </tr>
               </DataTableHead>
               <DataTableBody>
@@ -194,14 +194,14 @@ export default async function Home() {
         <DashboardCard>
           <DashboardCardHeader title="最近 Prompt 任务" action={<TableActionLink href="/prompt-tasks">查看全部</TableActionLink>} />
           <TableScrollArea>
-            <DataTable className="min-w-[780px]">
+            <DataTable>
               <DataTableHead>
                 <tr>
-                  <DataTableHeaderCell className="w-[32%]">任务</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[16%]">平台</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[42%]">任务</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[14%]">平台</DataTableHeaderCell>
                   <DataTableHeaderCell className="w-[16%]">类型</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[16%]">状态</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[20%]">更新</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[14%]">状态</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[14%]">更新</DataTableHeaderCell>
                 </tr>
               </DataTableHead>
               <DataTableBody>

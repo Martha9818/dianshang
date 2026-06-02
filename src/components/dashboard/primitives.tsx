@@ -361,7 +361,7 @@ export function DataTable({
   className?: string;
 }) {
   return (
-    <table className={cn("w-full table-fixed text-left text-sm text-slate-600", className)}>
+    <table className={cn("w-full min-w-full table-fixed text-left text-sm text-slate-600", className)}>
       {children}
     </table>
   );
@@ -379,7 +379,7 @@ export function DataTableHeaderCell({
   children: ReactNode;
 } & ThHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <th className={cn("pb-3 text-xs font-medium leading-5 tracking-[0.01em]", className)} {...props}>
+    <th className={cn("overflow-hidden pb-3 text-xs font-medium leading-5 tracking-[0.01em]", className)} {...props}>
       {children}
     </th>
   );
@@ -401,7 +401,7 @@ export function DataTableCell({
   children: ReactNode;
 } & TdHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <td className={cn("py-4 align-middle leading-6", className)} {...props}>
+    <td className={cn("overflow-hidden py-4 align-middle leading-6", className)} {...props}>
       {children}
     </td>
   );

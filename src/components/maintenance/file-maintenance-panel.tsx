@@ -258,7 +258,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
             </button>
           </div>
           <TableScrollArea>
-            <DataTable className="min-w-[1180px]">
+            <DataTable>
               <DataTableHead>
                 <tr>
                   <DataTableHeaderCell className="w-[5%]">选择</DataTableHeaderCell>
@@ -388,15 +388,15 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
             </button>
           </div>
           <TableScrollArea>
-            <DataTable className="min-w-[1280px]">
+            <DataTable>
               <DataTableHead>
                 <tr>
-                  <DataTableHeaderCell className="w-[72px]">选择</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[430px]">回收站相对路径</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[360px]">原相对路径</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[130px]">类型</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[110px]">大小</DataTableHeaderCell>
-                  <DataTableHeaderCell className="w-[178px]">修改时间</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[6%]">选择</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[34%]">回收站相对路径</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[30%]">原相对路径</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[10%]">类型</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[8%]">大小</DataTableHeaderCell>
+                  <DataTableHeaderCell className="w-[12%]">修改时间</DataTableHeaderCell>
                 </tr>
               </DataTableHead>
               <DataTableBody>
@@ -458,7 +458,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
       <DashboardCard>
         <DashboardCardHeader title="清理日志" description="记录扫描、移入回收站和永久删除结果，路径仅保存相对路径。" />
         <TableScrollArea>
-          <DataTable className="min-w-[940px]">
+          <DataTable>
             <DataTableHead>
               <tr>
                 <DataTableHeaderCell className="w-[12%]">时间</DataTableHeaderCell>
