@@ -44,7 +44,7 @@ const recommendationOptions: Array<{ value: "ALL" | FileMaintenanceRecommendatio
   { value: "keep", label: "保留" },
 ];
 
-const VISIBLE_ROW_LIMIT = 30;
+const VISIBLE_ROW_LIMIT = 10;
 
 function getBadgeTone(value: string): "blue" | "amber" | "green" | "violet" | "red" | "slate" {
   if (value === "keep" || value === "active_reference") return "green";
@@ -461,12 +461,12 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
           <DataTable>
             <DataTableHead>
               <tr>
-                <DataTableHeaderCell className="w-[12%]">时间</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[12%]">动作</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[10%]">目录</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[12%]">状态</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[32%]">原路径</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[22%]">原因</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[11%]">时间</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[11%]">动作</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[8%]">目录</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[10%]">状态</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[34%] pr-4">原路径</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[26%]">原因</DataTableHeaderCell>
               </tr>
             </DataTableHead>
             <DataTableBody>
@@ -477,7 +477,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
                     <DataTableCell>{log.action}</DataTableCell>
                     <DataTableCell>{log.fileScope}</DataTableCell>
                     <DataTableCell><StatusBadge label={log.status} tone={log.status === "success" ? "green" : log.status === "failed" ? "red" : "amber"} /></DataTableCell>
-                    <DataTableCell className="break-all text-slate-500">{log.originalRelativePath ?? log.trashRelativePath ?? "--"}</DataTableCell>
+                    <DataTableCell className="break-all pr-4 text-slate-500">{log.originalRelativePath ?? log.trashRelativePath ?? "--"}</DataTableCell>
                     <DataTableCell className="break-all text-slate-500">{log.reason ?? "--"}</DataTableCell>
                   </DataTableRow>
                 ))

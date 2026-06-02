@@ -4,6 +4,13 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-02
 
+### V1.5 Stabilization - File Cleanup Visible Rows And Log Spacing
+
+- Changed: `/maintenance/files` scan results and app-trash lists now default to 10 visible rows instead of 30, keeping the existing expand/collapse behavior for the remaining rows.
+- Changed: Cleanup-log columns were rebalanced so `原路径` starts earlier, has right-side spacing, and `原因` gets more room; no cleanup actions, file scanning, trash, or permanent-delete logic changed.
+- Verification: `npm run typecheck` and `npm run lint` passed. Browser check on `/maintenance/files` confirmed cleanup logs render 10 rows, no horizontal table overflow, wider path/reason spacing, and no console warnings/errors. A stale permanent-delete confirmation dialog was dismissed without executing deletion.
+- Boundary: Display-only UI change; no schema, migration, dependency, route contract, cleanup behavior, filesystem safety guard, or V2 scope change.
+
 ### V1.5 Stabilization - Home Date And Notification Column Spacing
 
 - Changed: Home recent-product `更新时间` now renders date-only with the existing product formatter so the half-width dashboard table no longer truncates the timestamp.
