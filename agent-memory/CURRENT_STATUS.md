@@ -45,6 +45,10 @@
 - Latest approved design follow-up keeps real IDs unchanged, moves toward computed display numbering (`商品 1`, per-product `素材 1`), restores real IDs to secondary detail-only information, removes duplicate material copywriting actions, and extends the existing cleanup foundation to surface empty directory shells without adding a second cleanup system or touching schema.
 - Latest implementation follow-up keeps real IDs unchanged and fully replaces the temporary primary-ID emphasis: product rows now show computed display numbering, product detail exposes both display number and real `Product ID`, materials show per-product computed numbering with real IDs in detail metadata, the mirrored duplicate copywriting shortcut is removed, and file cleanup now distinguishes empty directories from files while reusing the same guarded trash/delete pipeline.
 
+## Latest User Preference Notes
+
+- Future stat-card cleanup should avoid repeated accent colors within the same top stat row, and stat numbers / emphasis text should not use black. This is recorded only; no UI code has been changed for this preference yet.
+
 ## Next Recommended Step
 
-- Review the latest `/products`, `/materials`, and `/maintenance/files` follow-up on Windows local runtime, especially display-number continuity after delete/discard and empty-directory cleanup behavior, before opening another stabilization request.
+- Review the latest `/products`, `/materials`, and `/maintenance/files` follow-up on Windows local runtime, especially display-number continuity after delete/discard and empty-directory cleanup behavior. For the next stat-card UI cleanup, apply the recorded color rule: no repeated accent colors in a row and no black number/emphasis text.

@@ -2,6 +2,14 @@
 
 Only the latest summary stays here. Older V1.5 detail is archived; do not use archive files as default startup context.
 
+## 2026-06-02
+
+### UI Preference Note - Stat Card Colors
+
+- Recorded: Future stat-card UI cleanup should avoid repeated accent colors within the same top stat row.
+- Recorded: Stat numbers and emphasis text should not use black; use distinct non-black tones that still preserve readability and hierarchy.
+- Boundary: No UI code was changed in this step; this is a preference note for a future visual pass.
+
 ## 2026-06-01
 
 ### V1.5 Stabilization - Display Numbering, Product Pool Cleanup, And Empty Directory Cleanup
