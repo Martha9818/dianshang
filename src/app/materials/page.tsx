@@ -179,7 +179,7 @@ export default async function MaterialsPage({
         <StatCard label="全部素材" value={String(pageData?.stats.total ?? 0)} delta={pageData?.stats.deltas.total ?? "0"} tone="blue" icon={<MiniIcon name="image" className="h-7 w-7" />} />
         <StatCard label="待审核" value={String(pageData?.stats.pendingReview ?? 0)} delta={pageData?.stats.deltas.pendingReview ?? "0"} tone="amber" icon={<MiniIcon name="clock" className="h-7 w-7" />} />
         <StatCard label="已采用" value={String(pageData?.stats.adopted ?? 0)} delta={pageData?.stats.deltas.adopted ?? "0"} tone="green" icon={<MiniIcon name="shield" className="h-7 w-7" />} />
-        <StatCard label="待修改" value={String(pageData?.stats.needsEdit ?? 0)} delta={pageData?.stats.deltas.needsEdit ?? "0"} tone="amber" icon={<MiniIcon name="spark" className="h-7 w-7" />} />
+        <StatCard label="待修改" value={String(pageData?.stats.needsEdit ?? 0)} delta={pageData?.stats.deltas.needsEdit ?? "0"} tone="violet" icon={<MiniIcon name="spark" className="h-7 w-7" />} />
       </section>
 
       {pageData && pageData.stats.total === 0 ? (

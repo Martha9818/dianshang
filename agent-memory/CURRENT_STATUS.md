@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: The approved display-number and cleanup follow-up is implemented locally. A follow-up regression on `/maintenance/files` has been fixed: empty-directory scanning now shares the existing per-scope scan cap with files and stops recursive traversal once the cap is reached, preventing Server Action fetch failures from oversized local scans.
+- Current task state: The approved display-number and cleanup follow-up is implemented locally. `/maintenance/files` has been tightened for local performance: empty-directory scanning shares the existing scan cap, `backups/` now scans only top-level backup packages instead of expanding internal backup contents, and scan/trash tables default to 30 visible rows with expand controls. Stat-card color cleanup is also applied so top rows avoid repeated tones and stat numbers no longer use black.
 - Next stage: Review the latest local follow-up on Windows runtime, then continue only with the next explicitly approved V1.5 cleanup thread.
 
 ## Product Direction
@@ -51,4 +51,4 @@
 
 ## Next Recommended Step
 
-- Continue with the next explicitly approved V1.5 cleanup thread. For the next stat-card UI cleanup, apply the recorded color rule: no repeated accent colors in a row and no black number/emphasis text.
+- Continue with the next explicitly approved V1.5 cleanup thread. File cleanup remains the existing V1-Plus system, now with bounded backup-package scanning and collapsed result rendering.

@@ -436,7 +436,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
       <section className="grid gap-4 xl:grid-cols-5">
         <StatCard label="灵感总数" value={String(data.stats.total)} delta="默认隐藏归档/放弃" tone="blue" />
         <StatCard label="待处理" value={String(data.stats.pending)} delta="扫描后进入草稿" tone="amber" />
-        <StatCard label="已查看" value={String(data.stats.reviewed)} delta="等待后续判断" tone="blue" />
+        <StatCard label="已查看" value={String(data.stats.reviewed)} delta="等待后续判断" tone="violet" />
         <StatCard label="已转商品" value={String(data.stats.converted)} delta="必须用户确认" tone="green" />
         <StatCard label="已放弃" value={String(data.stats.rejected)} delta={`归档 ${data.stats.archived}`} tone="slate" />
       </section>
@@ -1289,13 +1289,24 @@ function ActionMessages({ messages }: { messages: Array<string | undefined> }) {
   );
 }
 
-function StatCard({ label, value, delta, tone }: { label: string; value: string; delta: string; tone: "blue" | "amber" | "green" | "slate" }) {
+function StatCard({ label, value, delta, tone }: { label: string; value: string; delta: string; tone: "blue" | "amber" | "green" | "violet" | "slate" }) {
+  const textClassName =
+    tone === "green"
+      ? "text-emerald-600"
+      : tone === "amber"
+        ? "text-amber-600"
+        : tone === "blue"
+          ? "text-blue-600"
+          : tone === "violet"
+            ? "text-violet-600"
+            : "text-slate-600";
+
   return (
     <DashboardCard className="h-full p-5">
       <div className="space-y-2">
         <p className="text-sm text-slate-500">{label}</p>
-        <p className="text-[2.4rem] font-semibold text-slate-900">{value}</p>
-        <p className={tone === "green" ? "text-emerald-600" : tone === "amber" ? "text-amber-600" : tone === "blue" ? "text-blue-600" : "text-slate-500"}>{delta}</p>
+        <p className={`text-[2.4rem] font-semibold ${textClassName}`}>{value}</p>
+        <p className={textClassName}>{delta}</p>
       </div>
     </DashboardCard>
   );

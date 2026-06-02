@@ -118,9 +118,9 @@ export default async function Home() {
     { label: "商品总数", value: String(totalCount), delta: data?.deltas.totalCount ?? "0", tone: "blue" as const, icon: "bag" as const },
     { label: "待分析商品数", value: String(pendingCount), delta: data?.deltas.pendingCount ?? "0", tone: "amber" as const, icon: "clock" as const },
     { label: "建议测试商品数", value: String(suggestedCount), delta: data?.deltas.suggestedCount ?? "0", tone: "green" as const, icon: "thumb" as const },
-    { label: "已生成文案数量", value: String(generatedCopywritingCount), delta: data?.deltas.generatedCopywritingCount ?? "0", tone: "blue" as const, icon: "doc" as const },
+    { label: "已生成文案数量", value: String(generatedCopywritingCount), delta: data?.deltas.generatedCopywritingCount ?? "0", tone: "red" as const, icon: "doc" as const },
     { label: "Prompt 任务数量", value: String(promptTaskCount), delta: data?.deltas.promptTaskCount ?? "0", tone: "violet" as const, icon: "prompt" as const },
-    { label: "已上传素材数量", value: String(materialCount), delta: data?.deltas.materialCount ?? "0", tone: "green" as const, icon: "image" as const },
+    { label: "已上传素材数量", value: String(materialCount), delta: data?.deltas.materialCount ?? "0", tone: "slate" as const, icon: "image" as const },
   ];
 
   return (

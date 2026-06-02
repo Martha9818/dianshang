@@ -136,7 +136,8 @@ export function StatCard({
           <div>
             <p
               className={cn(
-                "font-semibold leading-none tracking-[-0.06em] text-slate-900",
+                "font-semibold leading-none tracking-[-0.06em]",
+                toneStyles[tone].text,
                 compact ? "text-[2.25rem]" : "text-[2.8rem]",
               )}
             >

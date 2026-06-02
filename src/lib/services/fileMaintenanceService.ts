@@ -315,6 +315,53 @@ async function listFilesUnderScope(scope: FileMaintenanceScope | "trash") {
   return entries;
 }
 
+async function listTopLevelEntriesUnderScope(scope: FileMaintenanceScope | "trash") {
+  const root = await ensureLocalDirectory(scope as LocalDirectoryKey);
+  const entries: ScopedFilesystemEntry[] = [];
+
+  try {
+    const directoryEntries = await readdir(root, { withFileTypes: true });
+
+    for (const entry of directoryEntries) {
+      if (entries.length >= MAX_SCAN_FILES_PER_SCOPE) {
+        break;
+      }
+
+      const absolutePath = path.join(root, entry.name);
+      const relativeToRoot = normalizeSeparators(path.relative(root, absolutePath));
+
+      if (!relativeToRoot || hasUnsafeSegment(relativeToRoot)) {
+        continue;
+      }
+
+      if (entry.isDirectory()) {
+        entries.push({
+          relativePath: `${scope}/${relativeToRoot}`,
+          absolutePath,
+          stats: await stat(absolutePath),
+          itemKind: "directory",
+        });
+        continue;
+      }
+
+      if (!entry.isFile() || SKIPPED_FILE_NAMES.has(entry.name)) {
+        continue;
+      }
+
+      entries.push({
+        relativePath: `${scope}/${relativeToRoot}`,
+        absolutePath,
+        stats: await stat(absolutePath),
+        itemKind: "file",
+      });
+    }
+  } catch (error) {
+    await logError(`File maintenance top-level scan failed for ${scope}: ${sanitizeLogMessage(error)}`);
+  }
+
+  return entries;
+}
+
 function addReference(map: Map<string, FileReference[]>, relativePath: string | null | undefined, reference: FileReference) {
   if (!relativePath?.trim()) {
     return;
@@ -669,6 +716,38 @@ function buildMissingLogItem(input: {
   };
 }
 
+function buildBackupPackageItem(input: {
+  relativePath: string;
+  stats: Awaited<ReturnType<typeof stat>>;
+  isOld: boolean;
+  reference: { relatedType: string; relatedId: string; size: number | null } | null;
+}): FileMaintenanceItem {
+  return {
+    id: input.relativePath,
+    scope: "backups",
+    relativePath: input.relativePath,
+    itemKind: input.stats.isDirectory() ? "directory" : "file",
+    fileName: path.basename(input.relativePath),
+    fileType: input.stats.isDirectory() ? "BACKUP" : getFileType(input.relativePath, "file"),
+    fileSize: toFileSizeNumber(input.reference?.size ?? input.stats.size),
+    fileSizeLabel: formatBytes(input.reference?.size ?? input.stats.size),
+    modifiedAt: input.stats.mtime.toISOString(),
+    modifiedAtLabel: formatNullableDate(input.stats.mtime),
+    exists: true,
+    relatedType: input.reference?.relatedType ?? null,
+    relatedId: input.reference?.relatedId ?? null,
+    relationStatus: input.reference ? "log_reference" : "orphan",
+    relationStatusLabel: input.reference ? "备份记录关联" : "无备份记录",
+    recommendation: input.isOld ? "backup_warning" : "keep",
+    recommendationLabel: input.isOld ? "旧备份包，谨慎清理" : "保留",
+    reason: input.isOld
+      ? `备份包修改时间超过 ${OLD_BACKUP_DAYS} 天；不再逐个扫描内部文件。`
+      : "只扫描备份包本身，不展开备份内部文件。",
+    canMoveToTrash: input.isOld,
+    warningLevel: input.isOld ? "danger" : "info",
+  };
+}
+
 async function collectExportLogReferences() {
   const exportsRoot = getLocalDirectoryPath("exports");
   const logs = await prisma.exportLog.findMany({ select: { id: true, filePath: true, fileName: true } });
@@ -697,8 +776,8 @@ async function collectExportLogReferences() {
 
 async function collectBackupLogReferences() {
   const backupsRoot = getLocalDirectoryPath("backups");
-  const logs = await prisma.backupLog.findMany({ select: { id: true, backupPath: true } });
-  const map = new Map<string, { relatedType: string; relatedId: string; exists: boolean }>();
+  const logs = await prisma.backupLog.findMany({ select: { id: true, backupPath: true, size: true } });
+  const map = new Map<string, { relatedType: string; relatedId: string; exists: boolean; size: number | null }>();
 
   for (const log of logs) {
     try {
@@ -714,6 +793,7 @@ async function collectBackupLogReferences() {
         relatedType: "BackupLog",
         relatedId: String(log.id),
         exists: await pathExists(resolved),
+        size: log.size,
       });
     } catch {
       // Ignore malformed legacy paths.
@@ -753,24 +833,17 @@ async function buildExportItems() {
 }
 
 async function buildBackupItems() {
-  const [entries, references] = await Promise.all([listFilesUnderScope("backups"), collectBackupLogReferences()]);
+  const [entries, references] = await Promise.all([listTopLevelEntriesUnderScope("backups"), collectBackupLogReferences()]);
   const oldCutoff = getOldCutoff(OLD_BACKUP_DAYS);
 
-  const items = entries.map((file) => {
-    if (file.itemKind === "directory") {
-      return buildDirectoryItem({ scope: "backups", relativePath: file.relativePath, stats: file.stats });
-    }
-
-    const reference = Array.from(references.entries()).find(([backupPath]) => file.relativePath === backupPath || file.relativePath.startsWith(`${backupPath}/`));
-    return buildGeneratedFileItem({
-      scope: "backups",
+  const items = entries.map((file) =>
+    buildBackupPackageItem({
       relativePath: file.relativePath,
       stats: file.stats,
       isOld: file.stats.mtime.getTime() < oldCutoff,
-      relatedType: reference?.[1].relatedType ?? null,
-      relatedId: reference?.[1].relatedId ?? null,
-    });
-  });
+      reference: references.get(file.relativePath) ?? null,
+    }),
+  );
   const existingPaths = new Set(entries.map((file) => file.relativePath));
 
   for (const [relativePath, reference] of references.entries()) {
@@ -1116,10 +1189,6 @@ export async function permanentlyDeleteTrashFiles(input: {
       logId = log.id;
 
       if (isTrashDirectory) {
-        const nestedEntries = await readdir(trash.absolutePath);
-        if (nestedEntries.length > 0) {
-          throw new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, "目录已不再为空，请重新扫描后再操作。");
-        }
         await rm(trash.absolutePath, { recursive: true, force: true });
       } else {
         await unlink(trash.absolutePath);

@@ -44,12 +44,31 @@ const recommendationOptions: Array<{ value: "ALL" | FileMaintenanceRecommendatio
   { value: "keep", label: "保留" },
 ];
 
+const VISIBLE_ROW_LIMIT = 30;
+
 function getBadgeTone(value: string): "blue" | "amber" | "green" | "violet" | "red" | "slate" {
   if (value === "keep" || value === "active_reference") return "green";
   if (value === "missing_file" || value === "backup_warning") return "red";
   if (value === "review_before_trash" || value === "soft_deleted_reference") return "amber";
   if (value === "move_to_trash" || value === "orphan") return "violet";
   return "slate";
+}
+
+function getItemTypeLabel(item: FileMaintenancePageData["items"][number]) {
+  if (item.itemKind !== "directory") {
+    return item.fileType;
+  }
+
+  return item.scope === "backups" ? "备份包" : "空目录";
+}
+
+function getTrashItemTypeLabel(item: FileMaintenancePageData["trashItems"][number]) {
+  if (item.itemKind !== "directory") {
+    return item.fileType;
+  }
+
+  const originalSegments = item.originalRelativePath?.split("/").filter(Boolean) ?? [];
+  return originalSegments.length === 2 && originalSegments[0] === "backups" ? "备份包" : "空目录";
 }
 
 function latestDataFromStates(
@@ -69,6 +88,8 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
   const [recommendationFilter, setRecommendationFilter] = useState<"ALL" | FileMaintenanceRecommendation>("ALL");
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [selectedTrashFiles, setSelectedTrashFiles] = useState<string[]>([]);
+  const [showAllScanItems, setShowAllScanItems] = useState(false);
+  const [showAllTrashItems, setShowAllTrashItems] = useState(false);
 
   const data = latestDataFromStates(initialData, scanState, moveState, deleteState);
   const actionState = deleteState.message ? deleteState : moveState.message ? moveState : scanState;
@@ -81,6 +102,10 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
       }),
     [data.items, recommendationFilter, scopeFilter],
   );
+  const visibleFilteredItems = showAllScanItems ? filteredItems : filteredItems.slice(0, VISIBLE_ROW_LIMIT);
+  const hiddenFilteredItemCount = Math.max(0, filteredItems.length - visibleFilteredItems.length);
+  const visibleTrashItems = showAllTrashItems ? data.trashItems : data.trashItems.slice(0, VISIBLE_ROW_LIMIT);
+  const hiddenTrashItemCount = Math.max(0, data.trashItems.length - visibleTrashItems.length);
   const movableFilteredItems = filteredItems.filter((item) => item.canMoveToTrash);
   const effectiveSelectedFiles = selectedFiles.filter((relativePath) =>
     data.items.some((item) => item.relativePath === relativePath && item.canMoveToTrash),
@@ -248,7 +273,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
               </DataTableHead>
               <DataTableBody>
                 {filteredItems.length > 0 ? (
-                  filteredItems.map((item) => (
+                  visibleFilteredItems.map((item) => (
                     <DataTableRow key={item.relativePath}>
                       <DataTableCell>
                         <div className="space-y-1">
@@ -271,7 +296,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
                         </div>
                       </DataTableCell>
                       <DataTableCell>{item.scope}</DataTableCell>
-                      <DataTableCell>{item.itemKind === "directory" ? "空目录" : item.fileType}</DataTableCell>
+                      <DataTableCell>{getItemTypeLabel(item)}</DataTableCell>
                       <DataTableCell>{item.fileSizeLabel}</DataTableCell>
                       <DataTableCell>{item.modifiedAtLabel}</DataTableCell>
                       <DataTableCell>
@@ -295,6 +320,21 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
               </DataTableBody>
             </DataTable>
           </TableScrollArea>
+          {filteredItems.length > VISIBLE_ROW_LIMIT ? (
+            <div className="flex flex-col gap-2 border-t border-[#EEF2F8] px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                当前显示 {visibleFilteredItems.length} / {filteredItems.length} 条扫描结果
+                {hiddenFilteredItemCount > 0 ? `，其余 ${hiddenFilteredItemCount} 条已折叠。` : "。"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAllScanItems((value) => !value)}
+                className="inline-flex h-10 cursor-pointer items-center justify-center rounded-xl border border-[#DCE5F2] px-3 font-medium text-[#2563EB] hover:bg-blue-50"
+              >
+                {showAllScanItems ? "收起结果" : "展开全部结果"}
+              </button>
+            </div>
+          ) : null}
         </form>
       </DashboardCard>
 
@@ -361,7 +401,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
               </DataTableHead>
               <DataTableBody>
                 {data.trashItems.length > 0 ? (
-                  data.trashItems.map((item) => (
+                  visibleTrashItems.map((item) => (
                     <DataTableRow key={item.trashRelativePath}>
                       <DataTableCell>
                         <input
@@ -374,7 +414,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
                       </DataTableCell>
                       <DataTableCell className="break-all font-medium text-slate-900">{item.trashRelativePath}</DataTableCell>
                       <DataTableCell className="break-all text-slate-500">{item.originalRelativePath ?? "--"}</DataTableCell>
-                      <DataTableCell>{item.itemKind === "directory" ? "空目录" : item.fileType}</DataTableCell>
+                      <DataTableCell>{getTrashItemTypeLabel(item)}</DataTableCell>
                       <DataTableCell>{item.fileSizeLabel}</DataTableCell>
                       <DataTableCell>{item.modifiedAtLabel}</DataTableCell>
                     </DataTableRow>
@@ -389,6 +429,21 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
               </DataTableBody>
             </DataTable>
           </TableScrollArea>
+          {data.trashItems.length > VISIBLE_ROW_LIMIT ? (
+            <div className="flex flex-col gap-2 border-t border-[#EEF2F8] px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                当前显示 {visibleTrashItems.length} / {data.trashItems.length} 条回收站记录
+                {hiddenTrashItemCount > 0 ? `，其余 ${hiddenTrashItemCount} 条已折叠。` : "。"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAllTrashItems((value) => !value)}
+                className="inline-flex h-10 cursor-pointer items-center justify-center rounded-xl border border-[#DCE5F2] px-3 font-medium text-[#2563EB] hover:bg-blue-50"
+              >
+                {showAllTrashItems ? "收起回收站记录" : "展开全部回收站记录"}
+              </button>
+            </div>
+          ) : null}
         </form>
       </DashboardCard>
 

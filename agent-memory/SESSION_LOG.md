@@ -4,6 +4,15 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-02
 
+### V1.5 Stabilization - File Cleanup Backup Scan And Stat Card Colors
+
+- Changed: `/maintenance/files` no longer deep-scans inside `backups/` packages. Backup cleanup entries are now top-level backup packages, which prevents thousands of internal backup paths from filling the scan result.
+- Changed: Scan results and app-trash results now render 30 rows by default with explicit expand/collapse controls. The existing select-all behavior was preserved; it was not narrowed to visible rows.
+- Changed: App-trash permanent delete can remove directories already inside the app-managed trash, so a backup package moved to trash can be permanently deleted after confirmation.
+- Changed: Stat-card numbers now use the card accent color instead of black. Product, materials, inspirations, and dashboard stat rows were adjusted to avoid repeated tones in the same top row.
+- Verification: `npm run encoding:check`, `npm run typecheck`, `npm run lint`, `npm run build`, and `npx prisma validate` passed. Browser verification on `http://localhost:3000/maintenance/files` showed scan results reduced from the previous 1632 entries to 171 entries, with backups shown as top-level `备份包` rows and scan/trash tables collapsed to 30 rows. HTTP smoke returned 200 for `/`, `/products`, `/materials`, `/inspirations`, `/maintenance/files`, and `/notifications`.
+- Boundary: No schema migration, dependency change, second cleanup system, background cleanup, backup restore workflow, or V2 behavior was added.
+
 ### V1.5 Stabilization - File Maintenance Scan Fetch Failure Fix
 
 - Fixed: `/maintenance/files` could show `Runtime TypeError: Failed to fetch` after triggering the scan Server Action because the empty-directory cleanup follow-up let directory entries bypass the existing per-scope scan cap and continue recursive traversal.
