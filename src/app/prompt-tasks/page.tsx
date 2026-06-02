@@ -167,21 +167,20 @@ export default async function PromptTasksPage({
 
                   return (
                     <PromptTaskCardShell key={task.id} href={buildTaskHref(task.taskCode)} selected={isActive}>
-                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="flex min-w-0 flex-1 items-start gap-3">
-                          <MockThumb label="PT" tone="violet" />
-                          <div className="min-w-0 flex-1">
+                      <div className="grid gap-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-start">
+                        <MockThumb label="PT" tone="violet" />
+                        <div className="min-w-0 lg:pr-28">
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                               <Link
                                 href={buildTaskHref(task.taskCode)}
-                                className="break-all text-sm font-semibold leading-5 text-slate-900 hover:text-[#2563EB]"
+                                className="block break-all text-sm font-semibold leading-5 text-slate-900 hover:text-[#2563EB]"
                               >
                                 {task.taskCode}
                               </Link>
                               <StatusBadge label={task.status} tone={getPromptTaskStatusTone(task.status)} />
                               <span
                                 className={[
-                                  "inline-flex h-7 items-center rounded-full border px-2.5 text-xs font-medium",
+                                  "inline-flex h-7 items-center rounded-full border px-2.5 text-xs font-medium lg:absolute lg:right-[104px] lg:top-3 lg:min-w-[78px] lg:justify-center",
                                   isActive
                                     ? "border-blue-200 bg-blue-50 text-[#2563EB]"
                                     : "pointer-events-none invisible border-transparent bg-transparent text-transparent",
@@ -192,7 +191,6 @@ export default async function PromptTasksPage({
                             </div>
                             <p className="mt-1 text-xs text-slate-400">{task.formattedUpdatedAt}</p>
                           </div>
-                        </div>
 
                         <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
                           <TableActionLink href={`/prompt-tasks/${encodeURIComponent(task.taskCode)}/upload`}>上传</TableActionLink>

@@ -263,9 +263,7 @@ export default async function ProductsPage({
                             <ProductImage src={product.mainImagePath} alt={product.name} label={product.name.slice(0, 3)} />
                             <div className="min-w-0">
                               <p className="truncate font-medium leading-6 text-slate-900">{product.name}</p>
-                              <p className="mt-1 text-xs font-medium leading-5 text-[#2563EB]">
-                                {product.displayNumber ? `商品 ${product.displayNumber}` : "商品 --"}
-                              </p>
+                              <p className="mt-1 text-xs font-medium leading-5 text-[#2563EB]">Product ID {product.id}</p>
                               <p className="mt-1 truncate text-xs leading-5 text-slate-400">{product.spu}</p>
                             </div>
                           </div>

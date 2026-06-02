@@ -4,6 +4,49 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-02
 
+### V1.6 Planning - Direction Sync Report
+
+- Changed: Added `docs/superpowers/specs/2026-06-02-v16-direction-sync-report.md` as the current direction-sync baseline for the post-V1.5 stage.
+- Changed: Frozen the next product direction as an image-driven product and competitor draft workbench. The report repositions inspirations as an AI inbox, separates inspiration draft triage from formal product scoring, downgrades link import to an auxiliary source record, and stages competitor screenshot inbox and conditional content automation into later versions instead of mixing them into the current round.
+- Changed: Recorded additional guidance from review discussion: current product delete remains soft-delete only, normal workflows should not auto-compact real `Product.id` / `Material.id`, future competitor entities should keep stable real IDs, and growing inspiration source folders will eventually need a processed-source governance plan rather than an unsafe auto-delete shortcut.
+- Verification: Docs-only follow-up; use `npm run encoding:check` after the report/status updates.
+- Boundary: Docs-only sync. No business code, schema, migration, dependency, crawler, browser automation, auto-write, or cleanup-behavior change was implemented in this step.
+
+### V1.5 Stabilization - Prompt Task Active Badge Position
+
+- Changed: Stabilized the `/prompt-tasks` task-card header so the active `当前查看` badge is anchored in the right-top action area rather than flowing after the Task ID text.
+- Changed: Added card-level relative positioning and right-side title padding so long Task IDs or product names do not push the active badge down or overlap it.
+- Verification: `npm run typecheck`, `npm run lint`, and `npm run encoding:check` passed. HTTP smoke returned 200 for `/prompt-tasks`.
+- Boundary: Display-layout-only change; no schema, migration, dependency, Prompt task data logic, upload behavior, or AI behavior changed.
+
+### V1.5 Stabilization - Product Form Layout Rebalance
+
+- Changed: Replanned `/products/new` and shared product edit form layout so the page no longer leaves a large unused left column while stacking most fields on the right.
+- Changed: Removed the artificial `建档顺序建议` card after review. The form now uses actual field groups only: main image + basic archive, target platform + profit inputs + content judgment, and scoring signals + notes.
+- Verification: `npm run encoding:check`, `npm run typecheck`, and `npm run lint` passed. HTTP smoke returned 200 for `/products/new` and `/products`.
+- Boundary: Display-layout-only change; no schema, migration, dependency, route contract, product mutation logic, upload handling, AI behavior, or filesystem behavior changed.
+
+### V1.5 Stabilization - Development Real ID Compaction
+
+- Changed: Added a guarded development-only `开发期真实 ID 整理` entry on `/maintenance/files`. It requires the confirmation text `重排真实ID`, runs an automatic local backup first, hard-cleans soft-deleted test products and discarded material records, compacts remaining real `Product.id` and `Material.id` values to `1..N`, resets SQLite autoincrement sequences, and uses a two-stage filesystem move to rename `uploads/products/<oldId>` folders.
+- Changed: Product-scoped upload path fields and strong product/material associations are synchronized during compaction, including product/material foreign-key cascades, screenshot source IDs, image fingerprints/review logs, safe notification links, cleanup related IDs, and product-scoped image paths.
+- Changed: Removed computed display numbering from product/material surfaces. Product pool/detail and material library/product-material views now show real `Product ID` / `素材 ID` rather than `商品 1` or per-product `素材 1`.
+- Verification: `npm run encoding:check`, `npm run typecheck`, `npm run lint`, `npm run build`, and `npx prisma validate` passed. HTTP smoke returned 200 for `/products`, `/materials`, `/screenshots`, and `/maintenance/files`; content checks confirmed `Product ID` / `素材 ID` are present and old display-number labels are absent.
+- Boundary: No schema, migration, dependency, V2 scope, automatic delete-time compaction, or normal business workflow change was added. The dangerous real-ID compaction action was not executed during verification.
+
+### V1.5 Stabilization - Screenshot Upload Control And Shortcut Position
+
+- Changed: `/screenshots` no longer shows the browser-default file-picker text row inside the upload field. The manual upload control is now an icon-first custom picker with the selected filename shown as muted helper text below.
+- Changed: The `返回灵感箱` / `返回素材库` shortcuts were moved from the bottom of the screenshot page to the top action area; the conditional `返回商品详情` shortcut stays aligned with them when a product context exists.
+- Verification: `npm run encoding:check` and `npm run typecheck` passed. Local browser verification on `http://localhost:3000/screenshots` confirmed the top shortcuts are visible, the bottom shortcut group is no longer shown, and the upload area renders as an icon-first control with no native English button text visible.
+- Boundary: Display-only UI adjustment; no schema, migration, dependency, route contract, upload handling, AI behavior, or V2 scope change.
+
+### V1.5 Stabilization - Inspiration Shortcut Button Microcopy
+
+- Changed: Removed the English `Thread 02` and `Thread 03` prefixes from the two inspiration-detail shortcut buttons; they now read `截图识别` and `链接导入` while preserving the existing destinations and query parameters.
+- Verification: `npm run encoding:check` passed.
+- Boundary: Display-text-only UI change; no schema, migration, dependency, route behavior, AI behavior, or V2 scope change.
+
 ### V1.5 Stabilization - File Cleanup Visible Rows And Log Spacing
 
 - Changed: `/maintenance/files` scan results and app-trash lists now default to 10 visible rows instead of 30, keeping the existing expand/collapse behavior for the remaining rows.

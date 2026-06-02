@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getProductErrorMessage } from "@/lib/modules/products";
 import { type CleanupOperationSummary, type FileMaintenancePageData } from "@/lib/modules/cleanup/fileMaintenanceTypes";
+import { compactRealProductAndMaterialIds } from "@/lib/services/real-id-maintenance-service";
 import {
   moveFilesToTrash,
   parseDeleteSelections,
@@ -24,6 +25,9 @@ function revalidateMaintenancePaths() {
   revalidatePath("/maintenance/files");
   revalidatePath("/system/diagnostics");
   revalidatePath("/notifications");
+  revalidatePath("/products");
+  revalidatePath("/materials");
+  revalidatePath("/screenshots");
 }
 
 export async function scanFileMaintenanceAction(
@@ -98,6 +102,43 @@ export async function permanentlyDeleteTrashFilesAction(
     return {
       ok: false,
       message: getProductErrorMessage(error, "永久删除失败，请重新扫描后再试。"),
+    };
+  }
+}
+
+export async function compactRealIdsAction(
+  _state: FileMaintenanceActionState,
+  formData: FormData,
+): Promise<FileMaintenanceActionState> {
+  void _state;
+
+  try {
+    const confirmText = String(formData.get("confirmText") ?? "").trim();
+    if (confirmText !== "重排真实ID") {
+      return {
+        ok: false,
+        message: "请输入确认文案“重排真实ID”后再执行。",
+      };
+    }
+
+    const result = await compactRealProductAndMaterialIds();
+    const data = await refreshFileMaintenanceData();
+    revalidateMaintenancePaths();
+
+    return {
+      ok: true,
+      message: [
+        "真实 ID 整理完成，已先创建本地备份。",
+        `商品 ID 改动 ${result.productIdChangeCount} 个，素材 ID 改动 ${result.materialIdChangeCount} 个。`,
+        `商品文件夹改名 ${result.productFolderRenameCount} 个，清理已删除商品 ${result.hardDeletedProductCount} 个，清理废弃素材记录 ${result.discardedMaterialCount} 个。`,
+      ].join(" "),
+      data,
+    };
+  } catch (error) {
+    revalidateMaintenancePaths();
+    return {
+      ok: false,
+      message: getProductErrorMessage(error, "真实 ID 整理失败。系统已在执行前尝试创建本地备份，请检查备份记录后再重试。"),
     };
   }
 }

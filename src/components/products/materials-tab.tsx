@@ -90,9 +90,7 @@ export function ProductMaterialsTab({
                           <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" missing={!material.fileExists} />
                           <div className="min-w-0 space-y-1">
                             <p className="truncate text-sm font-medium text-slate-800">{material.product.name}</p>
-                            <p className="text-xs font-medium text-[#2563EB]">
-                              {material.displayNumberWithinProduct ? `素材 ${material.displayNumberWithinProduct}` : "素材 --"}
-                            </p>
+                            <p className="text-xs font-medium text-[#2563EB]">素材 ID {material.id}</p>
                             <p className="truncate text-xs text-slate-500">{material.filePath}</p>
                           </div>
                         </div>

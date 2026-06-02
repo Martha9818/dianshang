@@ -2,15 +2,21 @@
 
 ## Current Progress
 
-- Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: The approved V1.5 UI density and file-cleanup speed follow-up is implemented locally, with the latest correction removing the newly introduced horizontal table scrollbars from the affected overview/management pages and tightening the last visible spacing issues. Dashboard/product/export/AI/file-cleanup tables now stay within their cards and use balanced percentage columns plus hidden overflow/truncation where needed; the home recent-product `更新时间` now shows date-only to avoid truncation, and notification-list content has extra right-side breathing room before the related column. File cleanup scan/trash lists now default to 10 visible rows, and cleanup-log path/reason columns have clearer separation. Prompt task cards keep a fixed current-view placeholder so selection no longer changes card height, link-import screenshot upload uses a Chinese icon upload control while preserving the real `name="screenshot"` file input, and Inspiration ScanLog history uses readable record cards for long summaries. File cleanup performance is tightened by avoiding repeated full scans during move-to-trash and by building app-trash entries primarily from successful `move_to_trash` logs plus bounded package-level fallback enumeration; move/delete refreshes no longer create extra scan logs or scan notifications. Stat-card color cleanup now separates the previously too-similar green/teal areas with indigo and sky accents.
-- Next stage: Continue only with the next explicitly approved V1.5 cleanup thread after reviewing this local follow-up if needed.
+- Current stage: V1.6 planning and real-use flow review after the V1.5 freeze.
+- Current task state: The approved development-only real ID maintenance follow-up is implemented locally. `/maintenance/files` now has a guarded `开发期真实 ID 整理` entry that requires the confirmation text `重排真实ID`, creates an automatic local backup before changes, hard-cleans soft-deleted test products and discarded material records, compacts remaining real `Product.id` and `Material.id` values to `1..N`, renames `uploads/products/<oldId>` folders through a two-stage filesystem move, rewrites product-scoped upload paths, updates strong product/material associations, and resets SQLite autoincrement sequences. Product/material pages no longer expose computed display numbering; product pool/detail and material library/product-material views use real `Product ID` / `素材 ID` as the visible ID. The dangerous maintenance action was not executed during verification.
+- Latest product-form layout follow-up: `/products/new` and `/products/[id]/edit` now use a real-field workspace layout instead of the old left-image/right-stacked form. The artificial `建档顺序建议` block was removed after review; visible space is now filled only by actual product fields grouped as main image + basic archive, platform + profit inputs + content judgment, and scoring signals + notes.
+- Latest Prompt task card follow-up: the active `当前查看` badge on `/prompt-tasks` is anchored to the card's right-top action area instead of flowing with the Task ID/title text, so long task/product names no longer push it down.
+- Direction sync status: `docs/superpowers/specs/2026-06-02-v16-direction-sync-report.md` now records the approved planning baseline for the image-driven draft workbench, link-import downgrade, separated draft-vs-formal scoring, V1.7 competitor screenshot inbox, and V1.8 conditional content workflow.
+- Next stage: Review and approve the V1.6 direction-sync baseline before opening any implementation thread for inspiration inbox reshaping, competitor screenshot inbox design, or content-workflow automation.
 
 ## Product Direction
 
 - Keep EcomPilot Windows local-first with SQLite and local runtime folders as the source of truth.
 - Keep Vercel preview read-only; all real write acceptance belongs to Windows local runtime.
 - Reuse the existing runtime, local-path, logging, diagnostics, AI, image, export, backup, notification, and cleanup foundations.
+- Planned next flow: `图片/截图 -> 灵感箱扫描 -> AI 草稿 -> 草稿初筛分 -> 用户保留/放弃/转商品 -> 正式商品 -> 正式评估 -> 条件式内容生产`.
+- Direction split: inspiration draft triage answers whether a clue deserves more attention; formal product scoring answers whether the product deserves small-batch testing.
+- Product deletion remains a soft business delete by default; real `Product.id` / `Material.id` should stay stable in normal workflows, and future competitor records should keep stable real IDs as well.
 
 ## V1.5 Freeze Summary
 
@@ -47,6 +53,9 @@
 - Latest UI density and cleanup-speed follow-up keeps V1.5 boundaries: table spacing is stabilized across the requested pages without forcing horizontal scrollbars, Prompt task card selection no longer changes card height, link-import screenshot upload uses a Chinese icon UI while preserving the existing form field, Inspiration ScanLog history is easier to scan, and file cleanup avoids repeated move-time scans plus deep app-trash enumeration without changing schema, dependencies, route contracts, or permanent-delete safety boundaries.
 - Latest spacing follow-up keeps the no-horizontal-scroll preference and makes two final display-only refinements: home recent-product dates render date-only, and notification-list content/related columns have clearer separation without changing notification actions or filters.
 - Latest file-cleanup display follow-up reduces the default visible scan/trash rows from 30 to 10 and gives cleanup-log `原路径` / `原因` columns clearer spacing without changing cleanup behavior or safety guards.
+- Latest inspiration microcopy follow-up removes the English `Thread 02` / `Thread 03` prefixes from the two inspiration detail shortcut buttons while preserving the existing screenshot-recognition and link-import destinations.
+- Latest screenshot-page microcopy/layout follow-up replaces the native file-picker text box with an icon-first upload control on `/screenshots` and moves the return shortcuts to the top of the page while keeping the existing upload field name, route targets, and recognition flow unchanged.
+- Latest real-ID maintenance follow-up intentionally changes real primary-key behavior only through a manual development-only guard: it auto-backs up first, compacts `Product.id` / `Material.id`, renames product upload folders, and removes computed display numbering from visible product/material pages. It is not an automatic delete-time workflow and was not executed during verification.
 
 ## Latest User Preference Notes
 
@@ -56,4 +65,4 @@
 
 ## Next Recommended Step
 
-- Continue with the next explicitly approved V1.5 cleanup thread. File cleanup remains the existing V1-Plus system, now with bounded backup-package scanning, collapsed result rendering, faster move refresh, and package-level app-trash enumeration.
+- Use the new V1.6 direction-sync report as the planning baseline, then decide which docs-only or light-expression follow-up belongs in V1.6 before any schema or workflow implementation work starts.

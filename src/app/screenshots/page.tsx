@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import {
   ActionButton,
   DashboardCard,
@@ -15,6 +15,7 @@ import {
   TableScrollArea,
 } from "@/components/dashboard/primitives";
 import { ProductImage } from "@/components/products/product-image";
+import { ScreenshotFileInput } from "@/components/screenshots/screenshot-file-input";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import {
   confirmScreenshotDraftAction,
@@ -104,6 +105,13 @@ export default async function ScreenshotsPage({
   const selectedJob = pageResult.selectedJob;
   const draft = selectedJob?.effectiveDraft ?? selectedJob?.structuredDraft ?? emptyDraft();
   const readonlyNotice = pageResult.runtime.isWritable ? null : SCREENSHOT_READONLY_MESSAGE;
+  const shortcutActions = (
+    <div className="flex flex-wrap justify-end gap-2">
+      <ActionButton href="/inspirations" variant="ghost">{"\u8fd4\u56de\u7075\u611f\u7bb1"}</ActionButton>
+      <ActionButton href="/materials" variant="ghost">{"\u8fd4\u56de\u7d20\u6750\u5e93"}</ActionButton>
+      {pageResult.defaults.productId ? <ActionButton href={`/products/${pageResult.defaults.productId}`} variant="ghost">{"\u8fd4\u56de\u5546\u54c1\u8be6\u60c5"}</ActionButton> : null}
+    </div>
+  );
 
   return (
     <WorkspacePage
@@ -114,6 +122,7 @@ export default async function ScreenshotsPage({
       {readonlyNotice ? <PageNote>{readonlyNotice}</PageNote> : null}
       {readError ? <PageNote>{readError}</PageNote> : null}
       {params.screenshotError ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{params.screenshotError}</div> : null}
+      {shortcutActions}
 
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <DashboardCard>
@@ -152,13 +161,7 @@ export default async function ScreenshotsPage({
               </Field>
             </div>
             <Field label="手动上传截图">
-              <input
-                type="file"
-                name="image"
-                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                className={inputClassName}
-                disabled={!pageResult.runtime.isWritable}
-              />
+              <ScreenshotFileInput disabled={!pageResult.runtime.isWritable} />
               <p className="mt-2 text-xs leading-5 text-slate-400">
                 不上传文件时，系统会尝试使用来源记录已有图片。支持 jpg / jpeg / png / webp，单张最大沿用现有图片服务限制。
               </p>
@@ -332,7 +335,7 @@ export default async function ScreenshotsPage({
         </DashboardCard>
       </section>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="hidden flex-wrap gap-2">
         <ActionButton href="/inspirations" variant="ghost">返回灵感箱</ActionButton>
         <ActionButton href="/materials" variant="ghost">返回素材库</ActionButton>
         {pageResult.defaults.productId ? <ActionButton href={`/products/${pageResult.defaults.productId}`} variant="ghost">返回商品详情</ActionButton> : null}
@@ -368,3 +371,4 @@ function DetailRow({
     </div>
   );
 }
+

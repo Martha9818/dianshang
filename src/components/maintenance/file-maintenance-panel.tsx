@@ -17,6 +17,7 @@ import {
   TableScrollArea,
 } from "@/components/dashboard/primitives";
 import {
+  compactRealIdsAction,
   moveFilesToTrashAction,
   permanentlyDeleteTrashFilesAction,
   scanFileMaintenanceAction,
@@ -76,22 +77,25 @@ function latestDataFromStates(
   scanState: FileMaintenanceActionState,
   moveState: FileMaintenanceActionState,
   deleteState: FileMaintenanceActionState,
+  compactState: FileMaintenanceActionState,
 ) {
-  return deleteState.data ?? moveState.data ?? scanState.data ?? initialData;
+  return compactState.data ?? deleteState.data ?? moveState.data ?? scanState.data ?? initialData;
 }
 
 export function FileMaintenancePanel({ initialData }: { initialData: FileMaintenancePageData }) {
   const [scanState, scanAction, scanPending] = useActionState(scanFileMaintenanceAction, {});
   const [moveState, moveAction, movePending] = useActionState(moveFilesToTrashAction, {});
   const [deleteState, deleteAction, deletePending] = useActionState(permanentlyDeleteTrashFilesAction, {});
+  const [compactState, compactAction, compactPending] = useActionState(compactRealIdsAction, {});
   const [scopeFilter, setScopeFilter] = useState<"ALL" | FileMaintenanceScope>("ALL");
   const [recommendationFilter, setRecommendationFilter] = useState<"ALL" | FileMaintenanceRecommendation>("ALL");
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [selectedTrashFiles, setSelectedTrashFiles] = useState<string[]>([]);
   const [showAllScanItems, setShowAllScanItems] = useState(false);
   const [showAllTrashItems, setShowAllTrashItems] = useState(false);
+  const [compactConfirmText, setCompactConfirmText] = useState("");
 
-  const data = latestDataFromStates(initialData, scanState, moveState, deleteState);
+  const data = latestDataFromStates(initialData, scanState, moveState, deleteState, compactState);
   const actionState = deleteState.message ? deleteState : moveState.message ? moveState : scanState;
   const filteredItems = useMemo(
     () =>
@@ -126,6 +130,61 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
     <div className="space-y-5">
       {data.readonlyMessage ? <PageNote>{data.readonlyMessage}</PageNote> : null}
       <PageNote>文件清理功能只处理本地文件，不影响商品评分、文案数据、素材记录、导出记录或备份记录。</PageNote>
+
+      <DashboardCard>
+        <DashboardCardHeader
+          title="开发期真实 ID 整理"
+          description="仅用于当前开发测试数据：执行前会自动备份，然后把剩余有效 Product ID / 素材 ID 重排为 1、2、3，并同步商品文件夹名。"
+        />
+        <form
+          action={compactAction}
+          onSubmit={(event) => {
+            if (compactConfirmText.trim() !== "重排真实ID") {
+              event.preventDefault();
+              window.alert("请输入确认文案：重排真实ID");
+              return;
+            }
+
+            const confirmed = window.confirm(
+              "确认执行真实 ID 整理吗？\n\n此操作会修改数据库真实 Product ID、素材 ID，并重命名 uploads/products 下的商品文件夹。系统会先自动创建本地备份。",
+            );
+            if (!confirmed) {
+              event.preventDefault();
+            }
+          }}
+        >
+          <div className="grid gap-4 border-t border-[#EEF2F8] px-5 py-5 xl:grid-cols-[1fr_auto] xl:items-end">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-700">确认文案</span>
+              <input
+                name="confirmText"
+                value={compactConfirmText}
+                onChange={(event) => setCompactConfirmText(event.target.value)}
+                placeholder="输入：重排真实ID"
+                className="h-12 w-full rounded-2xl border border-[#E4EAF3] bg-white px-4 text-sm text-slate-700 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={compactPending || Boolean(data.readonlyMessage) || compactConfirmText.trim() !== "重排真实ID"}
+              className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-5 text-sm font-medium text-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <MiniIcon name="shield" className="h-4 w-4" />
+              {compactPending ? "整理中..." : "整理真实 ID"}
+            </button>
+          </div>
+        </form>
+        {compactState.message ? (
+          <div
+            className={[
+              "mx-5 mb-5 rounded-2xl border px-4 py-3 text-sm leading-6",
+              compactState.ok ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700",
+            ].join(" ")}
+          >
+            {compactState.message}
+          </div>
+        ) : null}
+      </DashboardCard>
 
       <section className="grid gap-4 xl:grid-cols-4">
         <StatCard label="扫描文件项" value={String(data.stats.total)} delta="手动扫描" tone="blue" icon={<MiniIcon name="database" className="h-7 w-7" />} />

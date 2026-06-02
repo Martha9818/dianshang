@@ -235,7 +235,7 @@ export default async function MaterialsPage({
                         className="h-4 w-4 rounded border-slate-300 text-blue-600"
                       />
                       <span className="rounded-full border border-[#DCE5F2] bg-white/90 px-2.5 py-1 font-medium text-slate-600 shadow-sm">
-                        {material.displayNumberWithinProduct ? `素材 ${material.displayNumberWithinProduct}` : "素材 --"}
+                        素材 ID {material.id}
                       </span>
                     </span>
                     <div className="pointer-events-none relative z-10">
@@ -299,9 +299,7 @@ export default async function MaterialsPage({
                             <ProductImage src={material.displayPath} alt={material.filePath} label="IMG" missing={!material.fileExists} />
                             <div className="min-w-0">
                               <span className="block truncate font-medium text-slate-900">{material.product.name}</span>
-                              <span className="mt-1 block text-xs font-medium text-[#2563EB]">
-                                {material.displayNumberWithinProduct ? `素材 ${material.displayNumberWithinProduct}` : "素材 --"}
-                              </span>
+                              <span className="mt-1 block text-xs font-medium text-[#2563EB]">素材 ID {material.id}</span>
                             </div>
                           </Link>
                         </DataTableCell>
@@ -364,7 +362,6 @@ export default async function MaterialsPage({
                 <DetailRow label="原图大小" value={selectedMaterial.originalSizeLabel} />
                 <DetailRow label="缩略图大小" value={selectedMaterial.thumbnailSizeLabel} />
                 <DetailRow label="MIME" value={selectedMaterial.mimeType ?? "--"} />
-                <DetailRow label="商品内素材序号" value={selectedMaterial.displayNumberWithinProduct ? String(selectedMaterial.displayNumberWithinProduct) : "--"} />
                 <DetailRow label="素材ID" value={String(selectedMaterial.id)} />
                 <DetailRow label="文件 Hash" value={selectedMaterial.fileHash ? `${selectedMaterial.fileHash.slice(0, 12)}...` : "--"} />
                 <DetailRow label="创建时间" value={selectedMaterial.formattedCreatedAt} />
@@ -376,7 +373,7 @@ export default async function MaterialsPage({
                 <DetailRow label="平台" value={selectedMaterial.platformLabel} />
                 <DetailRow
                   label="关联商品"
-                  value={`${selectedMaterial.productDisplayNumber ? `商品 ${selectedMaterial.productDisplayNumber} / ` : ""}${selectedMaterial.product.name} / ${selectedMaterial.product.spu}`}
+                  value={`${selectedMaterial.product.name} / ${selectedMaterial.product.spu}`}
                 />
                 <DetailRow label="Product ID" value={String(selectedMaterial.productId)} />
                 <DetailRow label="关联 Task ID" value={selectedMaterial.taskCode ?? "--"} />

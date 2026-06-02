@@ -166,7 +166,7 @@ export default async function ProductDetailPage({
                 <StatusBadge label={product.status} tone={PRODUCT_STATUS_TONE[product.status] ?? "slate"} />
               </div>
               <div className="mt-2 space-y-1 text-sm">
-                <p className="font-medium text-[#2563EB]">{product.displayNumber ? `商品 ${product.displayNumber}` : "商品 --"}</p>
+                <p className="font-medium text-[#2563EB]">Product ID {product.id}</p>
                 <p className="text-slate-400">{product.spu}</p>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -217,7 +217,6 @@ export default async function ProductDetailPage({
         {activeTab === "basic" ? (
           <div className="grid gap-4 px-5 py-5 md:grid-cols-2 xl:grid-cols-3">
             <InfoItem label="商品名称" value={product.name} />
-            <InfoItem label="商品展示编号" value={product.displayNumber ? `商品 ${product.displayNumber}` : "--"} />
             <InfoItem label="SPU" value={product.spu} />
             <InfoItem label="Product ID" value={String(product.id)} />
             <InfoItem label="当前状态" value={product.status} />

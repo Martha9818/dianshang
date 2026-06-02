@@ -23,6 +23,12 @@ This file keeps version-level summaries only. Detailed thread-by-thread history 
 - File cleanup and app trash remain the single existing V1-Plus Thread 06 implementation.
 - V1.5 threads reuse the established runtime, local-path, logging, diagnostics, AI, image, export, backup, notification, and cleanup foundations.
 
+## V1.6 Planning Entry
+
+- Current planning has shifted from V1.5 stabilization into V1.6 real-use validation and main-flow adjustment.
+- The next direction is an image-driven product and competitor draft workbench, followed later by a score/status-driven content workflow.
+- V1.6 planning is docs-first and scope-freeze-first. It does not itself authorize schema changes, migrations, crawler behavior, browser automation, or automatic writes into formal product/competitor records.
+
 ## V2 Entry
 
 V2 may discuss only planning for:

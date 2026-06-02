@@ -36,7 +36,7 @@ export function PromptTaskCardShell({ href, selected, children }: PromptTaskCard
         openDetail();
       }}
       className={[
-        "rounded-2xl border px-4 py-3 transition focus:outline-none focus:ring-4 focus:ring-blue-50",
+        "relative rounded-2xl border px-4 py-3 transition focus:outline-none focus:ring-4 focus:ring-blue-50",
         selected
           ? "cursor-default border-blue-200 bg-[#F8FBFF] shadow-[0_14px_30px_rgba(59,130,246,0.08)]"
           : "cursor-pointer border-[#EEF2F8] bg-white hover:border-blue-100 hover:bg-[#FBFDFF]",
