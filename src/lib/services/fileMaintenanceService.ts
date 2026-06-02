@@ -239,12 +239,38 @@ async function pathExists(absolutePath: string) {
 async function listFilesUnderScope(scope: FileMaintenanceScope | "trash") {
   const root = await ensureLocalDirectory(scope as LocalDirectoryKey);
   const entries: ScopedFilesystemEntry[] = [];
+  let limitReached = false;
+
+  function canCollectMore() {
+    return !limitReached && entries.length < MAX_SCAN_FILES_PER_SCOPE;
+  }
+
+  async function collectEntry(input: Omit<ScopedFilesystemEntry, "stats">) {
+    if (!canCollectMore()) {
+      limitReached = true;
+      return;
+    }
+
+    entries.push({
+      ...input,
+      stats: await stat(input.absolutePath),
+    });
+    limitReached = entries.length >= MAX_SCAN_FILES_PER_SCOPE;
+  }
 
   async function walk(currentPath: string): Promise<boolean> {
+    if (limitReached) {
+      return true;
+    }
+
     const directoryEntries = await readdir(currentPath, { withFileTypes: true });
     let hasVisibleChildren = false;
 
     for (const entry of directoryEntries) {
+      if (limitReached) {
+        break;
+      }
+
       const absolutePath = path.join(currentPath, entry.name);
       const relativeToRoot = normalizeSeparators(path.relative(root, absolutePath));
 
@@ -254,11 +280,10 @@ async function listFilesUnderScope(scope: FileMaintenanceScope | "trash") {
 
       if (entry.isDirectory()) {
         const childHasVisibleChildren = await walk(absolutePath);
-        if (!childHasVisibleChildren) {
-          entries.push({
+        if (!childHasVisibleChildren && canCollectMore()) {
+          await collectEntry({
             relativePath: `${scope}/${relativeToRoot}`,
             absolutePath,
-            stats: await stat(absolutePath),
             itemKind: "directory",
           });
         }
@@ -270,17 +295,12 @@ async function listFilesUnderScope(scope: FileMaintenanceScope | "trash") {
         continue;
       }
 
-      entries.push({
+      await collectEntry({
         relativePath: `${scope}/${relativeToRoot}`,
         absolutePath,
-        stats: await stat(absolutePath),
         itemKind: "file",
       });
       hasVisibleChildren = true;
-
-      if (entries.length >= MAX_SCAN_FILES_PER_SCOPE) {
-        return true;
-      }
     }
 
     return hasVisibleChildren;

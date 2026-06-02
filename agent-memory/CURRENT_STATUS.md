@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: The approved display-number and cleanup follow-up is now implemented locally and verified. `/products` uses computed product display numbers inside the product-info cell, `/materials` uses per-product material display numbers with real IDs demoted to detail-only metadata, duplicate copywriting shortcuts are removed, and `/maintenance/files` can now surface empty directories through the existing cleanup flow.
+- Current task state: The approved display-number and cleanup follow-up is implemented locally. A follow-up regression on `/maintenance/files` has been fixed: empty-directory scanning now shares the existing per-scope scan cap with files and stops recursive traversal once the cap is reached, preventing Server Action fetch failures from oversized local scans.
 - Next stage: Review the latest local follow-up on Windows runtime, then continue only with the next explicitly approved V1.5 cleanup thread.
 
 ## Product Direction
@@ -51,4 +51,4 @@
 
 ## Next Recommended Step
 
-- Review the latest `/products`, `/materials`, and `/maintenance/files` follow-up on Windows local runtime, especially display-number continuity after delete/discard and empty-directory cleanup behavior. For the next stat-card UI cleanup, apply the recorded color rule: no repeated accent colors in a row and no black number/emphasis text.
+- Continue with the next explicitly approved V1.5 cleanup thread. For the next stat-card UI cleanup, apply the recorded color rule: no repeated accent colors in a row and no black number/emphasis text.

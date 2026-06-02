@@ -4,6 +4,13 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-02
 
+### V1.5 Stabilization - File Maintenance Scan Fetch Failure Fix
+
+- Fixed: `/maintenance/files` could show `Runtime TypeError: Failed to fetch` after triggering the scan Server Action because the empty-directory cleanup follow-up let directory entries bypass the existing per-scope scan cap and continue recursive traversal.
+- Changed: `listFilesUnderScope()` now applies the same scan cap to files and empty directories, and stops descending once the cap is reached.
+- Verification: `npm run encoding:check`, `npm run typecheck`, `npm run lint`, `npm run build`, and `npx prisma validate` passed. Browser verification on `http://localhost:3000/maintenance/files` loaded successfully and `scanFileMaintenanceAction` returned 200 in about 1.5s with no `Failed to fetch`; HTTP smoke returned 200 for `/`, `/products`, `/materials`, `/maintenance/files`, and `/notifications`.
+- Boundary: No schema migration, dependency change, second cleanup system, background cleanup, or ID behavior change was added.
+
 ### UI Preference Note - Stat Card Colors
 
 - Recorded: Future stat-card UI cleanup should avoid repeated accent colors within the same top stat row.
