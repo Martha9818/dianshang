@@ -4,6 +4,13 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-02
 
+### V1.5 Stabilization - Notification Nested Form Hydration Fix
+
+- Fixed: `/notifications` no longer renders the batch-operation form around the notification table, which had nested the row-level mark-read/delete forms and triggered Next.js hydration errors (`<form> cannot contain a nested <form>`).
+- Changed: Kept `notification-batch-operation` as the external batch form target with the existing hidden confirmation input; row checkboxes and header batch buttons continue to associate through their existing `form` attributes.
+- Verification: `npm run typecheck`, `npm run lint`, and `npm run build` passed. Browser verification on `http://localhost:3000/notifications` found no Next overlay, no nested forms (`nestedFormCount: 0` for all forms), and no console warnings/errors.
+- Boundary: No schema migration, dependency change, notification data behavior change, cleanup behavior change, AI behavior, or V2 scope was added.
+
 ### V1.5 Stabilization - Circled Stat Card Color Follow-up
 
 - Changed: Replaced the circled gray/red stat-card accents without changing data or layout. Home `已生成文案数量` now uses teal, home `已上传素材数量` now uses cyan, notifications `通知总数` now uses amber, and inspirations `已放弃` now uses teal.

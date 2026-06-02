@@ -3,7 +3,7 @@
 ## Current Progress
 
 - Current stage: V1.5 Stabilization after V1.5 Thread 09 closeout.
-- Current task state: The approved display-number and cleanup follow-up is implemented locally. `/maintenance/files` has been tightened for local performance: empty-directory scanning shares the existing scan cap, `backups/` now scans only top-level backup packages instead of expanding internal backup contents, and scan/trash tables default to 30 visible rows with expand controls. Stat-card color cleanup is also applied so top rows avoid repeated tones and stat numbers no longer use black; the latest visual follow-up replaced the circled gray/red stat-card accents on `/`, `/notifications`, and `/inspirations` with non-gray/non-black accent tones.
+- Current task state: The approved display-number and cleanup follow-up is implemented locally. `/maintenance/files` has been tightened for local performance: empty-directory scanning shares the existing scan cap, `backups/` now scans only top-level backup packages instead of expanding internal backup contents, and scan/trash tables default to 30 visible rows with expand controls. Stat-card color cleanup is also applied so top rows avoid repeated tones and stat numbers no longer use black; the latest visual follow-up replaced the circled gray/red stat-card accents on `/`, `/notifications`, and `/inspirations` with non-gray/non-black accent tones, then fixed the `/notifications` nested-form hydration error by keeping the batch form outside row-level action forms.
 - Next stage: Review the latest local follow-up on Windows runtime, then continue only with the next explicitly approved V1.5 cleanup thread.
 
 ## Product Direction

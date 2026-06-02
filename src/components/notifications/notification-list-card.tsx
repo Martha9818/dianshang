@@ -178,6 +178,7 @@ export function NotificationListCard({
 
       <form id={NOTIFICATION_BATCH_FORM_ID} action={formAction}>
         <input type="hidden" name="confirmText" value={DANGEROUS_CONFIRM_TEXT} />
+      </form>
         {state.message ? (
           <div
             className={[
@@ -271,7 +272,6 @@ export function NotificationListCard({
             </DataTableBody>
           </DataTable>
         </TableScrollArea>
-      </form>
     </DashboardCard>
   );
 }
