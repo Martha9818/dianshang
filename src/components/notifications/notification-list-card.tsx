@@ -200,17 +200,17 @@ export function NotificationListCard({
         </div>
 
         <TableScrollArea>
-          <DataTable className="min-w-[1120px]">
+          <DataTable>
             <DataTableHead>
               <tr>
-                <DataTableHeaderCell className="w-[6%]">选择</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[13%]">时间</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[10%]">类型</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[10%]">级别</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[12%]">状态</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[31%]">内容</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[10%]">关联</DataTableHeaderCell>
-                <DataTableHeaderCell className="w-[14%]">操作</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[5%]">选择</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[12%]">时间</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[8%]">类型</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[8%]">级别</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[9%]">状态</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[34%] pr-4">内容</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[11%]">关联</DataTableHeaderCell>
+                <DataTableHeaderCell className="w-[13%]">操作</DataTableHeaderCell>
               </tr>
             </DataTableHead>
             <DataTableBody>
@@ -237,7 +237,7 @@ export function NotificationListCard({
                     <DataTableCell>
                       <StatusBadge label={item.status === "unread" ? "未读" : "已读"} tone={statusTone(item.status)} />
                     </DataTableCell>
-                    <DataTableCell>
+                    <DataTableCell className="pr-4">
                       <p className="font-medium text-slate-900">{item.title}</p>
                       {item.message ? <p className="mt-1 line-clamp-2 text-sm text-slate-500">{item.message}</p> : null}
                     </DataTableCell>

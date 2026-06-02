@@ -18,6 +18,7 @@ import {
 } from "@/components/dashboard/primitives";
 import { ProductImage } from "@/components/products/product-image";
 import { WorkspacePage } from "@/components/ui/workspace-page";
+import { formatDateOnly } from "@/lib/modules/products";
 import { PRODUCT_STATUS_TONE } from "@/lib/modules/products/constants";
 import { getDashboardTodoPageData, type DashboardTodoItem } from "@/lib/services/dashboardTodoService";
 import { getHomeProductStatsPageData } from "@/lib/services/product-service";
@@ -176,7 +177,7 @@ export default async function Home() {
                         <StatusBadge label={item.status} tone={PRODUCT_STATUS_TONE[item.status] ?? "slate"} />
                       </DataTableCell>
                       <DataTableCell className="whitespace-nowrap">{item.formattedLatestScore}</DataTableCell>
-                      <DataTableCell className="whitespace-nowrap text-slate-500">{item.formattedUpdatedAt}</DataTableCell>
+                      <DataTableCell className="whitespace-nowrap text-slate-500">{formatDateOnly(item.updatedAt)}</DataTableCell>
                     </DataTableRow>
                   ))
                 ) : (

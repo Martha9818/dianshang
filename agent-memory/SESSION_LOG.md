@@ -4,6 +4,13 @@ Only the latest summary stays here. Older V1.5 detail is archived; do not use ar
 
 ## 2026-06-02
 
+### V1.5 Stabilization - Home Date And Notification Column Spacing
+
+- Changed: Home recent-product `更新时间` now renders date-only with the existing product formatter so the half-width dashboard table no longer truncates the timestamp.
+- Changed: Notification list table no longer forces a wide minimum width; its columns now total 100%, with content given right-side padding so the related column is visually separated without converting the table into cards.
+- Verification: `npm run typecheck` and `npm run lint` passed. Browser checks confirmed `/` recent-product date is fully visible with no table overflow, `/notifications` has no table overflow, the content/related spacing is clearer, and console had no warnings/errors.
+- Boundary: Display-only UI spacing change; no schema, migration, dependency, route, Server Action, notification behavior, data writes, AI behavior, or V2 scope change.
+
 ### V1.5 Stabilization - Remove New Table Scrollbars
 
 - Fixed: Reworked the latest table-density pass so the affected dashboard/product/export/AI/file-cleanup tables no longer rely on oversized `min-width` values that create horizontal scrollbars on normal desktop layouts.
