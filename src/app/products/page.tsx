@@ -232,16 +232,16 @@ export default async function ProductsPage({
                 <DataTableHead>
                   <tr>
                     <DataTableHeaderCell className="w-[4%]">选择</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[22%]">商品信息</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[9%]">类目</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[9%]">平台</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[7%]">售价</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[7%]">净利润</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[18%]">商品信息</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[7%]">类目</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[6%]">平台</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[8%]">售价</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[8%]">净利润</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[8%]">状态</DataTableHeaderCell>
                     <DataTableHeaderCell className="w-[7%]">评分</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[8%]">结论</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[10%]">更新时间</DataTableHeaderCell>
-                    <DataTableHeaderCell className="w-[9%]">操作</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[9%]">结论</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[12%]">更新时间</DataTableHeaderCell>
+                    <DataTableHeaderCell className="w-[13%]">操作</DataTableHeaderCell>
                   </tr>
                 </DataTableHead>
                 <DataTableBody>
