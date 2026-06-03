@@ -2,9 +2,9 @@
 
 ## Current Progress
 
-- Current stage: `V1.6-01 entry and navigation reordering`
-- Current task state: The main entry wording and navigation now point new users to `灵感箱` first, while screenshot recognition is expressed as a supplementary recognition entry and link import is hidden from main navigation.
-- Current thread outcome: The V1.6 UI copy now aligns with the frozen main flow: `图片/截图 -> 灵感箱 -> AI 草稿 -> 草稿初筛分`; `/link-imports` remains available for old drafts and manual source backfill only.
+- Current stage: `V1.6-02 inspiration inbox main view rework`
+- Current task state: The `/inspirations` main screen now behaves like an AI inbox workbench: image-first cards, AI draft priority, explicit keep/reject/convert decisions, and folded advanced records.
+- Current thread outcome: The inspiration main view no longer leads with scan logs. Users can stay on one screen for `看图 -> 看 AI 草稿 -> 做初筛 -> 保留 / 放弃 / 转商品`, while ScanLog, task history, similarity hints, and file info remain available behind collapsed advanced sections.
 - Current planning baseline: `docs/superpowers/specs/2026-06-02-v16-direction-sync-report.md`
 - Next stage: Start only the next explicitly approved V1.6 execution thread after validating it against the V1.6-00 baseline and the V1.6-01 entry-expression cleanup.
 
@@ -17,6 +17,7 @@
 - Direction split: inspiration draft triage answers whether a clue deserves more attention; formal product scoring answers whether the product deserves small-batch testing.
 - Entry positioning: inspirations move toward the future main entry direction as an AI inspiration inbox.
 - UI entry positioning: new users should naturally understand `先看灵感箱`; screenshots are a supplementary recognition entry; `/link-imports` is a retained auxiliary route for old data and manual source notes.
+- Inbox-workbench positioning: the inspiration detail view should prioritize image, AI draft status, candidate product clues, next-step guidance, and explicit keep / reject / convert actions over logs or scan-management detail.
 - Link import positioning: link import is downgraded to an auxiliary source record rather than a core intake path.
 - Product-detail positioning: product detail should be understood around whether a product deserves small-batch testing.
 - Product deletion remains a soft business delete by default; real `Product.id` / `Material.id` should stay stable in normal workflows, and future competitor records should keep stable real IDs as well.
@@ -42,7 +43,8 @@
 - Inspiration source folders can grow until full rescans and re-hashing become noticeably slower; this is a future governance topic, not an auto-delete shortcut.
 - Existing optional API image generation remains legacy/manual V1.5 capability and should not be mistaken for the V1.6 mainline.
 - If screenshots or link drafts are still expressed like parallel main entrances elsewhere, users may continue to miss the intended `先看灵感箱` flow.
+- The current AI inbox still does not create new OCR fields, candidate-price extraction, recognition-quality scoring, or draft pre-screen scoring; missing fields are intentionally shown as placeholders rather than fabricated facts.
 
 ## Next Recommended Step
 
-- Use the V1.6 direction-sync report, V1.6-00 scope checklist, and V1.6-01 entry-expression cleanup as the baseline, then open only the next explicitly approved V1.6 execution thread.
+- Use the V1.6 direction-sync report, V1.6-00 scope checklist, V1.6-01 entry-expression cleanup, and V1.6-02 inbox main-view rework as the baseline, then open only the next explicitly approved V1.6 execution thread.

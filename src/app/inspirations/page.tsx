@@ -57,9 +57,9 @@ export default async function InspirationsPage({
 
   return (
     <WorkspacePage
-      eyebrow="Main Entry / Inspirations"
-      title="灵感箱"
-      description="主入口。先把图片或截图进入灵感箱，再看 AI 草稿和初筛结果，最后决定保留、放弃或转商品。"
+      eyebrow="Main Entry / AI Inbox"
+      title="AI 收件箱"
+      description="日常处理工作台。围绕看图、看 AI 草稿、做初筛，再决定保留、放弃或转商品。"
     >
       {readError ? <PageNote>{readError}</PageNote> : null}
       <InspirationManager data={pageData} readonlyNotice={readonlyNotice} />
