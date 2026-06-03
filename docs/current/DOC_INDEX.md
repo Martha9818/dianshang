@@ -15,14 +15,15 @@ Use this file only as the routing table after the required startup read.
 | --- | --- | --- |
 | `PROJECT_MAP.md` | Module and route map. | Code structure, routes, services, runtime, AI, file, export, backup, or diagnostics work. |
 | `ARCHITECTURE_RULES.md` | Stable architecture and safety rules. | Before behavior, data, filesystem, AI, runtime, or dependency changes. |
-| `THREAD_SCOPE_CHECKLIST.md` | Frozen V1.5 thread range, current closeout status, and cleanup boundary. | At thread start and final scope check. |
-| `RISK_REGISTER.md` | Only risks still valid after V1.5 completion. | Risk-sensitive work and V2 planning. |
-| `CHANGELOG_DEV.md` | Version-level summary through V1.5 completion. | Version context and V2 planning entry. |
+| `THREAD_SCOPE_CHECKLIST.md` | Active thread scope, acceptance boundary, and version freeze notes. | At thread start and final scope check. |
+| `RISK_REGISTER.md` | Only risks still valid on the current planning line. | Risk-sensitive work and version planning. |
+| `CHANGELOG_DEV.md` | Version-level summary through V1.6 planning entry. | Version context and planning entry. |
+| `KNOWN_ISSUES.md` | Unresolved limitations only. | Known-issue triage or when leaving a limitation. |
 | `DATABASE_CHANGELOG.md` | Migration purpose summary. | Prisma schema, migration, compatibility, or data-repair work. |
 | `PATCH_LOG.md` | Active patch state only. | Regression investigations and current closeout verification. |
-| `KNOWN_ISSUES.md` | Unresolved limitations only. | Known-issue triage or when leaving a limitation. |
 | `ELECTRON_POC_REPORT.md` | Thread 07 desktop feasibility report. | Electron POC, desktop feasibility, path/runtime risk, or V2 desktop preparation. |
 | `V1_CORE_UNDERSTANDING_CHECK.md` | Short V1-Core capability index. | Recalling the V1-Core baseline before future planning. |
+| `../superpowers/specs/2026-06-02-v16-direction-sync-report.md` | V1.6 scope, deferrals, and product direction freeze. | Before V1.6 planning or implementation work. |
 
 ## Archive Rule
 
@@ -33,6 +34,6 @@ Use this file only as the routing table after the required startup read.
 ## Current Baseline
 
 - MVP, V1-Core, V1-Plus, and V1.5 are complete on the current mainline.
-- V1.5 is frozen after Thread 09 closeout.
+- V1.6 planning is active as a real-use validation line.
 - Vercel remains preview-only and read-only.
 - Windows local runtime remains the writable source of truth.

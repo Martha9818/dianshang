@@ -16,6 +16,18 @@ Only unresolved or intentionally deferred issues live here.
 - Impact: Preview cannot validate real SQLite writes, uploads, exports, backups, logs, file cleanup, API image generation, or Electron POC execution.
 - Mitigation: Accept those flows only on Windows local runtime.
 
+### Inspiration Source Folder Scan Cost Grows With Accumulation
+
+- Status: OPEN
+- Impact: The current inspiration scan flow still re-enumerates the source folder and re-hashes each file, so scan time can grow as source images accumulate.
+- Mitigation: Treat processed-source governance as a future design topic; do not “solve” it by unsafe auto-delete.
+
+### Link Import Is Still Available As A Standalone Route
+
+- Status: OPEN / INTENDED LIMITATION
+- Impact: Until V1.6 navigation and page-expression updates are complete, some users may still mistake link import for a stable platform parser.
+- Mitigation: Keep it downgraded in copy and routing, and steer users toward screenshot or manual text intake.
+
 ### Restore Workflow Is Not Implemented
 
 - Status: DEFERRED
@@ -25,7 +37,7 @@ Only unresolved or intentionally deferred issues live here.
 ### External AI Success Depends On Valid Provider Credentials
 
 - Status: OPEN
-- Impact: Screenshot recognition, competitor analysis, inspiration AI drafts, copywriting AI, assistant intent parsing, and API image generation can fail without valid provider settings.
+- Impact: Screenshot recognition, competitor analysis, inspiration AI drafts, copywriting AI, assistant intent parsing, and optional legacy API image generation can fail without valid provider settings.
 - Mitigation: Keep manual workflows available and keep AI failure isolated.
 
 ### Electron Remains POC-Only

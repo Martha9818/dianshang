@@ -1,73 +1,97 @@
 # Thread Scope Checklist
 
-Use this file as the short frozen boundary and status record for the current mainline.
+Use this file as the active scope boundary and acceptance checklist for the current line.
 
 ## Thread
 
-- Name: V1.5 Stabilization Thread 01 - Issue Triage And Ordered Hardening
-- Date: 2026-05-31
-- Status: COMPLETE
-- Type: post-V1.5 stabilization / safety hardening / read-only consistency / docs status refresh
-- Approved scope: triage and small fixes for V1.5 stability, consistency, Vercel read-only behavior, sensitive-output reduction, file-cleanup boundary hardening, and status docs only
-- Existing working-tree changes belong to: Stabilization Thread 01 hardening work; untracked `tmp/` remains outside product scope
+- Name: `V1.6-00 Direction Freeze And Documentation Baseline`
+- Date: `2026-06-03`
+- Status: `COMPLETE`
+- Type: docs-only planning / scope freeze / version-baseline sync
+- Approved scope: update README, current status docs, current planning docs, Vercel read-only wording, safety boundaries, and acceptance wording so V1.6 has a clear execution baseline
+- Existing working-tree changes belong to: pre-existing local follow-up work outside this docs-only thread; untracked `tmp/` remains outside product scope
 
 ## Safety
 
 - `git status --short` checked before work: yes
-- New schema, migration, dependency, or major business feature: no
-- Second cleanup system, automated cleanup, formal Electron desktop, or V2 implementation: no
+- New schema, migration, dependency, or business-code change: no
+- Page or service implementation change: no
 - Vercel remains preview-only and read-only: yes
 - Windows local runtime remains the writable source of truth: yes
 
-## V1.5 Frozen Thread Range
+## V1.6 Frozen Boundary
 
-| Thread | Frozen Name | Status | Boundary |
-| --- | --- | --- | --- |
-| V1.5 Thread 00 | V1-Plus closeout and V1.5 baseline freeze | COMPLETE | Docs, status, archive, and route freeze only. |
-| V1.5 Thread 01 | Inspiration folder scheduled scan and AI drafts | COMPLETE | Local folder scan, app-runtime timer, dedupe, task states, and AI drafts only. |
-| V1.5 Thread 02 | Screenshot recognition and structured image import | COMPLETE | User-initiated screenshot recognition only; no automatic overwrite or crawler behavior. |
-| V1.5 Thread 03 | Link import attempts and quality grading | COMPLETE | Single pasted-link drafts and public metadata only; no crawler, login, or batch import. |
-| V1.5 Thread 04 | Competitor intelligence and differentiation suggestions | COMPLETE | Local AI analysis snapshots only; no scoring overwrite or platform fetch. |
-| V1.5 Thread 05 | Image dedupe and originality-risk hints | COMPLETE | Detection and advisory records only; no delete, move, or second cleanup system. |
-| V1.5 Thread 06 | Lightweight API image generation | COMPLETE | Manual one-click API image generation only; no batch or background generation. |
-| V1.5 Thread 07 | Electron technical validation | COMPLETE | Isolated POC only; no formal desktop app, installer, tray, or auto-update. |
-| V1.5 Thread 08 | Site-search assistant and notification-summary assistant | COMPLETE | Local read-only suggestions and summaries only; no auto execution or cleanup. |
-| V1.5 Thread 09 | Final integration acceptance, README, and V2 preparation | COMPLETE | Final regression, closeout docs, archive slimming, V2 prerequisites, and freeze only. |
+### V1.6 Is
 
-## Final Acceptance Boundary
+- a real-use validation line
+- a docs-first and scope-freeze-first line
+- a main-flow repositioning line
 
-- Regress MVP, V1-Core, V1-Plus, and V1.5 scope without adding new business features.
-- Keep file cleanup and app trash as the single existing V1-Plus Thread 06 implementation.
-- Keep AI failure isolated from product CRUD, scoring, materials, export, backup, and cleanup.
-- Keep Vercel preview read-only and block SQLite writes, runtime-folder writes, high-cost AI, API image generation, file scanning, file delete, and Electron POC execution.
-- Keep assistant behavior reminder-only and link-only; no cleanup execution, no batch execution, no real multi-agent behavior.
-- Keep Electron as POC-only and isolated under `experiments/electron-poc/`.
+### V1.6 Is Not
 
-## Stabilization Boundary
+- a large new-system delivery line
+- a competitor screenshot inbox delivery line
+- an automatic content workflow delivery line
+- an API image generation expansion line
 
-- Allowed: small bug fixes, guard hardening, UI disabled-state consistency, documentation/status corrections, and verification.
-- Not allowed: V2 behavior, schema changes, migrations, dependency changes, new pages, new workflows, second cleanup logic, formal Electron release, platform crawlers, automatic publishing, inventory, supplier management, PDF reports, or real multi-agent orchestration.
-- External action still required: historical Vercel recovery codes must be rotated or revoked provider-side; the repository cannot complete that account operation.
+## Explicit V1.6 Baseline
 
-## File Cleanup Boundary
+V1.6 must clearly state:
 
-- Existing owner: V1-Plus Thread 06 already owns manual scans, orphan/old-file detection, app trash, confirmed permanent delete, `CleanupLog`, Vercel no-real-scan/delete, path sanitization, path traversal protection, and active-file protection.
-- V1.5 image dedupe may detect only; it must not delete, move to trash, or permanently delete files.
-- V1.5 assistant may remind and link only; it must not trigger cleanup actions.
-- Permanent delete may operate only on files already inside `trash/`.
-- No timed cleanup, background cleanup, Windows recycle-bin integration, or second cleanup system is allowed on the frozen V1.5 baseline.
+1. `灵感箱` is the future main entry direction and is positioned as an AI inspiration inbox.
+2. `链接导入` is downgraded to an auxiliary source record.
+3. inspiration draft triage and formal product scoring are two separate systems.
+4. product detail is re-expressed around “whether the product deserves small-batch testing”.
+5. V1.7 is the first planning target for the competitor screenshot inbox.
+6. V1.8 is the first planning target for post-confirmation content automation.
+7. API image generation is not a V1.6 thread target and is not default-planned for V1.8.
+8. Vercel stays read-only and does not perform real acceptance.
+
+## Deferred Versions
+
+| Version | Position | Not In Current Thread |
+| --- | --- | --- |
+| `V1.6` | Real-use validation, flow correction, docs baseline | No competitor screenshot inbox, no automation workflow, no API image generation expansion |
+| `V1.7` | Competitor screenshot inbox planning target | Not implemented in V1.6-00 |
+| `V1.8` | Post-confirmation content workflow planning target | Not implemented in V1.6-00 |
+
+## Vercel Boundary
+
+- Preview remains read-only.
+- Preview must not write SQLite data, uploads, exports, backups, logs, or trash.
+- Preview must not run high-cost AI, API image generation, real file cleanup, or Electron POC execution.
+- Preview write attempts should show `预览环境只读，请在 Windows 本地验收。`
+
+## Prohibited Signals
+
+Current docs must not imply:
+
+- platform crawlers
+- automatic collection
+- automatic listing
+- automatic direct messages
+- automatic comments
+- browser automation
+- writable Vercel acceptance
 
 ## Verification
 
-- Required commands before current hardening passed during Thread 01 triage: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, `npm run typecheck`
-- Current hardening verification passed: `npm run encoding:check`, `npm run lint`, `npm run build`, `npx prisma validate`, `npm run typecheck`, `npm run thread09:verify`
-- Root `npm test` is not available; the project still has no `test` script
-- Final acceptance entry passed: `npm run thread09:verify`
-- Electron POC smoke passed: `experiments/electron-poc -> npm run smoke`
-- Thread 09 added no Prisma migration; existing migration purposes remain documented in `DATABASE_CHANGELOG.md`
+Available project-level verification commands from `package.json`:
 
-## Archive Pointers
+- `npm run encoding:check`
+- `npm run lint`
+- `npm run typecheck`
+- `npm run build`
+- `npx prisma validate`
+- `npm run thread09:verify`
 
-- Detailed Thread 00-08 summaries, previous active patch detail, and pre-closeout thread-scope detail moved to `agent-memory/archive/V1_5_THREAD09_CLOSEOUT_DETAIL_ARCHIVE_2026-05-31.md`
-- Field-level migration detail moved to `agent-memory/archive/V1_5_DATABASE_CHANGELOG_DETAIL_ARCHIVE_2026-05-31.md`
-- The longer V1-Core explanation moved to `agent-memory/archive/V1_CORE_UNDERSTANDING_CHECK_DETAIL_ARCHIVE_2026-05-31.md`
+Thread V1.6-00 required:
+
+- run docs-safe checks using the existing commands
+- confirm no schema / migration / dependency changes
+- confirm no business code changes were made by this thread
+
+## Archive Pointer
+
+- Detailed V1.5 implementation and stabilization history remains in the current docs plus archive pointers.
+- V1.6-00 establishes the new planning baseline; later V1.6 execution threads should reference it instead of re-deriving scope.
