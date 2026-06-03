@@ -38,7 +38,7 @@ export default async function InspirationsPage({
   const params = await searchParams;
   const runtime = getRuntimeModeSummary();
   const query = normalizeInspirationListQuery(params);
-  const readonlyNotice = runtime.isWritable ? null : "预览环境只读，请在 Windows 本地验收灵感文件夹扫描和 AI 识图。";
+  const readonlyNotice = runtime.isWritable ? null : "预览环境只读，请在 Windows 本地验收。";
   const pageResult = await getInspirationPageData(query).catch((error) => ({
     runtime: { isWritable: false },
     settingView: { configured: false, displayPath: null, scanEnabled: false, scanIntervalMinutes: 30 },

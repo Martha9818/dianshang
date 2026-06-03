@@ -3,8 +3,8 @@
 ## Current Progress
 
 - Current stage: `V1.6-02 inspiration inbox main view rework`
-- Current task state: The `/inspirations` main screen now behaves like an AI inbox workbench: image-first cards, AI draft priority, explicit keep/reject/convert decisions, and folded advanced records.
-- Current thread outcome: The inspiration main view no longer leads with scan logs. Users can stay on one screen for `看图 -> 看 AI 草稿 -> 做初筛 -> 保留 / 放弃 / 转商品`, while ScanLog, task history, similarity hints, and file info remain available behind collapsed advanced sections.
+- Current task state: The `/inspirations` main screen now behaves like an AI inbox workbench: image-first cards, AI draft priority, explicit keep/reject/convert decisions, folded advanced records, and the inbox list is promoted ahead of scan settings on wide screens.
+- Current thread outcome: The inspiration main view no longer leads with scan logs, and the V1.6-02 acceptance patch aligns the preview notice with the exact read-only wording requirement. Users can stay on one screen for `看图 -> 看 AI 草稿 -> 做初筛 -> 保留 / 放弃 / 转商品`, while ScanLog, task history, similarity hints, and file info remain available behind collapsed advanced sections.
 - Current planning baseline: `docs/superpowers/specs/2026-06-02-v16-direction-sync-report.md`
 - Next stage: Start only the next explicitly approved V1.6 execution thread after validating it against the V1.6-00 baseline and the V1.6-01 entry-expression cleanup.
 

@@ -498,7 +498,8 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         </AutoFilterForm>
       </DashboardCard>
 
-      <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+      <section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="xl:order-2">
         <DashboardCard className="px-5 py-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -606,7 +607,9 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
             ) : null}
           </div>
         </DashboardCard>
+        </div>
 
+        <div className="xl:order-1">
         <BatchOperationForm
           formId={INSPIRATION_BATCH_FORM_ID}
           action={batchInspirationOperationAction}
@@ -696,6 +699,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
             </div>
           </DashboardCard>
         </BatchOperationForm>
+        </div>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[0.86fr_1.14fr]">
