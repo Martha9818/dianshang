@@ -26,8 +26,17 @@ This file keeps version-level summaries only. Detailed thread-by-thread history 
 ## V1.6 Planning Entry
 
 - Current planning has shifted from V1.5 stabilization into V1.6 real-use validation and main-flow adjustment.
-- The next direction is an image-driven product and competitor draft workbench, followed later by a score/status-driven content workflow.
-- V1.6 planning is docs-first and scope-freeze-first. It does not itself authorize schema changes, migrations, crawler behavior, browser automation, or automatic writes into formal product/competitor records.
+- V1.6 is a docs-first and scope-freeze-first line; it is not the place to land large new systems.
+- The next main direction is an image-driven product and competitor draft workbench.
+- `灵感箱` is elevated as the future main entry direction and is positioned as an AI inspiration inbox.
+- `截图识别` is being re-expressed as a supplementary recognition entry rather than a parallel mainline intake page.
+- `链接导入` is downgraded to an auxiliary source record rather than a mainline intake route.
+- `/link-imports` remains route-compatible for old drafts, but it should no longer read like a platform auto-parsing entry.
+- inspiration draft triage and formal product scoring are explicitly separated.
+- product detail is being re-expressed around whether a product deserves small-batch testing.
+- V1.7 is the first planning target for the competitor screenshot inbox.
+- V1.8 is the first planning target for post-confirmation content automation.
+- V1.6 does not authorize competitor screenshot inbox implementation, automation workflow implementation, crawler behavior, browser automation, or API image generation expansion.
 
 ## V2 Entry
 

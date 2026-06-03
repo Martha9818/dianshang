@@ -115,20 +115,21 @@ export default async function ScreenshotsPage({
 
   return (
     <WorkspacePage
-      eyebrow="V1.5 Thread 02"
-      title="截图识别与图片导入结构化"
-      description="上传或选择截图，生成结构化 AI 草稿；所有结果都需要用户确认，不自动写入正式商品事实。"
+      eyebrow="Supplement / Screenshots"
+      title="截图补充识别"
+      description="补充入口：当图片还没先进入灵感箱时，可在这里手动识别，再回灵感箱看 AI 草稿和初筛结果。"
     >
       {readonlyNotice ? <PageNote>{readonlyNotice}</PageNote> : null}
       {readError ? <PageNote>{readError}</PageNote> : null}
       {params.screenshotError ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{params.screenshotError}</div> : null}
+      <PageNote>日常流程仍建议先看灵感箱；这里只处理补充识别，不会自动打开网页或抓取平台。</PageNote>
       {shortcutActions}
 
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <DashboardCard>
           <DashboardCardHeader
-            title="导入截图"
-            description="支持手动上传，也支持从灵感箱、商品详情、竞品模块或素材库选择已有图片。不会自动截屏、打开网页或抓取平台。"
+            title="补充上传截图"
+            description="适合单张补录，也支持从灵感箱、商品详情、竞品模块或素材库选择已有图片。不会自动截屏、打开网页或抓取平台。"
           />
           <form action={createScreenshotRecognitionJobAction} className="grid gap-4 px-5 py-5">
             <Field label="来源类型">
@@ -176,7 +177,7 @@ export default async function ScreenshotsPage({
         <DashboardCard>
           <DashboardCardHeader
             title="当前截图预览"
-            description="识别结果只作为草稿显示，质量分级只表示截图清晰度和字段完整度。"
+            description="识别结果只作为补充草稿显示；建议确认后回灵感箱继续判断是否保留、放弃或转商品。"
             action={
               selectedJob ? (
                 <form action={recognizeScreenshotJobAction}>
@@ -208,13 +209,13 @@ export default async function ScreenshotsPage({
                 <DetailRow label="AIJob" value={selectedJob.aiJob ? `#${selectedJob.aiJob.id} / ${selectedJob.aiJob.status}` : "--"} />
                 {selectedJob.errorSummary ? <p className="text-rose-600">{selectedJob.errorSummary}</p> : null}
                 <PageNote>
-                  商品、竞品、素材确认都只保存 Thread 02 草稿记录；不会自动覆盖标题、价格、成本、评分、状态、竞品价格、素材权限或素材状态。
+                  商品、竞品、素材确认都只保存截图识别草稿记录；不会自动覆盖标题、价格、成本、评分、状态、竞品价格、素材权限或素材状态。
                 </PageNote>
               </div>
             </div>
           ) : (
             <div className="px-5 py-5">
-              <PageNote>暂无截图识别任务。请先上传或选择一张截图。</PageNote>
+              <PageNote>暂无补充识别任务。需要补录时再上传或选择一张截图。</PageNote>
             </div>
           )}
         </DashboardCard>
@@ -222,7 +223,7 @@ export default async function ScreenshotsPage({
 
       <section className="grid gap-4 xl:grid-cols-[0.72fr_1.28fr]">
         <DashboardCard>
-          <DashboardCardHeader title="识别历史" description="仅显示识别任务与草稿状态；不展示本地绝对路径或 AI 原始响应。" />
+          <DashboardCardHeader title="补充识别记录" description="仅显示识别任务与草稿状态；不展示本地绝对路径或 AI 原始响应。" />
           <TableScrollArea>
             <DataTable className="min-w-[760px]">
               <DataTableHead>
@@ -254,7 +255,7 @@ export default async function ScreenshotsPage({
                 ) : (
                   <DataTableRow>
                     <DataTableCell colSpan={6} className="py-10 text-center text-sm text-slate-400">
-                      暂无识别历史。
+                      暂无补充识别记录。
                     </DataTableCell>
                   </DataTableRow>
                 )}
@@ -264,7 +265,7 @@ export default async function ScreenshotsPage({
         </DashboardCard>
 
         <DashboardCard>
-          <DashboardCardHeader title="结构化草稿" description="可编辑后保存或确认。确认只写入截图识别任务，不自动写入正式业务字段。" />
+          <DashboardCardHeader title="结构化草稿" description="可编辑后保存或确认。确认只写入截图识别任务，建议随后回灵感箱或对应业务页继续人工判断。" />
           {selectedJob ? (
             <form className="space-y-4 px-5 py-5">
               <input type="hidden" name="jobId" value={selectedJob.id} />
@@ -329,7 +330,7 @@ export default async function ScreenshotsPage({
             </form>
           ) : (
             <div className="px-5 py-5">
-              <PageNote>选择识别任务后，这里会显示可编辑结构化草稿。</PageNote>
+              <PageNote>选择识别任务后，这里会显示可编辑的补充识别草稿。</PageNote>
             </div>
           )}
         </DashboardCard>

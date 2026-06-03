@@ -20,9 +20,9 @@ EcomPilot is a Windows local-first Next.js App Router app for ecommerce product 
 | `/copywriting` | Multi-platform copywriting workspace. |
 | `/prompt-tasks`, `/prompt-tasks/[taskCode]/upload` | Prompt task management and material upload. |
 | `/materials` | Material library. |
-| `/inspirations` | Manual inspiration inbox, review states, and confirm-then-convert flow. |
-| `/screenshots` | V1.5 Thread 02 user-initiated screenshot recognition, structured drafts, quality grading, and manual confirmation history. |
-| `/link-imports` | V1.5 Thread 03 single-link import drafts, public meta attempts, quality grading, and manual conversion links. |
+| `/inspirations` | Main-entry AI inspiration inbox, local image intake, draft review states, and confirm-then-convert flow. |
+| `/screenshots` | Supplementary user-initiated screenshot recognition entry for manual draft backfill and structured draft review; not the main intake route. |
+| `/link-imports` | Auxiliary retained route for old single-link drafts and manual source backfill; not a platform parser or mainline intake route. |
 | `/products/[id]?tab=competitor-analysis` | V1.5 Thread 04 competitor intelligent analysis snapshots, local competitor selection, history, reference marking, and archive confirmation. |
 | `/assistant` | V1.5 Thread 08 lightweight site-search assistant and notification-summary assistant based on local existing data only. |
 | `/notifications` | Lightweight in-app notification center for important operation results. |

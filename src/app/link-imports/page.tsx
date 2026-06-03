@@ -119,14 +119,15 @@ export default async function LinkImportsPage({
 
   return (
     <WorkspacePage
-      eyebrow="V1.5 Thread 03"
-      title="链接导入尝试与质量分级"
-      description="手动粘贴单个商品或竞品链接，保存为链接导入草稿；仅尝试公开元信息，转化必须由用户确认。"
+      eyebrow="Auxiliary / Link Drafts"
+      title="来源链接补录"
+      description="辅助入口：只保留旧链接草稿或补录来源线索，不是日常主入口，也不会自动解析平台页面。"
     >
       {readonlyNotice ? <PageNote>{readonlyNotice}</PageNote> : null}
       {readError ? <PageNote>{readError}</PageNote> : null}
       {params.linkImportMessage ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{params.linkImportMessage}</div> : null}
       {params.linkImportError ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{params.linkImportError}</div> : null}
+      <PageNote>仅凭链接无法稳定识别商品标题、价格或卖点。请上传截图或粘贴页面文本。日常流程仍建议先把图片或截图进入灵感箱。</PageNote>
       <div className="flex flex-wrap gap-2">
         <ActionButton href="/inspirations" variant="ghost">返回灵感箱</ActionButton>
         <ActionButton href="/products" variant="ghost">返回商品池</ActionButton>
@@ -135,8 +136,8 @@ export default async function LinkImportsPage({
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <DashboardCard>
           <DashboardCardHeader
-            title="新建链接草稿"
-            description="一次只处理一个手动粘贴的链接；截图、页面文本和备注都只是辅助信息。"
+            title="补录单条来源链接"
+            description="只适合保存旧草稿或补充来源备注；截图、页面文本和备注都只是辅助信息。"
           />
           <form action={createLinkImportDraftAction} className="grid gap-4 px-5 py-5">
             <Field label="链接">
@@ -183,8 +184,8 @@ export default async function LinkImportsPage({
 
         <DashboardCard>
           <DashboardCardHeader
-            title="当前草稿"
-            description="质量分级只提示导入信息完整度，不代表商品判断结论。"
+            title="当前来源草稿"
+            description="这里只整理辅助来源信息，不代表已经形成可用商品草稿。"
           />
           {selectedDraft ? (
             <div className="grid gap-5 px-5 py-5 lg:grid-cols-[220px_1fr]">
@@ -212,13 +213,13 @@ export default async function LinkImportsPage({
                 <DetailRow label="更新" value={selectedDraft.formattedUpdatedAt} />
                 {selectedDraft.errorSummary ? <p className="text-amber-600">{selectedDraft.errorSummary}</p> : null}
                 <PageNote>
-                  本页不会自动打开多个链接、不会保存 Cookie、不会登录平台，也不会自动创建正式商品或竞品事实。
+                  本页不会自动打开多个链接、不会保存 Cookie、不会登录平台、不会自动解析平台页面，也不会自动创建正式商品或竞品事实。
                 </PageNote>
               </div>
             </div>
           ) : (
             <div className="px-5 py-5">
-              <PageNote>暂无链接导入草稿。</PageNote>
+              <PageNote>暂无来源链接草稿。日常请先走灵感箱；这里只保留历史草稿和人工补录来源。</PageNote>
             </div>
           )}
         </DashboardCard>
@@ -226,7 +227,7 @@ export default async function LinkImportsPage({
 
       <section className="grid gap-4 xl:grid-cols-[0.72fr_1.28fr]">
         <DashboardCard>
-          <DashboardCardHeader title="草稿列表" description="查看手动保存的链接草稿；默认最多展示最近 80 条。" />
+          <DashboardCardHeader title="历史链接草稿" description="保留旧数据和人工补录来源；默认最多展示最近 80 条，不作为核心入口。" />
           <div className="border-b border-[#EEF2F8] px-5 py-4">
             <LinkImportFilterControls
               purpose={pageResult.filters.purpose ?? ""}
@@ -296,13 +297,13 @@ export default async function LinkImportsPage({
                 </article>
               ))
             ) : (
-              <PageNote>暂无链接导入草稿。</PageNote>
+              <PageNote>暂无历史链接草稿。</PageNote>
             )}
           </div>
         </DashboardCard>
 
         <DashboardCard>
-          <DashboardCardHeader title="手动整理与确认转化" description="编辑辅助文本，或明确确认转灵感、关联已有商品、关联已有竞品。" />
+          <DashboardCardHeader title="手动补全后再确认去向" description="补充截图或页面文本后，再决定转入灵感箱、关联已有商品或关联已有竞品。" />
           {selectedDraft ? (
             <div className="grid gap-5 px-5 py-5">
               <form className="grid gap-4">
@@ -342,12 +343,12 @@ export default async function LinkImportsPage({
               <div className="grid gap-4 md:grid-cols-3">
                 <form action={linkImportDraftToInspirationAction} className="grid gap-3 rounded-[24px] border border-[#EEF2F8] bg-white px-4 py-4">
                   <input type="hidden" name="draftId" value={selectedDraft.id} />
-                  <p className="text-sm font-semibold text-slate-800">转为灵感</p>
+                  <p className="text-sm font-semibold text-slate-800">转入灵感箱</p>
                   <p className="min-h-12 text-xs leading-6 text-slate-500">
-                    {selectedDraft.screenshotPath ? "创建后仍进入灵感箱等待人工处理。" : "需要先上传辅助截图，才能转为灵感。"}
+                    {selectedDraft.screenshotPath ? "转入后回灵感箱继续看 AI 草稿和初筛结果。" : "需要先上传辅助截图，才能转入灵感箱继续处理。"}
                   </p>
                   <button type="submit" className={secondaryButtonClassName} disabled={!pageResult.runtime.isWritable || !selectedDraft.screenshotPath}>
-                    确认转灵感
+                    确认转入灵感箱
                   </button>
                 </form>
 
@@ -372,7 +373,7 @@ export default async function LinkImportsPage({
             </div>
           ) : (
             <div className="min-h-[420px] px-5 py-5">
-              <PageNote>选择一条链接草稿后，可以编辑辅助信息或执行确认转化。</PageNote>
+              <PageNote>选择一条链接草稿后，可以补全辅助信息，再决定是否转入灵感箱或关联已有记录。</PageNote>
             </div>
           )}
         </DashboardCard>

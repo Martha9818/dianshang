@@ -493,14 +493,14 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         <DashboardCard className="px-5 py-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-[1.15rem] font-semibold text-slate-900">灵感文件夹扫描</h2>
-              <p className="mt-1 text-sm text-slate-500">应用运行期间按配置触发；关闭应用或预览环境不会继续扫描。</p>
+              <h2 className="text-[1.15rem] font-semibold text-slate-900">先把图片放进灵感箱</h2>
+              <p className="mt-1 text-sm text-slate-500">日常流程先把图片放到本地灵感文件夹，再回这里看 AI 草稿、初筛信息和下一步建议。</p>
             </div>
             <StatusBadge label={data.settingView.configured ? "已设置" : "未设置"} tone={data.settingView.configured ? "green" : "amber"} />
           </div>
 
           <form action={folderAction} className="mt-5 space-y-3">
-            <Field label="本地灵感扫描目录">
+            <Field label="灵感箱文件夹">
               <input
                 name="folderPath"
                 className={inputClassName}
@@ -519,7 +519,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
               </ActionButton>
             </div>
             <div className="flex flex-wrap gap-2 border-t border-[#EEF2F8] pt-3">
-              <span className="inline-flex h-12 items-center text-sm text-slate-400">维护入口</span>
+              <span className="inline-flex h-12 items-center text-sm text-slate-400">补充与维护</span>
               <button
                 formAction={dedupLibraryAction}
                 type="submit"
@@ -607,7 +607,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           <DashboardCard>
             <DashboardCardHeader
               title="灵感列表"
-              description="图片导入后只进入灵感草稿，AI 识图也只作为待确认草稿。"
+              description="日常先看这里：图片进入灵感箱后，再集中看 AI 草稿、初筛信息和下一步处理。"
               action={
                 <div className="flex flex-wrap gap-2">
                   {[
@@ -671,7 +671,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                   </div>
                 ))
               ) : (
-                <PageNote>当前筛选条件下没有灵感记录。</PageNote>
+                <PageNote>当前筛选条件下没有灵感草稿。</PageNote>
               )}
             </div>
           </DashboardCard>
@@ -682,7 +682,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         <DashboardCard>
           <DashboardCardHeader
             title="灵感详情"
-            description={selectedInspiration ? "查看图片、AI 草稿、任务状态，并手动确认下一步。" : "请选择一条灵感记录。"}
+            description={selectedInspiration ? "先看图片和 AI 草稿，再决定保留、放弃或转商品。" : "请选择一条灵感草稿。"}
           />
           {selectedInspiration ? (
             <div className="space-y-4 px-5 py-5">
@@ -753,13 +753,13 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                     href={`/screenshots?sourceType=inspiration&sourceId=${selectedInspiration.id}`}
                     className={secondaryButtonClassName}
                   >
-                    截图识别
+                    补充截图识别
                   </Link>
                   <Link
                     href="/link-imports?purpose=inspiration"
                     className={secondaryButtonClassName}
                   >
-                    链接导入
+                    补录来源链接（可选）
                   </Link>
                   <button
                     formAction={applyAction}
@@ -816,7 +816,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
               </form>
 
               <div className="rounded-[24px] border border-[#EEF2F8] bg-white px-4 py-4">
-                <h3 className="text-sm font-semibold text-slate-900">AI 草稿任务</h3>
+                <h3 className="text-sm font-semibold text-slate-900">AI 草稿记录</h3>
                 <div className="mt-3 space-y-2 text-sm text-slate-600">
                   {selectedInspiration.aiDraftJobs.length > 0 ? (
                     selectedInspiration.aiDraftJobs.map((job) => (
@@ -833,7 +833,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                       </div>
                     ))
                   ) : (
-                    <p className="text-slate-400">暂无 AI 草稿任务。</p>
+                    <p className="text-slate-400">暂无 AI 草稿记录。</p>
                   )}
                 </div>
               </div>
@@ -842,7 +842,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
             </div>
           ) : (
             <div className="px-5 py-5">
-              <PageNote>暂无可查看的灵感记录。</PageNote>
+              <PageNote>还没有灵感草稿。先把图片放进灵感箱，或用补充截图识别导入后再回这里查看。</PageNote>
             </div>
           )}
         </DashboardCard>
@@ -904,8 +904,8 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
 
       <section className="grid gap-4 xl:grid-cols-2">
         <TaskTable
-          title="最近扫描任务"
-          empty="暂无扫描任务。"
+          title="最近扫描记录"
+          empty="暂无扫描记录。"
           tasks={data.recentTasks.scanJobs}
           retryAction={retryScanAction}
           retryPending={retryScanPending}
@@ -917,8 +917,8 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           actionError={deleteScanJobsState.error}
         />
         <TaskTable
-          title="最近 AI 草稿任务"
-          empty="暂无 AI 草稿任务。"
+          title="最近 AI 草稿记录"
+          empty="暂无 AI 草稿记录。"
           tasks={data.recentTasks.aiDraftJobs}
           retryAction={retryAiAction}
           retryPending={retryAiPending}
@@ -934,7 +934,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
 
       <DashboardCard>
         <DashboardCardHeader
-          title="最近 ScanLog"
+          title="最近扫描记录"
           description="只显示脱敏摘要，不展示完整本地路径。默认先展示最近 4 条，避免扫描历史占满页面。"
           action={
             <div className="flex flex-wrap items-center justify-end gap-2">
@@ -1015,7 +1015,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
             ))
           ) : (
             <div className="rounded-2xl border border-dashed border-[#D8E3F2] px-4 py-8 text-center text-sm text-slate-400">
-              暂无 ScanLog。
+              暂无扫描记录。
             </div>
           )}
         </div>
