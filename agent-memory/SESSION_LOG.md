@@ -9,12 +9,14 @@ Only the latest summary stays here. Older detailed history is archived or retain
 - Changed: Reworked `/inspirations` from a scan-log-leaning management page into an AI inbox workbench with image-first cards, AI draft priority, and a clearer `保留 / 放弃 / 转商品` decision flow.
 - Changed: Rebuilt the inspiration list cards and detail view so candidate name, product type, target audience, next-step guidance, and AI draft status appear before file/debug detail.
 - Changed: Follow-up acceptance patch moved the inbox list ahead of scan settings on wide screens so the first desktop visual focus is the workbench rather than the setup panel.
+- Changed: Final V1.6-02B implementation rebuilt `/inspirations` into a buyer-style three-column desk with a left inbox queue, a center image stage, and a right AI insight plus decision rail, so the page reads like a daily selection workbench instead of a management backend.
+- Changed: Follow-up layout patch grouped `文件信息与相似度`、`AI 任务与处理记录`、`扫描与任务历史` into a single right-side advanced-record rail below `转商品入口`, reducing empty whitespace on the right while keeping the left side focused on image, AI draft, and keep/reject decisions.
 - Changed: Adjusted the preview read-only notice to the exact required wording: `预览环境只读，请在 Windows 本地验收。`
 - Changed: Added explicit placeholder handling for missing fields such as candidate price, visible-text summary, spec clues, recognition quality, and draft pre-screen score so the UI does not fabricate deterministic facts.
 - Changed: Folded ScanLog, task history, similarity hints, and file information into collapsed advanced sections, while keeping them available for debugging and audit.
 - Changed: Tightened preview safety on the inbox workbench by disabling task retry/delete controls alongside the existing write actions when runtime is read-only.
 - Added: `scripts/thread-v16-02-inspiration-inbox-verify.mts` plus a pure inbox-view mapping module to lock the field order, placeholder wording, and no-draft guidance without adding a new test dependency.
-- Verification: Run `npx tsx scripts/thread-v16-02-inspiration-inbox-verify.mts`, `npm run typecheck`, `npm run lint`, and browser-check the local `/inspirations` page on Windows local runtime.
+- Verification: Run `npx tsx scripts/thread-v16-02-inspiration-inbox-verify.mts`, `npm run typecheck`, `npm run lint`, `npm run build`, and browser-check the local `/inspirations` page on Windows local runtime to confirm the three-column buyer-desk layout, collapsed scan-settings section, and right-side advanced-record rail.
 - Boundary: No schema, migration, dependency, scan-mechanism rewrite, AI-generation rewrite, similarity-logic rewrite, auto-product creation, or source-image deletion was introduced.
 
 ### V1.6-01 Entry And Navigation Reordering

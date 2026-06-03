@@ -2,9 +2,9 @@
 
 ## Current Progress
 
-- Current stage: `V1.6-02 inspiration inbox main view rework`
-- Current task state: The `/inspirations` main screen now behaves like an AI inbox workbench: image-first cards, AI draft priority, explicit keep/reject/convert decisions, folded advanced records, and the inbox list is promoted ahead of scan settings on wide screens.
-- Current thread outcome: The inspiration main view no longer leads with scan logs, and the V1.6-02 acceptance patch aligns the preview notice with the exact read-only wording requirement. Users can stay on one screen for `看图 -> 看 AI 草稿 -> 做初筛 -> 保留 / 放弃 / 转商品`, while ScanLog, task history, similarity hints, and file info remain available behind collapsed advanced sections.
+- Current stage: `V1.6-02B inspiration inbox buyer-desk rework`
+- Current task state: The `/inspirations` main screen now behaves like a buyer-style AI inbox workbench: a left queue for inspiration cards, a center image stage for the selected sample, a right AI insight and decision rail, and a folded maintenance section for scan settings.
+- Current thread outcome: The inspiration main view no longer leads with scan logs or setup panels. The current V1.6-02B buyer-desk layout keeps users on one screen for `看图 -> 看 AI 草稿 -> 做初筛 -> 保留 / 放弃 / 转商品`, while ScanLog, task history, similarity hints, file info, and scan settings remain available in collapsed secondary sections.
 - Current planning baseline: `docs/superpowers/specs/2026-06-02-v16-direction-sync-report.md`
 - Next stage: Start only the next explicitly approved V1.6 execution thread after validating it against the V1.6-00 baseline and the V1.6-01 entry-expression cleanup.
 
@@ -18,6 +18,8 @@
 - Entry positioning: inspirations move toward the future main entry direction as an AI inspiration inbox.
 - UI entry positioning: new users should naturally understand `先看灵感箱`; screenshots are a supplementary recognition entry; `/link-imports` is a retained auxiliary route for old data and manual source notes.
 - Inbox-workbench positioning: the inspiration detail view should prioritize image, AI draft status, candidate product clues, next-step guidance, and explicit keep / reject / convert actions over logs or scan-management detail.
+- Buyer-desk positioning: the current V1.6-02B mainline should read as a buyer-style three-column workbench with an inbox queue, a central image stage, and a right-side insight plus decision rail rather than a settings-led admin page.
+- Inbox-layout positioning: advanced records such as file info, similarity, AI task history, and ScanLog should stay available but share the right-side rail so the left detail area remains focused on review and decision flow.
 - Link import positioning: link import is downgraded to an auxiliary source record rather than a core intake path.
 - Product-detail positioning: product detail should be understood around whether a product deserves small-batch testing.
 - Product deletion remains a soft business delete by default; real `Product.id` / `Material.id` should stay stable in normal workflows, and future competitor records should keep stable real IDs as well.
