@@ -7,6 +7,7 @@ type WorkspacePageProps = {
   eyebrow?: string;
   title?: string;
   description?: string;
+  hideHeader?: boolean;
   children?: ReactNode;
 };
 
@@ -87,6 +88,7 @@ export function WorkspacePage({
   eyebrow,
   title,
   description,
+  hideHeader = false,
   children,
 }: WorkspacePageProps) {
   const unreadPromise = getUnreadNotificationCount();
@@ -94,6 +96,7 @@ export function WorkspacePage({
 
   return (
     <div className="flex flex-1 flex-col">
+      {!hideHeader ? (
       <header className="border-b border-[#EDF2F8] px-5 py-5 sm:px-8 sm:py-7">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           {hasHeading ? (
@@ -139,6 +142,7 @@ export function WorkspacePage({
           </div>
         </div>
       </header>
+      ) : null}
 
       <div className="flex flex-1 flex-col gap-5 px-5 py-5 sm:px-8 sm:py-6">{children}</div>
     </div>

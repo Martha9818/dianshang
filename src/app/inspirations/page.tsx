@@ -56,7 +56,7 @@ export default async function InspirationsPage({
   const readError = "readError" in pageResult ? pageResult.readError : null;
 
   return (
-    <WorkspacePage>
+    <WorkspacePage hideHeader>
       {readError ? <PageNote>{readError}</PageNote> : null}
       <InspirationManager data={pageData} readonlyNotice={readonlyNotice} />
     </WorkspacePage>
