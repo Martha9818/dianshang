@@ -3,6 +3,7 @@
 ## Current Progress
 
 - Current stage: `V1.6-02B inspiration inbox buyer-desk rework`
+- Current task state: Paused the B-version inspiration layout iteration to fix the global wide-screen right-side whitespace regression first. The app shell no longer caps the whole application at `1780px`, and the main workspace now removes the right gutter/right rounding so it fills to the viewport edge.
 - Current task state: The `/inspirations` main screen now behaves like a buyer-style AI inbox workbench: a left queue for inspiration cards, a center image stage for the selected sample, a right AI insight and decision rail, and a folded maintenance section for scan settings.
 - Current task state: The latest V1.6-02B follow-up tightened the buyer-desk layout to more closely match the approved B-version composition: a flatter KPI strip, a clearer queue-first left rail, a cleaner image-stage center column, a compact row-style AI draft panel on the right, and a less repetitive top section.
 - Current thread outcome: The inspiration main view no longer leads with scan logs or setup panels. The current V1.6-02B buyer-desk layout keeps users on one screen for `看图 -> 看 AI 草稿 -> 做初筛 -> 保留 / 放弃 / 转商品`, while ScanLog, task history, similarity hints, file info, and scan settings remain available in collapsed secondary sections.

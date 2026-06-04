@@ -2,6 +2,14 @@
 
 Only the latest summary stays here. Older detailed history is archived or retained in current docs.
 
+## 2026-06-04
+
+### Global Shell Width Regression Fix
+
+- Changed: Removed the global `AppShell` `max-w-[1780px] mx-auto` cap, removed the desktop right gutter/right rounding, and added `min-w-0` to the main workspace area, fixing the wide-screen right-side blank area across routes without changing page business logic.
+- Verification: Ran `npm run typecheck`, `npm run lint`, and `npm run build`; browser-checked `/inspirations`, `/products`, `/copywriting`, and `/prompt-tasks` on the local dev server and confirmed the main workspace fills to the viewport edge.
+- Boundary: No schema, migration, dependency, scan, AI, similarity, product-conversion, or Vercel read-only logic changes were introduced.
+
 ## 2026-06-03
 
 ### V1.6-02 Inspiration Inbox Main View Rework
