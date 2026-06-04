@@ -56,11 +56,7 @@ export default async function InspirationsPage({
   const readError = "readError" in pageResult ? pageResult.readError : null;
 
   return (
-    <WorkspacePage
-      eyebrow="Main Entry / AI Inbox"
-      title="AI 收件箱"
-      description="日常处理工作台。围绕看图、看 AI 草稿、做初筛，再决定保留、放弃或转商品。"
-    >
+    <WorkspacePage>
       {readError ? <PageNote>{readError}</PageNote> : null}
       <InspirationManager data={pageData} readonlyNotice={readonlyNotice} />
     </WorkspacePage>

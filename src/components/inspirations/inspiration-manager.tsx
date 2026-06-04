@@ -12,7 +12,6 @@ import {
   PageNote,
   StatusBadge,
 } from "@/components/dashboard/primitives";
-import { BatchOperationForm } from "@/components/batch/batch-operation-form";
 import { ProductImage } from "@/components/products/product-image";
 import { AutoFilterForm } from "@/components/ui/auto-filter-form";
 import {
@@ -44,6 +43,7 @@ import {
   getInspirationInboxAiStatus,
   type InspirationInboxSource,
 } from "@/components/inspirations/inspiration-inbox-view";
+import { DANGEROUS_CONFIRM_TEXT } from "@/lib/modules/batch/rules";
 import type { InspirationAISuggestion } from "@/lib/services/inspirations/inspirationTypes";
 
 const INSPIRATION_BATCH_FORM_ID = "inspiration-batch-operation";
@@ -215,6 +215,10 @@ type InspirationsPageData = {
 };
 
 type InboxField = { label: string; value: string; isPlaceholder?: boolean };
+type BatchActionState = {
+  ok?: boolean;
+  message?: string;
+};
 
 const inputClassName =
   "h-12 w-full rounded-[20px] border border-[#D8E0EB] bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-[#6B8ECF] focus:ring-4 focus:ring-[#E6EEF9] disabled:bg-[#F6F7F8] disabled:text-slate-400";
@@ -369,7 +373,11 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
   );
   const [statusFilter, setStatusFilter] = useState("all");
   const [scanLogExpanded, setScanLogExpanded] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedBatchAction, setSelectedBatchAction] = useState(inspirationBatchOperations[0]?.value ?? "");
+  const [batchConfirmText, setBatchConfirmText] = useState("");
 
+  const [batchState, batchAction, batchPending] = useActionState<BatchActionState, FormData>(batchInspirationOperationAction, { ok: false, message: "" });
   const [folderState, folderAction, folderPending] = useActionState(saveInspirationFolderAction, { success: false, error: "" });
   const [scanConfigState, scanConfigAction, scanConfigPending] = useActionState(saveInspirationScanConfigAction, { success: false, error: "" });
   const [scanState, scanAction, scanPending] = useActionState(runInspirationScanAction, { success: false, error: "" });
@@ -398,6 +406,11 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
 
     return data.inspirations.filter((item) => item.status === statusFilter);
   }, [data.inspirations, statusFilter]);
+  const visibleInspirationIds = useMemo(() => visibleInspirations.map((item) => item.id), [visibleInspirations]);
+  const effectiveSelectedIds = useMemo(() => selectedIds.filter((id) => visibleInspirationIds.includes(id)), [selectedIds, visibleInspirationIds]);
+  const selectedCount = effectiveSelectedIds.length;
+  const selectedOperation = inspirationBatchOperations.find((operation) => operation.value === selectedBatchAction) ?? inspirationBatchOperations[0];
+  const allVisibleSelected = visibleInspirationIds.length > 0 && visibleInspirationIds.every((id) => effectiveSelectedIds.includes(id));
 
   const effectiveSelectedId = useMemo(() => {
     const selectedExists = data.inspirations.some((item) => item.id === selectedId);
@@ -429,22 +442,74 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
     }
   }, [convertState.data, convertState.success, router]);
 
+  function toggleSelection(id: number, checked: boolean) {
+    setSelectedIds((current) => (checked ? Array.from(new Set([...current, id])) : current.filter((item) => item !== id)));
+  }
+
+  function selectAllVisible() {
+    setSelectedIds(visibleInspirationIds);
+  }
+
+  function clearSelection() {
+    setSelectedIds([]);
+  }
+
+  function updateListQuery(name: string, value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set(name, value);
+    } else {
+      params.delete(name);
+    }
+
+    if (effectiveSelectedId) {
+      params.set("selectedId", String(effectiveSelectedId));
+    }
+
+    router.push(`/inspirations?${params.toString()}`);
+  }
+
   const formKey = selectedInspiration ? `${selectedInspiration.id}-${selectedInspiration.formattedUpdatedAt}` : "empty";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {readonlyNotice ? <PageNote>{readonlyNotice}</PageNote> : null}
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-        <StatCard label="灵感总数" value={String(data.stats.total)} delta="主队列素材规模" tone="blue" />
-        <StatCard label="待处理" value={String(data.stats.pending)} delta="等待人工初筛" tone="amber" />
-        <StatCard label="已查看" value={String(data.stats.reviewed)} delta="可继续跟进判断" tone="violet" />
-        <StatCard label="已转商品" value={String(data.stats.converted)} delta="必须用户确认" tone="green" />
-        <StatCard label="已放弃 / 归档" value={`${data.stats.rejected} / ${data.stats.archived}`} delta="默认不占首屏视线" tone="sky" />
+      <section className="rounded-[28px] border border-[#E6DDD1] bg-[linear-gradient(180deg,#FDFBF7_0%,#FAF7F1_100%)] px-5 py-5 shadow-[0_18px_44px_rgba(15,23,42,0.04)]">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-[720px]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#7A8CA7]">Desk Snapshot</p>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              第一屏只保留队列状态和审核进度，让左侧候选、中栏图片、右侧 AI 草稿自然成为主流程。
+            </p>
+          </div>
+          <div className="grid gap-2 text-sm text-slate-500 sm:grid-cols-2 xl:min-w-[360px]">
+            <div className="rounded-[20px] border border-white/70 bg-white/70 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">队列状态</p>
+              <p className="mt-1 font-medium text-slate-700">
+                当前 {visibleInspirations.length} 条可见，待处理 {data.stats.pending} 条
+              </p>
+            </div>
+            <div className="rounded-[20px] border border-white/70 bg-white/70 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">当前任务</p>
+              <p className="mt-1 font-medium text-slate-700">
+                {selectedInspiration ? `正在审核 #${selectedInspiration.id}` : "先从左侧选择一条灵感"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-2 xl:grid-cols-5">
+          <StatCard label="灵感总数" value={String(data.stats.total)} delta="队列规模" tone="blue" />
+          <StatCard label="待处理" value={String(data.stats.pending)} delta="优先初筛" tone="amber" />
+          <StatCard label="已查看" value={String(data.stats.reviewed)} delta="待继续判断" tone="violet" />
+          <StatCard label="已转商品" value={String(data.stats.converted)} delta="人工确认后创建" tone="green" />
+          <StatCard label="已放弃 / 归档" value={`${data.stats.rejected} / ${data.stats.archived}`} delta="默认下沉" tone="sky" />
+        </div>
       </section>
 
-      <DashboardCard className="border-[#E6E1D8] bg-[#FCFBF8] px-5 py-5">
-        <AutoFilterForm action="/inspirations" className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_170px_160px_160px_150px_160px] xl:items-end">
+      <DashboardCard className="border-[#E6DED4] bg-[#F8F5EF] px-4 py-4 shadow-none">
+        <AutoFilterForm action="/inspirations" className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(280px,1.2fr)_160px_160px_160px_150px] xl:items-end">
           <FilterField label="关键词">
             <input name="q" defaultValue={data.filters.keyword ?? ""} placeholder="标题 / 备注 / 文件名" className={inputClassName} />
           </FilterField>
@@ -482,151 +547,304 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
               <option value="false">图片缺失</option>
             </select>
           </FilterField>
-          <FilterField label="创建时间">
-            <select name="sort" defaultValue={data.filters.sort} className={inputClassName}>
-              <option value="createdAt_desc">从新到旧</option>
-              <option value="createdAt_asc">从旧到新</option>
-            </select>
-          </FilterField>
         </AutoFilterForm>
       </DashboardCard>
 
-      <section className="grid gap-4 xl:grid-cols-[0.82fr_1.08fr_1fr] xl:items-start">
-        <div>
-          <BatchOperationForm
-            formId={INSPIRATION_BATCH_FORM_ID}
-            action={batchInspirationOperationAction}
-            operations={inspirationBatchOperations}
-            disabled={!data.runtime.isWritable}
-          >
-            <DashboardCard className="overflow-hidden border-[#E8E2D8] bg-[#FFFEFC]">
-              <DashboardCardHeader
-                title="AI 收件箱队列"
-                description="先在这里挑图，再看右侧 AI 洞察与后续操作。"
-                action={
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      ["all", "全部"],
-                      ["pending", "待处理"],
-                      ["reviewed", "已查看"],
-                      ["converted", "已转商品"],
-                      ["archived", "已归档"],
-                      ["rejected", "已放弃"],
-                    ].map(([value, label]) => (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => setStatusFilter(value)}
-                        className={[
-                          "inline-flex h-9 items-center rounded-full border px-3 text-xs font-medium transition",
-                          statusFilter === value
-                            ? "border-[#9AB0CB] bg-[#EEF3F9] text-[#294A72]"
-                            : "border-[#E2E7EE] bg-white text-slate-500 hover:border-[#C9D5E3] hover:text-slate-700",
-                        ].join(" ")}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                }
-              />
-              <div className="space-y-3 px-4 py-4">
-                {visibleInspirations.length > 0 ? (
-                  visibleInspirations.map((item) => {
-                    const summary = buildInspirationInboxCardSummary(item);
-                    const aiStatus = getInspirationInboxAiStatus(item);
-                    const priceField = getInboxFieldValue(buildInspirationInboxPrimaryFields(item), "候选价格");
+      <section className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)_430px] xl:items-start">
+        <DashboardCard className="overflow-hidden border-[#E4DDD4] bg-[#FFFEFC] shadow-[0_18px_40px_rgba(15,23,42,0.04)] xl:sticky xl:top-6 xl:flex xl:h-[calc(100vh-10.5rem)] xl:flex-col">
+          <form
+            id={INSPIRATION_BATCH_FORM_ID}
+            action={batchAction}
+            className="xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
+            onSubmit={(event) => {
+              if (selectedCount === 0) {
+                event.preventDefault();
+                window.alert("请先选择要批量处理的灵感。");
+                return;
+              }
 
-                    return (
-                      <article
-                        key={item.id}
-                        className={[
-                          "rounded-[26px] border p-4 transition",
-                          selectedInspiration?.id === item.id
-                            ? "border-[#A9BACF] bg-[#F6F8FB] shadow-[0_18px_34px_rgba(41,74,114,0.08)]"
-                            : "border-[#ECE7DE] bg-white hover:border-[#D8E0EA] hover:shadow-[0_14px_30px_rgba(15,23,42,0.05)]",
-                        ].join(" ")}
-                      >
-                        <div className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            form={INSPIRATION_BATCH_FORM_ID}
-                            name="ids"
-                            value={item.id}
-                            aria-label={`选择 ${item.title ?? item.fileName}`}
-                            className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600"
-                          />
-                          <button type="button" onClick={() => setSelectedId(item.id)} className="min-w-0 flex-1 text-left">
-                            <div className="flex gap-3">
+              if (selectedOperation?.dangerous && batchConfirmText.trim() !== DANGEROUS_CONFIRM_TEXT) {
+                event.preventDefault();
+                window.alert(`危险操作前，请先输入“${DANGEROUS_CONFIRM_TEXT}”确认。`);
+              }
+            }}
+          >
+            {effectiveSelectedIds.map((id) => (
+              <input key={id} type="hidden" name="ids" value={id} />
+            ))}
+            <input type="hidden" name="action" value={selectedBatchAction} />
+            <div className="border-b border-[#EEF2F8] px-4 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Queue</p>
+                  <h2 className="mt-2 text-[1.08rem] font-semibold tracking-[-0.02em] text-slate-900">
+                    待处理候选 ({visibleInspirations.length})
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">先从这里快速挑图，再进入中栏主舞台和右栏初筛。</p>
+                </div>
+                <div className="w-[138px] shrink-0">
+                  <select
+                    value={data.filters.sort}
+                    onChange={(event) => updateListQuery("sort", event.target.value)}
+                    className="h-10 w-full rounded-[14px] border border-[#D8E0EB] bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-[#6B8ECF] focus:ring-4 focus:ring-[#E6EEF9]"
+                  >
+                    <option value="createdAt_desc">最新优先</option>
+                    <option value="createdAt_asc">最早优先</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[
+                  ["all", "全部"],
+                  ["pending", "待处理"],
+                  ["reviewed", "已查看"],
+                  ["converted", "已转商品"],
+                  ["archived", "已归档"],
+                  ["rejected", "已放弃"],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setStatusFilter(value)}
+                    className={[
+                      "inline-flex h-8 items-center rounded-full border px-3 text-xs font-medium transition",
+                      statusFilter === value
+                        ? "border-[#90A8C6] bg-[#EEF3FA] text-[#294A72]"
+                        : "border-[#E2E7EE] bg-white text-slate-500 hover:border-[#CBD6E3] hover:text-slate-700",
+                    ].join(" ")}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3 px-4 py-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
+              {visibleInspirations.length > 0 ? (
+                visibleInspirations.map((item) => {
+                  const summary = buildInspirationInboxCardSummary(item);
+                  const aiStatus = getInspirationInboxAiStatus(item);
+                  const itemFields = buildInspirationInboxPrimaryFields(item);
+                  const priceField = getInboxFieldValue(itemFields, "候选价格");
+                  const nextStepField = getInboxFieldValue(itemFields, "下一步建议", "待补充");
+
+                  return (
+                    <article
+                      key={item.id}
+                      className={[
+                        "rounded-[24px] border p-3 transition",
+                        selectedInspiration?.id === item.id
+                          ? "border-[#9DB3CC] bg-[linear-gradient(180deg,#F7FAFD_0%,#F3F7FB_100%)] shadow-[0_18px_34px_rgba(41,74,114,0.08)]"
+                          : "border-[#ECE7DE] bg-white hover:border-[#D6E0EA] hover:shadow-[0_14px_30px_rgba(15,23,42,0.05)]",
+                      ].join(" ")}
+                    >
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={effectiveSelectedIds.includes(item.id)}
+                          onChange={(event) => toggleSelection(item.id, event.target.checked)}
+                          aria-label={`选择 ${item.title ?? item.fileName}`}
+                          className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600"
+                        />
+                        <button type="button" onClick={() => setSelectedId(item.id)} className="min-w-0 flex-1 text-left">
+                          <div className="grid gap-3 sm:grid-cols-[88px_minmax(0,1fr)]">
+                            <div className="overflow-hidden rounded-[18px] border border-[#ECE7DE] bg-[#F7F8FA]">
                               <ProductImage src={item.displayPath} alt={item.imagePath} label="IMG" square missing={!item.fileExists} />
-                              <div className="min-w-0 flex-1 space-y-3">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <StatusBadge label={aiStatus.label} tone={aiStatus.tone} />
-                                  <StatusBadge label={item.statusLabel} tone={item.statusTone} />
-                                  {item.imageDedup?.warningLabel ? <StatusBadge label={item.imageDedup.warningLabel} tone="amber" /> : null}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <StatusBadge label={aiStatus.label} tone={aiStatus.tone} />
+                                <StatusBadge label={item.statusLabel} tone={item.statusTone} />
+                              </div>
+                              <h3 className="mt-3 line-clamp-2 text-[1rem] font-semibold tracking-[-0.02em] text-slate-900">
+                                {summary.title}
+                              </h3>
+                              <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{summary.subtitle}</p>
+                              <div className="mt-3 grid gap-2 text-[12px] text-slate-600">
+                                <div className="grid grid-cols-[72px_1fr] gap-2">
+                                  <span className="text-slate-400">候选价格</span>
+                                  <span className="line-clamp-1">{priceField}</span>
                                 </div>
-                                <div>
-                                  <p className="line-clamp-2 text-[0.98rem] font-semibold tracking-[-0.02em] text-slate-900">{summary.title}</p>
-                                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{summary.subtitle}</p>
+                                <div className="grid grid-cols-[72px_1fr] gap-2">
+                                  <span className="text-slate-400">商品类型</span>
+                                  <span className="line-clamp-1">{summary.productType}</span>
                                 </div>
-                                <div className="grid gap-2 rounded-[20px] border border-[#EEF1F4] bg-[#FBFAF7] px-3 py-3 text-xs text-slate-600">
-                                  <MiniFact label="候选价格" value={priceField} />
-                                  <MiniFact label="商品类型" value={summary.productType} />
-                                  <MiniFact label="下一步" value={summary.nextStep} />
+                                <div className="grid grid-cols-[72px_1fr] gap-2">
+                                  <span className="text-slate-400">下一步</span>
+                                  <span className="line-clamp-2">{nextStepField}</span>
                                 </div>
-                                <p className="text-[11px] text-slate-400">{item.sourceTypeLabel} · {item.formattedImportedAt}</p>
+                              </div>
+                              <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-400">
+                                <span>{item.sourceTypeLabel}</span>
+                                <span>·</span>
+                                <span>{item.formattedImportedAt}</span>
+                                {item.imageDedup?.warningLabel ? (
+                                  <>
+                                    <span>·</span>
+                                    <span className="text-amber-600">{item.imageDedup.warningLabel}</span>
+                                  </>
+                                ) : null}
                               </div>
                             </div>
-                          </button>
-                        </div>
-                      </article>
-                    );
-                  })
-                ) : (
-                  <PageNote>当前筛选条件下还没有可处理的灵感。可以先放入图片并扫描，或调整筛选后继续处理。</PageNote>
-                )}
-              </div>
-            </DashboardCard>
-          </BatchOperationForm>
-        </div>
+                          </div>
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })
+              ) : (
+                <PageNote>当前筛选条件下还没有可处理的灵感。可以先扫描图片，或调整筛选后继续处理。</PageNote>
+              )}
+            </div>
 
-        <DashboardCard className="overflow-hidden border-[#E8E2D8] bg-[#FFFDFC]">
-          <DashboardCardHeader
-            title="当前样片主舞台"
-            description={selectedInspiration ? "中间只负责看图和快速理解，不把你拖进表单细节里。" : "请选择一条灵感记录，查看大图和速览摘要。"}
-            action={
-              selectedInspiration ? (
+            <div className="border-t border-[#EEF2F8] bg-[#FCFBF8] px-4 py-4">
+              <div className="grid gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Batch Desk</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      已选择 <span className="font-semibold text-slate-900">{selectedCount}</span> 条，批量操作只做状态整理。
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={selectAllVisible} className={secondaryButtonClassName} disabled={visibleInspirationIds.length === 0 || allVisibleSelected}>
+                      全选
+                    </button>
+                    <button type="button" onClick={clearSelection} className={secondaryButtonClassName} disabled={selectedCount === 0}>
+                      清空
+                    </button>
+                  </div>
+                </div>
+                <select
+                  value={selectedBatchAction}
+                  onChange={(event) => {
+                    const nextAction = event.target.value;
+                    const nextOperation = inspirationBatchOperations.find((operation) => operation.value === nextAction);
+                    setSelectedBatchAction(nextAction);
+                    if (!nextOperation?.dangerous) {
+                      setBatchConfirmText("");
+                    }
+                  }}
+                  className={inputClassName}
+                  disabled={batchPending || !data.runtime.isWritable}
+                >
+                  {inspirationBatchOperations.map((operation) => (
+                    <option key={operation.value} value={operation.value}>
+                      {operation.label}
+                    </option>
+                  ))}
+                </select>
+                {selectedOperation?.dangerous ? (
+                  <input
+                    value={batchConfirmText}
+                    onChange={(event) => setBatchConfirmText(event.target.value)}
+                    placeholder={DANGEROUS_CONFIRM_TEXT}
+                    className={inputClassName}
+                    disabled={batchPending || !data.runtime.isWritable}
+                  />
+                ) : null}
+                <button type="submit" className={primaryButtonClassName} disabled={batchPending || selectedCount === 0 || !data.runtime.isWritable}>
+                  {batchPending ? "执行中..." : "执行批量操作"}
+                </button>
+                <p className="text-xs leading-5 text-slate-500">{selectedOperation?.impact ?? "只修改已选灵感状态，不会自动创建正式商品。"}</p>
+                {batchState.message ? (
+                  <p className={batchState.ok ? "text-sm text-emerald-600" : "text-sm text-rose-600"}>{batchState.message}</p>
+                ) : null}
+              </div>
+            </div>
+          </form>
+        </DashboardCard>
+
+        <DashboardCard className="overflow-hidden border-[#E4DDD4] bg-[#FFFEFC] shadow-[0_18px_40px_rgba(15,23,42,0.05)] xl:sticky xl:top-6 xl:flex xl:h-[calc(100vh-10.5rem)] xl:flex-col">
+          {selectedInspiration ? (
+            <div className="flex min-h-0 flex-1 flex-col px-5 pb-5">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#EEF2F8] py-4">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Stage</p>
+                  <h2 className="mt-2 line-clamp-2 text-[1.38rem] font-semibold tracking-[-0.03em] text-slate-900">
+                    {selectedInboxSummary?.title ?? selectedInspiration.title ?? "待补充标题"}
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    {selectedInboxSummary?.subtitle ?? "先通过图片和已有线索做快速理解，右侧再看完整 AI 初筛草稿。"}
+                  </p>
+                </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {selectedAiStatus ? <StatusBadge label={selectedAiStatus.label} tone={selectedAiStatus.tone} /> : null}
                   <StatusBadge label={selectedInspiration.statusLabel} tone={selectedInspiration.statusTone} />
-                  {selectedInspiration.imageDedup?.warningLabel ? <StatusBadge label={selectedInspiration.imageDedup.warningLabel} tone="amber" /> : null}
+                  <StatusBadge label={selectedInspiration.usagePermissionLabel} tone={selectedInspiration.usagePermissionTone} />
+                  {selectedInspiration.convertedProduct ? <StatusBadge label={`已转商品 #${selectedInspiration.convertedProduct.id}`} tone="green" /> : null}
                 </div>
-              ) : null
-            }
-          />
-          {selectedInspiration ? (
-            <div className="space-y-5 px-5 py-5">
-              <div className="rounded-[30px] border border-[#E9E1D6] bg-[linear-gradient(180deg,#F7F2E8_0%,#FBF8F2_100%)] p-4">
-                <ProductImage src={selectedInspiration.displayPath} alt={selectedInspiration.imagePath} label="IMG" large missing={!selectedInspiration.fileExists} />
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-                <div className="rounded-[26px] border border-[#ECE4D8] bg-[#FBF7F1] px-4 py-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">AI 草稿速览</p>
-                  <h3 className="mt-3 text-[1.28rem] font-semibold tracking-[-0.03em] text-slate-900">{selectedInboxSummary?.title ?? "待补充"}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{selectedInboxSummary?.subtitle ?? "尚未生成 AI 草稿。"}</p>
-                  <p className="mt-4 text-xs leading-6 text-slate-500">{selectedAiStatus?.description ?? "先生成 AI 草稿，再决定保留、放弃或转商品。"}</p>
-                </div>
-                <div className="rounded-[26px] border border-[#E8ECEF] bg-white px-4 py-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">买手速看</p>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <MiniFact label="候选价格" value={selectedCandidatePrice} />
-                    <MiniFact label="商品类型" value={selectedInboxSummary?.productType ?? "信息不足"} />
-                    <MiniFact label="建议平台" value={selectedPlatform} />
-                    <MiniFact label="类目建议" value={selectedCategory} />
-                    <MiniFact label="目标人群" value={selectedInboxSummary?.targetAudience ?? "信息不足"} />
-                    <MiniFact label="下一步" value={selectedNextStep} />
+              <div className="mt-4 flex min-h-0 flex-1 flex-col">
+                <div className="flex-1 rounded-[34px] border border-[#E6DDD1] bg-[radial-gradient(circle_at_top,#F7F0E4_0%,#F5F7FB_44%,#FBFAF7_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
+                  <div className="flex h-full min-h-[340px] items-center justify-center overflow-hidden rounded-[28px] border border-white/70 bg-white/70">
+                    <ProductImage src={selectedInspiration.displayPath} alt={selectedInspiration.imagePath} label="IMG" large missing={!selectedInspiration.fileExists} />
                   </div>
+                </div>
+
+                <div className="mt-4 grid gap-4">
+                  <div className="flex flex-wrap gap-2">
+                    <div className="inline-flex items-center gap-3 rounded-[18px] border border-[#E6EAF0] bg-white px-3 py-2 shadow-[0_8px_20px_rgba(15,23,42,0.03)]">
+                      <div className="h-10 w-10 overflow-hidden rounded-[12px] border border-[#E8E2D8] bg-[#F4F6F8]">
+                        <ProductImage src={selectedInspiration.displayPath} alt={selectedInspiration.imagePath} label="1" square missing={!selectedInspiration.fileExists} />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs font-medium text-slate-700">当前主图</p>
+                        <p className="text-[11px] text-slate-400">{selectedInspiration.fileName}</p>
+                      </div>
+                    </div>
+                    <div className="inline-flex items-center rounded-[18px] border border-[#E6EAF0] bg-white px-3 py-2 text-xs text-slate-500 shadow-[0_8px_20px_rgba(15,23,42,0.03)]">
+                      {selectedInspiration.sourceTypeLabel} · {selectedInspiration.formattedImportedAt}
+                    </div>
+                    {selectedInspiration.imageDedup?.warningLabel ? (
+                      <div className="inline-flex items-center rounded-[18px] border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                        {selectedInspiration.imageDedup.warningLabel}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(260px,0.85fr)]">
+                    <div className="rounded-[28px] border border-[#ECE4D8] bg-[#FBF7F1] px-4 py-4">
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">AI 草稿速览</p>
+                      <p className="mt-3 text-sm leading-7 text-slate-600">{selectedInboxSummary?.subtitle ?? "尚未生成 AI 草稿。"}</p>
+                      <p className="mt-4 text-xs leading-6 text-slate-500">{selectedAiStatus?.description ?? "先生成 AI 草稿，再决定保留、放弃或转商品。"}</p>
+                    </div>
+
+                    <div className="rounded-[28px] border border-[#E8ECEF] bg-white px-4 py-4">
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">买手速看</p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <MiniFact label="候选价格" value={selectedCandidatePrice} />
+                        <MiniFact label="商品类型" value={selectedInboxSummary?.productType ?? "信息不足"} />
+                        <MiniFact label="建议平台" value={selectedPlatform} />
+                        <MiniFact label="类目建议" value={selectedCategory} />
+                        <MiniFact label="目标人群" value={selectedInboxSummary?.targetAudience ?? "信息不足"} />
+                        <MiniFact label="下一步" value={selectedNextStep} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <form action={draftAction} key={formKey} className="rounded-[28px] border border-[#E6EAF0] bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.03)]">
+                    <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Notes</p>
+                        <h3 className="mt-2 text-sm font-semibold text-slate-900">人工备注与草稿标题</h3>
+                      </div>
+                      <ActionButton type="submit" variant="secondary" disabled={!data.runtime.isWritable}>
+                        {draftPending ? "保存中..." : "保存备注"}
+                      </ActionButton>
+                    </div>
+                    <div className="mt-4 grid gap-3">
+                      <Field label="草稿标题">
+                        <input name="title" className={inputClassName} defaultValue={selectedInspiration.title ?? ""} disabled={!data.runtime.isWritable} />
+                      </Field>
+                      <Field label="人工备注">
+                        <textarea name="note" className="min-h-[138px] w-full rounded-[22px] border border-[#D8DEE8] bg-white px-4 py-3 text-sm leading-6 text-slate-700 outline-none transition focus:border-[#89A7C9] focus:ring-2 focus:ring-[#D7E4F4]" defaultValue={selectedInspiration.note ?? ""} disabled={!data.runtime.isWritable} />
+                      </Field>
+                      <ActionMessages messages={[draftState.error]} />
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>
@@ -637,392 +855,407 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           )}
         </DashboardCard>
 
-        <div id="inspiration-convert-panel" className="space-y-4">
-          {selectedInspiration ? (
-            <>
-              <AiDraftPanel source={selectedInspiration} fields={selectedInboxFields} aiStatus={selectedAiStatus} />
-
-              <form action={draftAction} key={formKey} className="space-y-4 rounded-[28px] border border-[#E8E2D8] bg-[#FFFDFC] px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
-                <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Decision Desk</p>
-                    <h3 className="mt-2 text-[1.12rem] font-semibold tracking-[-0.02em] text-slate-900">保留 / 放弃 / 转商品</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-500">先看图和 AI 草稿，再做人工初筛；不会自动创建正式商品。</p>
-                  </div>
-                  <a href="#inspiration-convert-panel" className={secondaryButtonClassName}>
-                    去转商品表单
-                  </a>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button formAction={reviewAction} type="submit" className={primaryButtonClassName} disabled={reviewPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
-                    {reviewPending ? "处理中..." : "保留并继续跟进"}
-                  </button>
-                  <button formAction={archiveAction} type="submit" className={secondaryButtonClassName} disabled={archivePending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
-                    归档
-                  </button>
-                </div>
-                <div className="grid gap-3 rounded-[24px] border border-[#F1E4E1] bg-[#FFFBFA] p-4 md:grid-cols-[1fr_auto] md:items-end">
-                  <Field label="放弃原因">
-                    <input name="rejectedReason" className={inputClassName} placeholder="简短记录为什么不继续处理" disabled={!data.runtime.isWritable || selectedIsConverted || selectedIsClosed} />
-                  </Field>
-                  <button formAction={rejectAction} type="submit" className={dangerButtonClassName} disabled={rejectPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
-                    放弃
-                  </button>
-                </div>
-
-                <div className="space-y-3 rounded-[24px] border border-[#ECE8E1] bg-[#FBFAF7] p-4">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">辅助处理</p>
-                    <p className="mt-2 text-sm text-slate-500">这些动作保留给需要补信息或修正草稿的时候使用。</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      formAction={aiAction}
-                      type="submit"
-                      className={primaryButtonClassName}
-                      disabled={aiPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}
-                    >
-                      <MiniIcon name="spark" className="h-4 w-4" />
-                      {aiPending ? "识图中..." : "AI 识图草稿"}
-                    </button>
-                    <ActionButton type="submit" variant="secondary" disabled={!data.runtime.isWritable}>
-                      {draftPending ? "保存中..." : "保存人工备注"}
-                    </ActionButton>
-                    <Link href={`/screenshots?sourceType=inspiration&sourceId=${selectedInspiration.id}`} className={secondaryButtonClassName}>
-                      补充截图识别
-                    </Link>
-                    <Link href="/link-imports?purpose=inspiration" className={secondaryButtonClassName}>
-                      补录来源链接（可选）
-                    </Link>
-                    <button
-                      formAction={applyAction}
-                      type="submit"
-                      className={secondaryButtonClassName}
-                      disabled={applyPending || !selectedInspiration.aiSuggestion || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}
-                    >
-                      确认并应用到灵感备注
-                    </button>
-                    <button
-                      formAction={ignoreDraftAction}
-                      type="submit"
-                      className={secondaryButtonClassName}
-                      disabled={ignoreDraftPending || !selectedInspiration.aiSuggestion || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}
-                    >
-                      忽略 AI 草稿
-                    </button>
-                    {latestFailedAiDraft ? (
-                      <>
-                        <input type="hidden" name="aiDraftJobId" value={latestFailedAiDraft.id} />
-                        <button formAction={retryAiAction} type="submit" className={secondaryButtonClassName} disabled={retryAiPending || !data.runtime.isWritable}>
-                          重试 AI 草稿任务
-                        </button>
-                      </>
-                    ) : null}
-                  </div>
-                </div>
-
-                <Field label="草稿标题">
-                  <input name="title" className={inputClassName} defaultValue={selectedInspiration.title ?? ""} disabled={!data.runtime.isWritable} />
-                </Field>
-                <Field label="草稿备注">
-                  <textarea name="note" className={textareaClassName} defaultValue={selectedInspiration.note ?? ""} disabled={!data.runtime.isWritable} />
-                </Field>
-                <ActionMessages
-                  messages={[
-                    draftState.error,
-                    aiState.error,
-                    applyState.error,
-                    ignoreDraftState.error,
-                    retryAiState.error,
-                    reviewState.error,
-                    archiveState.error,
-                    rejectState.error,
-                  ]}
-                />
-              </form>
-            </>
-          ) : (
-            <DashboardCard className="border-[#E8E2D8] bg-[#FFFDFC] px-5 py-5">
-              <PageNote>先从左侧收件箱队列选择一条灵感，再查看 AI 洞察与操作区。</PageNote>
-            </DashboardCard>
-          )}
-
-          <DashboardCard>
-            <DashboardCardHeader title="转商品入口" description="这里只做 AI 草稿预填和人工确认；只有用户提交后，才会创建正式 Product。" />
+        <div id="inspiration-convert-panel" className="xl:sticky xl:top-6 xl:h-[calc(100vh-10.5rem)] xl:overflow-hidden">
+          <div className="space-y-4 xl:h-full xl:overflow-y-auto xl:pr-1">
             {selectedInspiration ? (
-              <form
-                action={convertAction}
-                key={`${formKey}-convert`}
-                className="space-y-3 px-5 py-5"
-                onSubmit={(event) => {
-                  if (selectedIsConverted || selectedIsClosed) {
-                    event.preventDefault();
-                    return;
-                  }
+              <>
+                <AiDraftPanel source={selectedInspiration} fields={selectedInboxFields} aiStatus={selectedAiStatus} />
 
-                  if (!window.confirm("确认把这条灵感转为正式商品？转商品后不能重复转换。")) {
-                    event.preventDefault();
-                  }
-                }}
-              >
-                <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
-                {selectedIsConverted ? <PageNote>这条灵感已转为商品，不能重复转商品。</PageNote> : null}
-                {selectedIsClosed ? <PageNote>已归档或已放弃的灵感不再进入转商品流程。</PageNote> : null}
-                <Field label="商品名称">
-                  <input name="name" className={inputClassName} defaultValue={conversionDefaults.name} disabled={!data.runtime.isWritable} />
-                </Field>
-                <Field label="一级类目">
-                  <input name="categoryLevel1" className={inputClassName} defaultValue={conversionDefaults.categoryLevel1} disabled={!data.runtime.isWritable} />
-                </Field>
-                <Field label="目标用户">
-                  <input name="targetUser" className={inputClassName} defaultValue={conversionDefaults.targetUser} disabled={!data.runtime.isWritable} />
-                </Field>
-                <Field label="卖点草稿">
-                  <textarea name="sellingPointsText" className={textareaClassName} defaultValue={conversionDefaults.sellingPointsText} disabled={!data.runtime.isWritable} />
-                </Field>
-                <Field label="使用场景">
-                  <textarea name="usageScenesText" className={textareaClassName} defaultValue={conversionDefaults.usageScenesText} disabled={!data.runtime.isWritable} />
-                </Field>
-                <Field label="标签">
-                  <textarea name="tagsText" className={textareaClassName} defaultValue={conversionDefaults.tagsText} disabled={!data.runtime.isWritable} />
-                </Field>
-                <Field label="备注">
-                  <textarea name="notes" className={textareaClassName} defaultValue={conversionDefaults.notes} disabled={!data.runtime.isWritable} />
-                </Field>
-                {convertState.error ? <p className="text-sm text-rose-600">{convertState.error}</p> : null}
-                <button type="submit" className={primaryButtonClassName} disabled={convertPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
-                  {convertPending ? "创建中..." : "确认转为商品"}
-                </button>
-              </form>
-            ) : (
-              <div className="px-5 py-5">
-                <PageNote>先选择一条灵感记录，再填写确认表单。</PageNote>
-              </div>
-            )}
-          </DashboardCard>
-
-          <DashboardCard className="overflow-hidden">
-            <DashboardCardHeader
-              title="高级记录 / 调试信息"
-              description="把文件信息、AI 任务和扫描历史集中放到右侧；主流程继续留在左边。"
-            />
-            <div className="space-y-4 px-5 py-5">
-              <CollapsibleSection
-                title="高级记录：文件信息与相似度"
-                description="文件信息、相似度和调试提示都保留，但默认折叠，不压住主流程。"
-              >
-                <div className="space-y-4">
-                  <div className="grid gap-3 text-sm text-slate-600 md:grid-cols-2">
-                    <DetailRow label="文件名" value={selectedInspiration?.fileName ?? "--"} />
-                    <DetailRow label="来源" value={selectedInspiration?.sourceTypeLabel ?? "--"} />
-                    <DetailRow label="权限" value={selectedInspiration?.usagePermissionLabel ?? "--"} badgeTone={selectedInspiration?.usagePermissionTone} />
-                    <DetailRow label="状态" value={selectedInspiration?.statusLabel ?? "--"} badgeTone={selectedInspiration?.statusTone} />
-                    <DetailRow label="hash" value={selectedInspiration?.fileHashShort ?? "--"} />
-                    <DetailRow label="导入" value={selectedInspiration?.formattedImportedAt ?? "--"} />
-                    <DetailRow label="更新" value={selectedInspiration?.formattedUpdatedAt ?? "--"} />
-                    <DetailRow label="查看" value={selectedInspiration?.formattedReviewedAt ?? "--"} />
-                    <DetailRow label="归档" value={selectedInspiration?.formattedArchivedAt ?? "--"} />
-                    <DetailRow label="放弃" value={selectedInspiration?.rejectedReason ?? "--"} />
-                    <DetailRow label="AIJob" value={selectedInspiration?.aiJobSummary ? `#${selectedInspiration.aiJobSummary.id} · ${selectedInspiration.aiJobSummary.status}` : "--"} />
-                    <DetailRow label="转商品" value={selectedInspiration?.convertedProduct ? `${selectedInspiration.convertedProduct.name} (#${selectedInspiration.convertedProduct.id})` : "--"} />
-                    <DetailRow
-                      label="去重"
-                      value={selectedInspiration?.imageDedup?.warningLabel ?? selectedInspiration?.imageDedup?.status ?? "未检测"}
-                      badgeTone={selectedInspiration?.imageDedup?.warningLabel ? "amber" : "slate"}
-                    />
+                <form className="space-y-4 rounded-[30px] border border-[#E4DDD4] bg-[#FFFDFC] px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Decision Desk</p>
+                      <h3 className="mt-2 text-[1.12rem] font-semibold tracking-[-0.02em] text-slate-900">保留 / 放弃 / 转商品</h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-500">右栏只承载决策，避免再把首屏拉回后台表单状态。</p>
+                    </div>
+                    <a href="#convert-form-panel" className={secondaryButtonClassName}>
+                      查看转商品表单
+                    </a>
                   </div>
-                  {selectedInspiration ? (
-                    <>
-                      <form action={dedupAction} className="flex flex-wrap gap-2">
-                        <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
-                        <button type="submit" className={secondaryButtonClassName} disabled={dedupPending || !data.runtime.isWritable}>
-                          {dedupPending ? "检测中..." : "检测此灵感图片"}
-                        </button>
-                        <Link href="/maintenance/files" className={secondaryButtonClassName}>
-                          去文件清理与回收站
-                        </Link>
-                      </form>
-                      {dedupState.error ? <p className="text-sm text-rose-600">{dedupState.error}</p> : null}
-                      {dedupIgnoreState.error ? <p className="text-sm text-rose-600">{dedupIgnoreState.error}</p> : null}
-                      {dedupArchiveState.error ? <p className="text-sm text-rose-600">{dedupArchiveState.error}</p> : null}
-                      <ImageDedupPanel
-                        summary={selectedInspiration.imageDedup}
-                        ignoreAction={dedupIgnoreAction}
-                        archiveSuggestAction={dedupArchiveAction}
-                        actionPending={dedupIgnorePending || dedupArchivePending || !data.runtime.isWritable}
-                      />
-                    </>
-                  ) : (
-                    <PageNote>先选择一条灵感记录，再查看文件信息和相似度提示。</PageNote>
-                  )}
-                </div>
-              </CollapsibleSection>
 
-              <CollapsibleSection
-                title="高级记录：AI 任务与处理记录"
-                description="保留最近的 AI 草稿任务和人工处理记录，方便排查，但不干扰主流程。"
-              >
-                {selectedInspiration ? (
-                  <div className="space-y-4">
-                    <div className="rounded-[24px] border border-[#EEF2F8] bg-white px-4 py-4">
-                      <h3 className="text-sm font-semibold text-slate-900">AI 草稿记录</h3>
-                      <div className="mt-3 space-y-2 text-sm text-slate-600">
-                        {selectedInspiration.aiDraftJobs.length > 0 ? (
-                          selectedInspiration.aiDraftJobs.map((job) => (
-                            <div key={job.id} className="rounded-2xl bg-[#F8FAFD] px-3 py-3">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <StatusBadge label={job.status} tone={getTaskTone(job.status)} />
-                                <span>#{job.id}</span>
-                                <span>确认：{job.needsUserConfirmation ? "需要" : "已处理"}</span>
-                                <span>重试 {job.retryCount}</span>
-                              </div>
-                              <p className="mt-1 text-slate-500">
-                                {getAiTaskSummary(job.failureReasonSummary, job.rawResponseSummary, "无摘要")}
-                              </p>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-slate-400">暂无 AI 草稿记录。</p>
-                        )}
+                  <div className="grid gap-3">
+                    <div className="grid gap-3">
+                      <button formAction={reviewAction} type="submit" className={primaryButtonClassName} disabled={reviewPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
+                        {reviewPending ? "处理中..." : "保留并继续跟进"}
+                      </button>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <button formAction={archiveAction} type="submit" className={secondaryButtonClassName} disabled={archivePending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
+                          归档
+                        </button>
+                        <a href="#convert-form-panel" className={secondaryButtonClassName}>
+                          转商品
+                        </a>
                       </div>
                     </div>
-                    <OperationLogList logs={selectedInspiration.operationLogs} />
+
+                    <div className="grid gap-3 rounded-[24px] border border-[#F1E4E1] bg-[#FFFBFA] p-4">
+                      <Field label="放弃原因">
+                        <input name="rejectedReason" className={inputClassName} placeholder="简短记录为什么不继续处理" disabled={!data.runtime.isWritable || selectedIsConverted || selectedIsClosed} />
+                      </Field>
+                      <button formAction={rejectAction} type="submit" className={dangerButtonClassName} disabled={rejectPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
+                        放弃
+                      </button>
+                    </div>
                   </div>
-                ) : (
-                  <PageNote>先选择一条灵感记录，再查看 AI 任务和处理记录。</PageNote>
-                )}
-              </CollapsibleSection>
 
-              <CollapsibleSection
-                title="高级记录：扫描与任务历史"
-                description="ScanLog、任务历史和批量删除能力都保留，但默认折叠，不干扰日常审核草稿。"
-              >
-                <div className="space-y-4">
-                  <section className="grid gap-4 xl:grid-cols-2">
-                    <TaskTable
-                      title="最近扫描任务"
-                      empty="暂无扫描任务。"
-                      tasks={data.recentTasks.scanJobs}
-                      retryAction={retryScanAction}
-                      retryPending={retryScanPending}
-                      retryFieldName="scanJobId"
-                      deleteAction={deleteScanJobsAction}
-                      deletePending={deleteScanJobsPending}
-                      deleteFieldName="scanJobIds"
-                      actionMessage={deleteScanJobsState.message}
-                      actionError={deleteScanJobsState.error}
-                      disabled={!data.runtime.isWritable}
-                    />
-                    <TaskTable
-                      title="最近 AI 草稿任务"
-                      empty="暂无 AI 草稿任务。"
-                      tasks={data.recentTasks.aiDraftJobs}
-                      retryAction={retryAiAction}
-                      retryPending={retryAiPending}
-                      retryFieldName="aiDraftJobId"
-                      deleteAction={deleteAiDraftJobsAction}
-                      deletePending={deleteAiDraftJobsPending}
-                      deleteFieldName="aiDraftJobIds"
-                      actionMessage={deleteAiDraftJobsState.message}
-                      actionError={deleteAiDraftJobsState.error}
-                      redactAiFailureDetails
-                      disabled={!data.runtime.isWritable}
-                    />
-                  </section>
+                  <div className="space-y-3 rounded-[24px] border border-[#ECE8E1] bg-[#FBFAF7] p-4">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">辅助处理</p>
+                      <p className="mt-2 text-sm text-slate-500">补信息、补识别、重新生成时再用，不抢主决策层级。</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        formAction={aiAction}
+                        type="submit"
+                        className={secondaryButtonClassName}
+                        disabled={aiPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}
+                      >
+                        <MiniIcon name="spark" className="h-4 w-4" />
+                        {aiPending ? "识图中..." : "AI 识图草稿"}
+                      </button>
+                      <Link href={`/screenshots?sourceType=inspiration&sourceId=${selectedInspiration.id}`} className={secondaryButtonClassName}>
+                        补充截图识别
+                      </Link>
+                      <Link href="/link-imports?purpose=inspiration" className={secondaryButtonClassName}>
+                        补录来源链接
+                      </Link>
+                      <button
+                        formAction={applyAction}
+                        type="submit"
+                        className={secondaryButtonClassName}
+                        disabled={applyPending || !selectedInspiration.aiSuggestion || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}
+                      >
+                        应用到灵感备注
+                      </button>
+                      <button
+                        formAction={ignoreDraftAction}
+                        type="submit"
+                        className={secondaryButtonClassName}
+                        disabled={ignoreDraftPending || !selectedInspiration.aiSuggestion || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}
+                      >
+                        忽略 AI 草稿
+                      </button>
+                      {latestFailedAiDraft ? (
+                        <>
+                          <input type="hidden" name="aiDraftJobId" value={latestFailedAiDraft.id} />
+                          <button formAction={retryAiAction} type="submit" className={secondaryButtonClassName} disabled={retryAiPending || !data.runtime.isWritable}>
+                            重试 AI 草稿任务
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
 
-                  <DashboardCard>
-                    <DashboardCardHeader
-                      title="最近 ScanLog 记录"
-                      description="只显示脱敏摘要，不展示完整本地路径。默认先展示最近 4 条，避免扫描历史占满页面。"
-                      action={
-                        <div className="flex flex-wrap items-center justify-end gap-2">
-                          {data.recentScanLogs.length > 0 ? (
-                            <form action={deleteScanLogsAction}>
-                              {recentScanLogIds.map((id) => (
-                                <input key={id} type="hidden" name="scanLogIds" value={id} />
-                              ))}
-                              <button
-                                type="submit"
-                                disabled={deleteScanLogsPending || !data.runtime.isWritable}
-                                className="inline-flex h-10 items-center rounded-xl border border-rose-200 bg-white px-3 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                              >
-                                全部删除
-                              </button>
-                            </form>
-                          ) : null}
-                          {data.recentScanLogs.length > 4 ? (
-                            <button
-                              type="button"
-                              onClick={() => setScanLogExpanded((current) => !current)}
-                              className="inline-flex h-10 items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:bg-blue-50"
-                            >
-                              {scanLogExpanded ? "收起" : `展开全部 ${data.recentScanLogs.length} 条`}
-                            </button>
-                          ) : null}
-                        </div>
+                  <ActionMessages
+                    messages={[
+                      aiState.error,
+                      applyState.error,
+                      ignoreDraftState.error,
+                      retryAiState.error,
+                      reviewState.error,
+                      archiveState.error,
+                      rejectState.error,
+                    ]}
+                  />
+                </form>
+              </>
+            ) : (
+              <DashboardCard className="border-[#E8E2D8] bg-[#FFFDFC] px-5 py-5">
+                <PageNote>先从左侧收件箱队列选择一条灵感，再查看 AI 洞察与操作区。</PageNote>
+              </DashboardCard>
+            )}
+
+            <div id="convert-form-panel">
+              <DashboardCard className="overflow-hidden border-[#E4DDD4] bg-[#FFFEFC]">
+                <DashboardCardHeader title="转商品入口" description="这里继续保留完整表单，但退到决策区下方，不打断首屏审核节奏。" />
+                {selectedInspiration ? (
+                  <form
+                    action={convertAction}
+                    key={`${formKey}-convert`}
+                    className="space-y-3 px-5 py-5"
+                    onSubmit={(event) => {
+                      if (selectedIsConverted || selectedIsClosed) {
+                        event.preventDefault();
+                        return;
                       }
-                    />
-                    {deleteScanLogsState.message ? <p className="px-5 pt-4 text-sm text-emerald-600">{deleteScanLogsState.message}</p> : null}
-                    {deleteScanLogsState.error ? <p className="px-5 pt-4 text-sm text-rose-600">{deleteScanLogsState.error}</p> : null}
-                    <div className="space-y-3 px-5 py-4">
-                      {visibleScanLogs.length > 0 ? (
-                        visibleScanLogs.map((log) => (
-                          <article key={log.id} className="rounded-2xl border border-[#EEF2F8] bg-white px-4 py-4 text-sm text-slate-600">
-                            <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                              <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-[150px_110px_120px_1fr]">
-                                <div>
-                                  <p className="text-xs text-slate-400">时间</p>
-                                  <p className="mt-1 font-medium text-slate-700">{log.formattedStartedAt}</p>
+
+                      if (!window.confirm("确认把这条灵感转为正式商品？转商品后不能重复转换。")) {
+                        event.preventDefault();
+                      }
+                    }}
+                  >
+                    <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
+                    {selectedIsConverted ? <PageNote>这条灵感已转为商品，不能重复转商品。</PageNote> : null}
+                    {selectedIsClosed ? <PageNote>已归档或已放弃的灵感不再进入转商品流程。</PageNote> : null}
+                    <details className="rounded-[22px] border border-[#ECE8E1] bg-[#FBFAF7]" open>
+                      <summary className="cursor-pointer list-none px-4 py-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">商品确认表单</p>
+                            <p className="mt-1 text-sm text-slate-500">保留 AI 预填，但仍需人工确认后提交。</p>
+                          </div>
+                          <span className="text-xs font-medium text-[#365B8C]">可展开 / 收起</span>
+                        </div>
+                      </summary>
+                      <div className="space-y-3 border-t border-[#E8ECF3] px-4 py-4">
+                        <Field label="商品名称">
+                          <input name="name" className={inputClassName} defaultValue={conversionDefaults.name} disabled={!data.runtime.isWritable} />
+                        </Field>
+                        <Field label="一级类目">
+                          <input name="categoryLevel1" className={inputClassName} defaultValue={conversionDefaults.categoryLevel1} disabled={!data.runtime.isWritable} />
+                        </Field>
+                        <Field label="目标用户">
+                          <input name="targetUser" className={inputClassName} defaultValue={conversionDefaults.targetUser} disabled={!data.runtime.isWritable} />
+                        </Field>
+                        <Field label="卖点草稿">
+                          <textarea name="sellingPointsText" className={textareaClassName} defaultValue={conversionDefaults.sellingPointsText} disabled={!data.runtime.isWritable} />
+                        </Field>
+                        <Field label="使用场景">
+                          <textarea name="usageScenesText" className={textareaClassName} defaultValue={conversionDefaults.usageScenesText} disabled={!data.runtime.isWritable} />
+                        </Field>
+                        <Field label="标签">
+                          <textarea name="tagsText" className={textareaClassName} defaultValue={conversionDefaults.tagsText} disabled={!data.runtime.isWritable} />
+                        </Field>
+                        <Field label="备注">
+                          <textarea name="notes" className={textareaClassName} defaultValue={conversionDefaults.notes} disabled={!data.runtime.isWritable} />
+                        </Field>
+                      </div>
+                    </details>
+                    {convertState.error ? <p className="text-sm text-rose-600">{convertState.error}</p> : null}
+                    <button type="submit" className={primaryButtonClassName} disabled={convertPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
+                      {convertPending ? "创建中..." : "确认转为商品"}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="px-5 py-5">
+                    <PageNote>先选择一条灵感记录，再填写确认表单。</PageNote>
+                  </div>
+                )}
+              </DashboardCard>
+            </div>
+
+            <DashboardCard className="overflow-hidden border-[#E4DDD4] bg-[#FFFEFC]">
+              <DashboardCardHeader
+                title="高级记录 / 调试信息"
+                description="把文件信息、AI 任务和扫描历史收进右侧尾部，不干扰主舞台和决策卡。"
+              />
+              <div className="space-y-4 px-5 py-5">
+                <CollapsibleSection
+                  title="高级记录：文件信息与相似度"
+                  description="文件信息、相似度和调试提示都保留，但默认折叠，不压住主流程。"
+                >
+                  <div className="space-y-4">
+                    <div className="grid gap-3 text-sm text-slate-600 md:grid-cols-2">
+                      <DetailRow label="文件名" value={selectedInspiration?.fileName ?? "--"} />
+                      <DetailRow label="来源" value={selectedInspiration?.sourceTypeLabel ?? "--"} />
+                      <DetailRow label="权限" value={selectedInspiration?.usagePermissionLabel ?? "--"} badgeTone={selectedInspiration?.usagePermissionTone} />
+                      <DetailRow label="状态" value={selectedInspiration?.statusLabel ?? "--"} badgeTone={selectedInspiration?.statusTone} />
+                      <DetailRow label="hash" value={selectedInspiration?.fileHashShort ?? "--"} />
+                      <DetailRow label="导入" value={selectedInspiration?.formattedImportedAt ?? "--"} />
+                      <DetailRow label="更新" value={selectedInspiration?.formattedUpdatedAt ?? "--"} />
+                      <DetailRow label="查看" value={selectedInspiration?.formattedReviewedAt ?? "--"} />
+                      <DetailRow label="归档" value={selectedInspiration?.formattedArchivedAt ?? "--"} />
+                      <DetailRow label="放弃" value={selectedInspiration?.rejectedReason ?? "--"} />
+                      <DetailRow label="AIJob" value={selectedInspiration?.aiJobSummary ? `#${selectedInspiration.aiJobSummary.id} · ${selectedInspiration.aiJobSummary.status}` : "--"} />
+                      <DetailRow label="转商品" value={selectedInspiration?.convertedProduct ? `${selectedInspiration.convertedProduct.name} (#${selectedInspiration.convertedProduct.id})` : "--"} />
+                      <DetailRow
+                        label="去重"
+                        value={selectedInspiration?.imageDedup?.warningLabel ?? selectedInspiration?.imageDedup?.status ?? "未检测"}
+                        badgeTone={selectedInspiration?.imageDedup?.warningLabel ? "amber" : "slate"}
+                      />
+                    </div>
+                    {selectedInspiration ? (
+                      <>
+                        <form action={dedupAction} className="flex flex-wrap gap-2">
+                          <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
+                          <button type="submit" className={secondaryButtonClassName} disabled={dedupPending || !data.runtime.isWritable}>
+                            {dedupPending ? "检测中..." : "检测此灵感图片"}
+                          </button>
+                          <Link href="/maintenance/files" className={secondaryButtonClassName}>
+                            去文件清理与回收站
+                          </Link>
+                        </form>
+                        {dedupState.error ? <p className="text-sm text-rose-600">{dedupState.error}</p> : null}
+                        {dedupIgnoreState.error ? <p className="text-sm text-rose-600">{dedupIgnoreState.error}</p> : null}
+                        {dedupArchiveState.error ? <p className="text-sm text-rose-600">{dedupArchiveState.error}</p> : null}
+                        <ImageDedupPanel
+                          summary={selectedInspiration.imageDedup}
+                          ignoreAction={dedupIgnoreAction}
+                          archiveSuggestAction={dedupArchiveAction}
+                          actionPending={dedupIgnorePending || dedupArchivePending || !data.runtime.isWritable}
+                        />
+                      </>
+                    ) : (
+                      <PageNote>先选择一条灵感记录，再查看文件信息和相似度提示。</PageNote>
+                    )}
+                  </div>
+                </CollapsibleSection>
+
+                <CollapsibleSection
+                  title="高级记录：AI 任务与处理记录"
+                  description="保留最近的 AI 草稿任务和人工处理记录，方便排查，但不干扰主流程。"
+                >
+                  {selectedInspiration ? (
+                    <div className="space-y-4">
+                      <div className="rounded-[24px] border border-[#EEF2F8] bg-white px-4 py-4">
+                        <h3 className="text-sm font-semibold text-slate-900">AI 草稿记录</h3>
+                        <div className="mt-3 space-y-2 text-sm text-slate-600">
+                          {selectedInspiration.aiDraftJobs.length > 0 ? (
+                            selectedInspiration.aiDraftJobs.map((job) => (
+                              <div key={job.id} className="rounded-2xl bg-[#F8FAFD] px-3 py-3">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <StatusBadge label={job.status} tone={getTaskTone(job.status)} />
+                                  <span>#{job.id}</span>
+                                  <span>确认：{job.needsUserConfirmation ? "需要" : "已处理"}</span>
+                                  <span>重试 {job.retryCount}</span>
                                 </div>
-                                <div>
-                                  <p className="text-xs text-slate-400">类型</p>
-                                  <p className="mt-1 font-medium text-slate-700">{log.scanType}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-slate-400">状态</p>
-                                  <div className="mt-1"><StatusBadge label={log.status} tone={log.statusTone} /></div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2 rounded-2xl bg-[#F8FBFF] px-3 py-2 text-center">
-                                  <div><p className="text-xs text-slate-400">新增</p><p className="font-semibold text-slate-700">{log.newFiles}</p></div>
-                                  <div><p className="text-xs text-slate-400">重复</p><p className="font-semibold text-slate-700">{log.skippedDuplicates}</p></div>
-                                  <div><p className="text-xs text-slate-400">失败</p><p className="font-semibold text-slate-700">{log.failedFiles}</p></div>
-                                </div>
+                                <p className="mt-1 text-slate-500">
+                                  {getAiTaskSummary(job.failureReasonSummary, job.rawResponseSummary, "无摘要")}
+                                </p>
                               </div>
-                              <form action={deleteScanLogsAction} className="shrink-0">
-                                <input type="hidden" name="scanLogIds" value={log.id} />
+                            ))
+                          ) : (
+                            <p className="text-slate-400">暂无 AI 草稿记录。</p>
+                          )}
+                        </div>
+                      </div>
+                      <OperationLogList logs={selectedInspiration.operationLogs} />
+                    </div>
+                  ) : (
+                    <PageNote>先选择一条灵感记录，再查看 AI 任务和处理记录。</PageNote>
+                  )}
+                </CollapsibleSection>
+
+                <CollapsibleSection
+                  title="高级记录：扫描与任务历史"
+                  description="ScanLog、任务历史和批量删除能力都保留，但默认折叠，不干扰日常审核草稿。"
+                >
+                  <div className="space-y-4">
+                    <section className="grid gap-4 xl:grid-cols-2">
+                      <TaskTable
+                        title="最近扫描任务"
+                        empty="暂无扫描任务。"
+                        tasks={data.recentTasks.scanJobs}
+                        retryAction={retryScanAction}
+                        retryPending={retryScanPending}
+                        retryFieldName="scanJobId"
+                        deleteAction={deleteScanJobsAction}
+                        deletePending={deleteScanJobsPending}
+                        deleteFieldName="scanJobIds"
+                        actionMessage={deleteScanJobsState.message}
+                        actionError={deleteScanJobsState.error}
+                        disabled={!data.runtime.isWritable}
+                      />
+                      <TaskTable
+                        title="最近 AI 草稿任务"
+                        empty="暂无 AI 草稿任务。"
+                        tasks={data.recentTasks.aiDraftJobs}
+                        retryAction={retryAiAction}
+                        retryPending={retryAiPending}
+                        retryFieldName="aiDraftJobId"
+                        deleteAction={deleteAiDraftJobsAction}
+                        deletePending={deleteAiDraftJobsPending}
+                        deleteFieldName="aiDraftJobIds"
+                        actionMessage={deleteAiDraftJobsState.message}
+                        actionError={deleteAiDraftJobsState.error}
+                        redactAiFailureDetails
+                        disabled={!data.runtime.isWritable}
+                      />
+                    </section>
+
+                    <DashboardCard>
+                      <DashboardCardHeader
+                        title="最近 ScanLog 记录"
+                        description="只显示脱敏摘要，不展示完整本地路径。默认先展示最近 4 条，避免扫描历史占满页面。"
+                        action={
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            {data.recentScanLogs.length > 0 ? (
+                              <form action={deleteScanLogsAction}>
+                                {recentScanLogIds.map((id) => (
+                                  <input key={id} type="hidden" name="scanLogIds" value={id} />
+                                ))}
                                 <button
                                   type="submit"
                                   disabled={deleteScanLogsPending || !data.runtime.isWritable}
-                                  className="inline-flex h-9 items-center rounded-xl border border-rose-200 bg-white px-3 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                                  className="inline-flex h-10 items-center rounded-xl border border-rose-200 bg-white px-3 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
                                 >
-                                  删除
+                                  全部删除
                                 </button>
                               </form>
-                            </div>
-                            <div className="mt-3 grid gap-3 border-t border-[#F0F3F8] pt-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-                              <div>
-                                <p className="text-xs text-slate-400">文件夹摘要</p>
-                                <p className="mt-1 line-clamp-2 break-all text-slate-600">{log.folderSummary}</p>
+                            ) : null}
+                            {data.recentScanLogs.length > 4 ? (
+                              <button
+                                type="button"
+                                onClick={() => setScanLogExpanded((current) => !current)}
+                                className="inline-flex h-10 items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:bg-blue-50"
+                              >
+                                {scanLogExpanded ? "收起" : `展开全部 ${data.recentScanLogs.length} 条`}
+                              </button>
+                            ) : null}
+                          </div>
+                        }
+                      />
+                      {deleteScanLogsState.message ? <p className="px-5 pt-4 text-sm text-emerald-600">{deleteScanLogsState.message}</p> : null}
+                      {deleteScanLogsState.error ? <p className="px-5 pt-4 text-sm text-rose-600">{deleteScanLogsState.error}</p> : null}
+                      <div className="space-y-3 px-5 py-4">
+                        {visibleScanLogs.length > 0 ? (
+                          visibleScanLogs.map((log) => (
+                            <article key={log.id} className="rounded-2xl border border-[#EEF2F8] bg-white px-4 py-4 text-sm text-slate-600">
+                              <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                                <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-[150px_110px_120px_1fr]">
+                                  <div>
+                                    <p className="text-xs text-slate-400">时间</p>
+                                    <p className="mt-1 font-medium text-slate-700">{log.formattedStartedAt}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-slate-400">类型</p>
+                                    <p className="mt-1 font-medium text-slate-700">{log.scanType}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-slate-400">状态</p>
+                                    <div className="mt-1"><StatusBadge label={log.status} tone={log.statusTone} /></div>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-2 rounded-2xl bg-[#F8FBFF] px-3 py-2 text-center">
+                                    <div><p className="text-xs text-slate-400">新增</p><p className="font-semibold text-slate-700">{log.newFiles}</p></div>
+                                    <div><p className="text-xs text-slate-400">重复</p><p className="font-semibold text-slate-700">{log.skippedDuplicates}</p></div>
+                                    <div><p className="text-xs text-slate-400">失败</p><p className="font-semibold text-slate-700">{log.failedFiles}</p></div>
+                                  </div>
+                                </div>
+                                <form action={deleteScanLogsAction} className="shrink-0">
+                                  <input type="hidden" name="scanLogIds" value={log.id} />
+                                  <button
+                                    type="submit"
+                                    disabled={deleteScanLogsPending || !data.runtime.isWritable}
+                                    className="inline-flex h-9 items-center rounded-xl border border-rose-200 bg-white px-3 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                                  >
+                                    删除
+                                  </button>
+                                </form>
                               </div>
-                              <div>
-                                <p className="text-xs text-slate-400">错误摘要</p>
-                                <p className="mt-1 line-clamp-3 break-words text-rose-600">{log.errorSummary ?? "--"}</p>
+                              <div className="mt-3 grid gap-3 border-t border-[#F0F3F8] pt-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                                <div>
+                                  <p className="text-xs text-slate-400">文件夹摘要</p>
+                                  <p className="mt-1 line-clamp-2 break-all text-slate-600">{log.folderSummary}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-slate-400">错误摘要</p>
+                                  <p className="mt-1 line-clamp-3 break-words text-rose-600">{log.errorSummary ?? "--"}</p>
+                                </div>
                               </div>
-                            </div>
-                          </article>
-                        ))
-                      ) : (
-                        <div className="rounded-2xl border border-dashed border-[#D8E3F2] px-4 py-8 text-center text-sm text-slate-400">
-                          暂无扫描记录。
-                        </div>
-                      )}
-                    </div>
-                  </DashboardCard>
-                </div>
-              </CollapsibleSection>
-            </div>
-          </DashboardCard>
+                            </article>
+                          ))
+                        ) : (
+                          <div className="rounded-2xl border border-dashed border-[#D8E3F2] px-4 py-8 text-center text-sm text-slate-400">
+                            暂无扫描记录。
+                          </div>
+                        )}
+                      </div>
+                    </DashboardCard>
+                  </div>
+                </CollapsibleSection>
+              </div>
+            </DashboardCard>
+          </div>
         </div>
       </section>
 
@@ -1224,15 +1457,22 @@ function AiDraftPanel({
   const groups = buildInsightGroups(fields);
 
   return (
-    <DashboardCard className="overflow-hidden border-[#E8E2D8] bg-[#FFFDFC]">
-      <DashboardCardHeader
-        title="AI 洞察"
-        description="右侧集中看 AI 草稿、初筛线索和后续建议；缺失字段只显示占位，不伪造成确定事实。"
-        action={aiStatus ? <StatusBadge label={aiStatus.label} tone={aiStatus.tone} /> : null}
-      />
+    <DashboardCard className="overflow-hidden border-[#E4DDD4] bg-[#FFFEFC]">
+      <div className="border-b border-[#EEF2F8] px-5 py-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">AI Draft</p>
+            <h3 className="mt-2 text-[1.16rem] font-semibold tracking-[-0.02em] text-slate-900">AI 初筛草稿</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              右侧集中看候选结论、卖点、风险和下一步建议；缺失字段只显示占位，不伪造成确定事实。
+            </p>
+          </div>
+          {aiStatus ? <StatusBadge label={aiStatus.label} tone={aiStatus.tone} /> : null}
+        </div>
+      </div>
       <div className="space-y-4 px-5 py-5">
         {source.aiSuggestion?.shortDescription ? (
-          <div className="rounded-[24px] border border-[#ECE4D8] bg-[#FBF7F1] px-4 py-4 text-sm leading-7 text-slate-600">
+          <div className="rounded-[22px] border border-[#ECE4D8] bg-[#FBF7F1] px-4 py-4 text-sm leading-7 text-slate-600">
             {source.aiSuggestion.shortDescription}
           </div>
         ) : (
@@ -1240,19 +1480,14 @@ function AiDraftPanel({
         )}
 
         {groups.map((group) => (
-          <section key={group.title} className="rounded-[24px] border border-[#ECE8E1] bg-white px-4 py-4">
-            <div className="mb-3">
-              <h3 className="text-sm font-semibold text-slate-900">{group.title}</h3>
+          <section key={group.title} className="rounded-[22px] border border-[#ECE8E1] bg-white px-4 py-4">
+            <div className="mb-3 border-b border-[#F1F4F8] pb-3">
+              <h4 className="text-sm font-semibold text-slate-900">{group.title}</h4>
               <p className="mt-1 text-xs leading-5 text-slate-500">{group.description}</p>
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
               {group.fields.map((field) => (
-                <div key={field.label} className="rounded-[20px] border border-[#EEF2F8] bg-[#FBFDFF] px-3 py-3">
-                  <p className="text-xs text-slate-400">{field.label}</p>
-                  <p className={field.isPlaceholder ? "mt-2 text-sm leading-6 text-slate-400" : "mt-2 text-sm leading-6 text-slate-700"}>
-                    {field.value}
-                  </p>
-                </div>
+                <InsightRow key={field.label} label={field.label} value={field.value} isPlaceholder={field.isPlaceholder} />
               ))}
             </div>
           </section>
@@ -1490,11 +1725,11 @@ function StatCard({
                 : "text-slate-600";
 
   return (
-    <DashboardCard className="border-[#E6E1D8] bg-[#FFFEFC] p-5">
-      <div className="space-y-2">
-        <p className="text-sm text-slate-500">{label}</p>
-        <p className={`text-[2.15rem] font-semibold tracking-[-0.05em] ${textClassName}`}>{value}</p>
-        <p className="text-sm text-slate-500">{delta}</p>
+    <DashboardCard className="border-white/70 bg-white/72 px-4 py-3 shadow-none">
+      <div className="space-y-1">
+        <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">{label}</p>
+        <p className={`text-[1.9rem] font-semibold tracking-[-0.05em] ${textClassName}`}>{value}</p>
+        <p className="text-xs text-slate-500">{delta}</p>
       </div>
     </DashboardCard>
   );
@@ -1512,9 +1747,26 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 function FilterField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <div className="mb-2 px-1 text-sm text-slate-500">{label}</div>
+      <div className="mb-2 px-1 text-xs font-medium uppercase tracking-[0.14em] text-slate-400">{label}</div>
       {children}
     </label>
+  );
+}
+
+function InsightRow({
+  label,
+  value,
+  isPlaceholder = false,
+}: {
+  label: string;
+  value: string;
+  isPlaceholder?: boolean;
+}) {
+  return (
+    <div className="grid gap-2 rounded-[16px] border border-[#EEF2F8] bg-[#FBFDFF] px-3 py-3 md:grid-cols-[88px_1fr] md:items-start">
+      <span className="text-xs text-slate-400">{label}</span>
+      <span className={isPlaceholder ? "text-sm leading-6 text-slate-400" : "text-sm leading-6 text-slate-700"}>{value}</span>
+    </div>
   );
 }
 

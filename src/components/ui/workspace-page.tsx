@@ -5,8 +5,8 @@ import { getUnreadNotificationCount } from "@/lib/services/notificationService";
 
 type WorkspacePageProps = {
   eyebrow?: string;
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   children?: ReactNode;
 };
 
@@ -90,22 +90,27 @@ export function WorkspacePage({
   children,
 }: WorkspacePageProps) {
   const unreadPromise = getUnreadNotificationCount();
+  const hasHeading = Boolean(eyebrow || title || description);
 
   return (
     <div className="flex flex-1 flex-col">
       <header className="border-b border-[#EDF2F8] px-5 py-5 sm:px-8 sm:py-7">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="max-w-3xl">
-            {eyebrow ? (
-              <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-slate-400">
-                {eyebrow}
-              </p>
-            ) : null}
-            <h1 className="text-[2.15rem] font-semibold tracking-[-0.05em] text-slate-950 sm:text-[2.6rem]">
-              {title}
-            </h1>
-            <p className="mt-2 text-base leading-7 text-slate-500">{description}</p>
-          </div>
+          {hasHeading ? (
+            <div className="max-w-3xl">
+              {eyebrow ? (
+                <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-slate-400">
+                  {eyebrow}
+                </p>
+              ) : null}
+              {title ? (
+                <h1 className="text-[2.15rem] font-semibold tracking-[-0.05em] text-slate-950 sm:text-[2.6rem]">
+                  {title}
+                </h1>
+              ) : null}
+              {description ? <p className="mt-2 text-base leading-7 text-slate-500">{description}</p> : null}
+            </div>
+          ) : <div />}
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
             <Link
