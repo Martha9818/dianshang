@@ -867,7 +867,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           </aside>
         </section>
 
-        <details id="scan-settings" className="rounded-xl border border-[#E2E8F0] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+        <details id="scan-settings" className="mb-12 rounded-xl border border-[#E2E8F0] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
           <summary className="cursor-pointer list-none px-4 py-4">
             <div className="flex items-center justify-between">
               <div>

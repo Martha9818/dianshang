@@ -9,6 +9,7 @@ Only the latest summary stays here. Older detailed history is archived or retain
 - Changed: Reworked the active `/inspirations` B-version layout against the actual right-side workspace width after the shell gutter fix, removing the page-level `1600px` cap and shifting the desk into a full-width three-column composition.
 - Changed: Rebalanced the desk into an AI inbox queue, a center original-image stage, and a right AI draft plus decision rail; the center stage now explicitly presents the imported/scanned inspiration image and does not imply AI-generated product imagery.
 - Changed: Compressed the KPI strip, made the selected queue card more deliberate, moved long notes and auxiliary actions into a folded secondary section, and kept conversion form, advanced records, and scan settings folded by default.
+- Changed: Added bottom safe space to the folded `收件箱设置与扫描记录` section so its title and helper text are not covered when the page is scrolled to the bottom.
 - Verification: Ran `npm run typecheck`, `npm run lint`, `npm run encoding:check`, and `npm run build`; browser-checked `/inspirations` and confirmed the main workspace right gap is `0`, the active three-column widths are approximately `352 / 560 / 391`, and the original-image notice, AI draft, decision card, advanced records, and scan settings are all present.
 - Boundary: No schema, migration, dependency, scan mechanism, AI generation logic, similarity logic, auto-product creation, or source-image deletion was introduced.
 

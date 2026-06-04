@@ -4,6 +4,7 @@
 
 - Current stage: `V1.6-02B inspiration inbox buyer-desk rework`
 - Current task state: The `/inspirations` B-version buyer desk has been re-laid out against the real right-side workspace size after the global shell gutter fix. The page now uses a full-width three-column desk with an AI inbox queue, an original-image stage in the center, and a right-side AI draft plus decision rail.
+- Current task state: The bottom `收件箱设置与扫描记录` fold now has extra bottom safe space so it is not covered by the viewport edge or recording/browser overlays when scrolled into view.
 - Current task state: The global wide-screen shell gutter regression is fixed. The app shell no longer caps the whole application at `1780px`, and the main workspace removes the right gutter/right rounding so it fills to the viewport edge.
 - Current task state: The `/inspirations` main screen now behaves like a buyer-style AI inbox workbench: a left queue for inspiration cards, a center image stage for the selected sample, a right AI insight and decision rail, and a folded maintenance section for scan settings.
 - Current task state: The latest V1.6-02B follow-up tightened the buyer-desk layout to more closely match the approved B-version composition: a flatter KPI strip, a clearer queue-first left rail, a cleaner image-stage center column, a compact row-style AI draft panel on the right, and a less repetitive top section.
