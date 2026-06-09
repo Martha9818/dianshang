@@ -1,5 +1,6 @@
 import { ActionButton, DashboardCard, PageNote, SectionTabs, StatusBadge } from "@/components/dashboard/primitives";
 import { CompetitorAnalysisTab } from "@/components/products/competitor-analysis-tab";
+import { CompetitorScreenshotDraftPanel } from "@/components/products/competitor-screenshot-draft-panel";
 import { CompetitorTab } from "@/components/products/competitor-tab";
 import { CopywritingTab } from "@/components/products/copywriting-tab";
 import { ProductMaterialsTab } from "@/components/products/materials-tab";
@@ -543,18 +544,27 @@ export default async function ProductDetailPage({
         ) : null}
 
         {activeTab === "competitors" ? (
-          <CompetitorTab
-            productId={product.id}
-            competitors={pageData.data.competitors}
-            stats={pageData.data.competitorStats}
-            initialValues={competitorInitialValues}
-            runtimeNotice={runtimeNotice}
-            formMode={competitorToEdit ? "edit" : "create"}
-            onSubmit={saveCompetitorAction.bind(null, product.id)}
-            onDelete={deleteCompetitorAction}
-            platformOptions={COMPETITOR_PLATFORM_VALUES}
-            heatMetricOptions={COMPETITOR_HEAT_METRIC_VALUES}
-          />
+          <div className="space-y-5">
+            <CompetitorTab
+              productId={product.id}
+              competitors={pageData.data.competitors}
+              stats={pageData.data.competitorStats}
+              initialValues={competitorInitialValues}
+              runtimeNotice={runtimeNotice}
+              formMode={competitorToEdit ? "edit" : "create"}
+              onSubmit={saveCompetitorAction.bind(null, product.id)}
+              onDelete={deleteCompetitorAction}
+              platformOptions={COMPETITOR_PLATFORM_VALUES}
+              heatMetricOptions={COMPETITOR_HEAT_METRIC_VALUES}
+            />
+            <div className="px-5 pb-5">
+              <CompetitorScreenshotDraftPanel
+                productId={product.id}
+                candidates={pageData.data.competitorScreenshotDraftCandidates}
+                runtimeNotice={runtimeNotice}
+              />
+            </div>
+          </div>
         ) : null}
 
         {activeTab === "competitor-analysis" && competitorAnalysisData ? (

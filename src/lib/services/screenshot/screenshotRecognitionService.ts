@@ -258,6 +258,71 @@ function mapScreenshotJob(record: ScreenshotJobRecord) {
   };
 }
 
+export type CompetitorScreenshotDraftCandidate = {
+  id: number;
+  imagePath: string;
+  displayPath: string;
+  sourceLabel: string;
+  status: string;
+  statusTone: ReturnType<typeof getStatusTone>;
+  qualityLevel: string | null;
+  qualityTone: ReturnType<typeof getQualityTone>;
+  formattedCreatedAt: string;
+  formattedUpdatedAt: string;
+  possibleTitle: string | null;
+  possiblePrice: string | null;
+  possiblePlatformSource: string | null;
+  possibleSalesOrHeat: string | null;
+  sellingPoints: string[];
+  uncertaintyNotes: string[];
+  privacyNotes: string[];
+  hasStructuredDraft: boolean;
+  hasConfirmedDraft: boolean;
+};
+
+export async function getCompetitorScreenshotDraftCandidates(productId: number) {
+  try {
+    const jobs = await prisma.screenshotRecognitionJob.findMany({
+      where: {
+        productId,
+        sourceType: SCREENSHOT_SOURCE_TYPES.COMPETITOR,
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: 12,
+      select: screenshotJobSelect,
+    });
+
+    return jobs.map((job): CompetitorScreenshotDraftCandidate => {
+      const mapped = mapScreenshotJob(job);
+      const draft = mapped.effectiveDraft;
+
+      return {
+        id: mapped.id,
+        imagePath: mapped.imagePath,
+        displayPath: mapped.displayPath,
+        sourceLabel: mapped.sourceLabel,
+        status: mapped.status,
+        statusTone: mapped.statusTone,
+        qualityLevel: mapped.qualityLevel,
+        qualityTone: mapped.qualityTone,
+        formattedCreatedAt: mapped.formattedCreatedAt,
+        formattedUpdatedAt: mapped.formattedUpdatedAt,
+        possibleTitle: draft?.possibleTitle ?? null,
+        possiblePrice: draft?.possiblePrice ?? null,
+        possiblePlatformSource: draft?.possiblePlatformSource ?? null,
+        possibleSalesOrHeat: draft?.possibleSalesOrHeat ?? null,
+        sellingPoints: draft?.sellingPoints ?? [],
+        uncertaintyNotes: draft?.uncertaintyNotes ?? [],
+        privacyNotes: draft?.privacyNotes ?? [],
+        hasStructuredDraft: Boolean(mapped.structuredDraft || mapped.confirmedDraft),
+        hasConfirmedDraft: Boolean(mapped.confirmedDraft),
+      };
+    });
+  } catch (error) {
+    throw normalizeProductReadError(error);
+  }
+}
+
 async function resolveProduct(productId: number | null) {
   if (!productId) return null;
   const product = await prisma.product.findFirst({

@@ -23,6 +23,7 @@ import { getProductOperationLogs } from "@/lib/services/operation-log-service";
 import { buildProfitView } from "@/lib/services/profit-service";
 import { getHomeMaterialStats, getProductMaterials } from "@/lib/services/material-service";
 import { getHomePromptTaskStats, getProductPromptTasks } from "@/lib/services/prompt-task-service";
+import { getCompetitorScreenshotDraftCandidates } from "@/lib/services/screenshot";
 import { formatStatDelta, getTodayStart } from "@/lib/services/stat-delta-service";
 import { normalizeInspirationSuggestion, type InspirationAISuggestion } from "@/lib/services/inspirations/inspirationTypes";
 import {
@@ -643,6 +644,7 @@ export async function getProductDetailPageData(
     competitorAnalysisSnapshotCount: number;
     logs: Awaited<ReturnType<typeof getProductOperationLogView>>;
     competitors: Awaited<ReturnType<typeof getCompetitorsByProductId>>;
+    competitorScreenshotDraftCandidates: Awaited<ReturnType<typeof getCompetitorScreenshotDraftCandidates>>;
     competitorStats: ReturnType<typeof computeCompetitorStats>;
     profitView: ReturnType<typeof buildProfitView> | null;
     currentScoreEvaluation: Awaited<ReturnType<typeof getScorePreview>> | null;
@@ -673,6 +675,7 @@ export async function getProductDetailPageData(
           competitorAnalysisSnapshotCount: 0,
           logs: [],
           competitors: [],
+          competitorScreenshotDraftCandidates: [],
           competitorStats: computeCompetitorStats([]),
           profitView: null,
           currentScoreEvaluation: null,
@@ -690,6 +693,7 @@ export async function getProductDetailPageData(
       logs,
       competitorRecords,
       competitors,
+      competitorScreenshotDraftCandidates,
       sourceInspiration,
       competitorAnalysisSnapshotCount,
       currentScoreEvaluation,
@@ -703,6 +707,7 @@ export async function getProductDetailPageData(
         options?.includeLogs ? getProductOperationLogView(product.id) : Promise.resolve([]),
         getCompetitorRecordsByProductIdForStats(product.id),
         getCompetitorsByProductId(product.id),
+        getCompetitorScreenshotDraftCandidates(product.id),
         prisma.inspiration.findFirst({
           where: { convertedProductId: product.id },
           orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
@@ -746,6 +751,7 @@ export async function getProductDetailPageData(
         competitorAnalysisSnapshotCount,
         logs,
         competitors,
+        competitorScreenshotDraftCandidates,
         competitorStats: computeCompetitorStats(competitorRecords),
         profitView: buildProfitView(product),
         currentScoreEvaluation,

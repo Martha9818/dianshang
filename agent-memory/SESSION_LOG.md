@@ -4,6 +4,15 @@ Only the latest summary stays here. Older detailed history is archived or retain
 
 ## 2026-06-09
 
+### V1.7 Design Gate Read-Only Competitor Screenshot Draft Prep
+
+- Changed: Continued the already-agreed `V1.7 Design Gate` direction by keeping work strictly inside a low-risk read-only prep layer instead of starting formal `V1.7` implementation.
+- Changed: Added a new product-detail `绔炲搧鎴浘鑽夌鍊欓€?` panel under the `绔炲搧鍙傝€僠` tab so the current product page can surface competitor screenshot draft candidates without mixing them into formal competitor writes.
+- Changed: Added a read-only `getCompetitorScreenshotDraftCandidates(productId)` query in the screenshot recognition service that reuses existing `ScreenshotRecognitionJob` data for `sourceType=competitor`, maps the current effective draft fields, and keeps the result bounded to recent records only.
+- Changed: Extended `getProductDetailPageData` to assemble `competitorScreenshotDraftCandidates` through the existing service boundary and wired the result into the product detail page without changing schema, migration, dependency, AI execution, or competitor write behavior.
+- Verification: Ran `npm run typecheck`, `npm run lint`, and `npm run build`; browser-checked local `http://localhost:3000/products/6?tab=competitors` and confirmed the new read-only panel renders with the expected title, notice, and screenshot-page entry link.
+- Boundary: No schema, migration, dependency, AI trigger, screenshot-path migration, cleanup logic change, or formal competitor confirm/write flow was introduced. This remains `V1.7 Design Gate` prep only.
+
 ### V1.6-08 Final Acceptance And Closeout
 
 - Changed: Confirmed the current mainline should now be treated as `V1.6-08 final acceptance and closeout`, not as `V1.5` or as an unfinished `V1.6-07` thread.

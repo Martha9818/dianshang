@@ -3,6 +3,9 @@
 ## Current Progress
 
 - Current stage: `V1.6-08 final acceptance and closeout`
+- Current task state: `V1.7 Design Gate` has now started only as a low-risk read-only prep layer. Product detail `绔炲搧鍙傝€僠` now includes a `绔炲搧鎴浘鑽夌鍊欓€?` panel backed by existing `ScreenshotRecognitionJob` rows for the current product.
+- Current task state: The new competitor screenshot draft panel reuses existing screenshot-recognition draft data only. It shows candidate title / price / platform / sales-or-heat clues, selling points, uncertainty notes, privacy notes, task status, and quality level without triggering AI or writing formal competitor records.
+- Current task state: `getProductDetailPageData` now assembles read-only competitor screenshot draft candidates through the existing screenshot service boundary, keeping the current desktop/runtime foundation and avoiding schema, migration, dependency, or write-path changes.
 - Current task state: The `/inspirations` buyer desk now computes a lightweight draft triage score from existing AI draft fields without changing schema or writing into formal score history.
 - Current task state: The right-side AI draft rail now shows six triage dimensions, a total draft triage score, a conservative conclusion, and next-step guidance with the explicit note `仅用于线索初筛，不代表正式商品评估。`
 - Current task state: Inspiration queue cards and top summary metrics now surface draft triage status so users can quickly distinguish `优先保留 / 可以保留 / 暂存观察 / 建议放弃` from incomplete clues.
@@ -21,7 +24,7 @@
 - Current acceptance state: Local browser checks confirm `/inspirations` still reads as the AI inbox / buyer desk main entry, and `/products/[id]` still reads as the formal evaluation workflow with `补竞品 -> 看机会 -> 算利润 -> 得结论`.
 - Current acceptance state: `docs/superpowers/acceptance/2026-06-09-v16-final-acceptance.md` records the final closeout judgment for V1.6.
 - Current planning baseline: `docs/superpowers/specs/2026-06-02-v16-direction-sync-report.md`
-- Next stage: If work continues, enter `V1.7 Design Gate` only. Do not start direct `V1.7` implementation before the competitor screenshot inbox design is frozen.
+- Next stage: Continue `V1.7 Design Gate` only. The current mainline may keep adding read-only prep pieces such as draft mapping, service queries, placeholder panels, and design docs, but still must not start direct schema / write-flow / AI-execution `V1.7` implementation before the competitor screenshot inbox design is frozen.
 
 ## Product Direction
 
