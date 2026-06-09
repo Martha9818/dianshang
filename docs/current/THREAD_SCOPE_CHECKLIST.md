@@ -4,12 +4,12 @@ Use this file as the active scope boundary and acceptance checklist for the curr
 
 ## Thread
 
-- Name: `V1.6-00 Direction Freeze And Documentation Baseline`
-- Date: `2026-06-03`
+- Name: `V1.6-08 Final Acceptance And Closeout`
+- Date: `2026-06-09`
 - Status: `COMPLETE`
-- Type: docs-only planning / scope freeze / version-baseline sync
-- Approved scope: update README, current status docs, current planning docs, Vercel read-only wording, safety boundaries, and acceptance wording so V1.6 has a clear execution baseline
-- Existing working-tree changes belong to: pre-existing local follow-up work outside this docs-only thread; untracked `tmp/` remains outside product scope
+- Type: acceptance / closeout / status-sync
+- Approved scope: verify the completed V1.6 mainline, correct outdated current-line wording, record the final acceptance result, and decide whether V1.6 can close and move to `V1.7 Design Gate`
+- Existing working-tree changes belong to: completed V1.6-02 through V1.6-07 implementation and verification work already present on the current mainline; `tmp/` remains outside product scope
 
 ## Safety
 
@@ -85,13 +85,14 @@ Available project-level verification commands from `package.json`:
 - `npx prisma validate`
 - `npm run thread09:verify`
 
-Thread V1.6-00 required:
+Thread V1.6-08 required:
 
-- run docs-safe checks using the existing commands
-- confirm no schema / migration / dependency changes
-- confirm no business code changes were made by this thread
+- run the completed V1.6 verification scripts
+- run project-level checks using the existing commands
+- confirm no schema / migration / dependency changes were introduced by closeout
+- confirm the next step is `V1.7 Design Gate`, not direct feature implementation
 
 ## Archive Pointer
 
 - Detailed V1.5 implementation and stabilization history remains in the current docs plus archive pointers.
-- V1.6-00 establishes the new planning baseline; later V1.6 execution threads should reference it instead of re-deriving scope.
+- `docs/superpowers/acceptance/2026-06-09-v16-final-acceptance.md` is now the active V1.6 closeout record; later planning should reference it together with the V1.6 direction-sync report.

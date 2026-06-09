@@ -2,15 +2,26 @@
 
 ## Current Progress
 
-- Current stage: `V1.6-02B inspiration inbox buyer-desk rework`
-- Current task state: The `/inspirations` B-version buyer desk has been re-laid out against the real right-side workspace size after the global shell gutter fix. The page now uses a full-width three-column desk with an AI inbox queue, an original-image stage in the center, and a right-side AI draft plus decision rail.
+- Current stage: `V1.6-08 final acceptance and closeout`
+- Current task state: The `/inspirations` buyer desk now computes a lightweight draft triage score from existing AI draft fields without changing schema or writing into formal score history.
+- Current task state: The right-side AI draft rail now shows six triage dimensions, a total draft triage score, a conservative conclusion, and next-step guidance with the explicit note `仅用于线索初筛，不代表正式商品评估。`
+- Current task state: Inspiration queue cards and top summary metrics now surface draft triage status so users can quickly distinguish `优先保留 / 可以保留 / 暂存观察 / 建议放弃` from incomplete clues.
+- Current task state: Inspiration-to-product conversion now stays inside an explicit confirm-then-convert flow. The buyer desk convert CTA enters a human confirmation form first, AI-prefilled draft values are clearly marked as reference-only, cancel no longer creates a product, and only the explicit confirmed submit can create the formal product.
+- Current task state: The product detail page now reads as a formal evaluation workflow instead of a flat backend tab set. Top-level cards now show `当前正式结论`、missing formal-evaluation prerequisites, and a four-step `补竞品 -> 看机会 -> 算利润 -> 得结论` progress rail.
+- Current task state: The scoring page now reads as the formal `测试结论` page, not a generic score tab. It explicitly explains that formal scoring is a rule-based test decision, surfaces the current missing conditions, and brings the source inspiration triage result forward only as a read-only reference card.
+- Current task state: The `竞品参考`、`AI 机会分析`、`成本利润` three tabs now each open with a lightweight purpose/output/decision-impact guide so users can immediately understand why this step exists, what it has already produced, and what is still blocking the formal `测试结论`.
+- Current task state: The `竞品参考` tab now explicitly surfaces `当前有效竞品 x / 3` progress, while the `成本利润` tab now explicitly lists missing cost fields such as `售价 / 进货价 / 运费`, reducing the need to infer blockers from scattered form state.
+- Current task state: The product-detail top action area now emphasizes formal evaluation work such as `补竞品`、`算利润`、`重新评分`, and moves `链接导入` into an auxiliary source-record block so old intake paths no longer dominate the main next-step surface.
 - Current task state: The bottom `收件箱设置与扫描记录` fold now has extra bottom safe space so it is not covered by the viewport edge or recording/browser overlays when scrolled into view.
 - Current task state: The global wide-screen shell gutter regression is fixed. The app shell no longer caps the whole application at `1780px`, and the main workspace removes the right gutter/right rounding so it fills to the viewport edge.
 - Current task state: The `/inspirations` main screen now behaves like a buyer-style AI inbox workbench: a left queue for inspiration cards, a center image stage for the selected sample, a right AI insight and decision rail, and a folded maintenance section for scan settings.
 - Current task state: The latest V1.6-02B follow-up tightened the buyer-desk layout to more closely match the approved B-version composition: a flatter KPI strip, a clearer queue-first left rail, a cleaner image-stage center column, a compact row-style AI draft panel on the right, and a less repetitive top section.
-- Current thread outcome: The inspiration main view no longer leads with scan logs or setup panels. The current V1.6-02B buyer-desk layout keeps users on one screen for `看图 -> 看 AI 草稿 -> 做初筛 -> 保留 / 放弃 / 转商品`, while ScanLog, task history, similarity hints, file info, and scan settings remain available in collapsed secondary sections.
+- Current thread outcome: The current mainline now has a clean split between inspiration draft triage and product formal scoring, with explicit manual confirmation before product creation, a clearer product-detail evaluation flow, in-tab guidance for each module, and a top action hierarchy that better matches the formal test-decision workflow.
+- Current acceptance state: `scripts/thread-v16-02` through `thread-v16-07` verification all pass, and `npm run typecheck`, `npm run lint`, `npm run encoding:check`, `npm run build`, plus `npx prisma validate` all pass on the current mainline.
+- Current acceptance state: Local browser checks confirm `/inspirations` still reads as the AI inbox / buyer desk main entry, and `/products/[id]` still reads as the formal evaluation workflow with `补竞品 -> 看机会 -> 算利润 -> 得结论`.
+- Current acceptance state: `docs/superpowers/acceptance/2026-06-09-v16-final-acceptance.md` records the final closeout judgment for V1.6.
 - Current planning baseline: `docs/superpowers/specs/2026-06-02-v16-direction-sync-report.md`
-- Next stage: Start only the next explicitly approved V1.6 execution thread after validating it against the V1.6-00 baseline and the V1.6-01 entry-expression cleanup.
+- Next stage: If work continues, enter `V1.7 Design Gate` only. Do not start direct `V1.7` implementation before the competitor screenshot inbox design is frozen.
 
 ## Product Direction
 
@@ -27,6 +38,8 @@
 - Inbox-layout positioning: advanced records such as file info, similarity, AI task history, and ScanLog should stay available but share the right-side rail so the left detail area remains focused on review and decision flow.
 - Link import positioning: link import is downgraded to an auxiliary source record rather than a core intake path.
 - Product-detail positioning: product detail should be understood around whether a product deserves small-batch testing.
+- Product-detail flow positioning: product detail should read as an evaluation workflow where `竞品参考` supplies market evidence, `AI 机会分析` supplies explanation and opportunity framing, `成本利润` supplies profitability signal, and `测试结论` supplies the final rule-based decision.
+- Inspiration handoff positioning: source inspiration triage may be shown on the product side only as reference context; formal product scoring must still be recomputed from confirmed product, competitor, profit, and risk data.
 - Product deletion remains a soft business delete by default; real `Product.id` / `Material.id` should stay stable in normal workflows, and future competitor records should keep stable real IDs as well.
 
 ## V1.6 Frozen Boundary
@@ -50,8 +63,10 @@
 - Inspiration source folders can grow until full rescans and re-hashing become noticeably slower; this is a future governance topic, not an auto-delete shortcut.
 - Existing optional API image generation remains legacy/manual V1.5 capability and should not be mistaken for the V1.6 mainline.
 - If screenshots or link drafts are still expressed like parallel main entrances elsewhere, users may continue to miss the intended `先看灵感箱` flow.
-- The current AI inbox still does not create new OCR fields, candidate-price extraction, recognition-quality scoring, or draft pre-screen scoring; missing fields are intentionally shown as placeholders rather than fabricated facts.
+- The current AI inbox still does not create new OCR fields, candidate-price extraction, recognition-quality scoring, or persistent draft pre-screen scoring; missing fields are intentionally shown as placeholders rather than fabricated facts.
+- Draft triage remains a display-layer helper based on existing draft fields only; it does not persist, does not write `ScoreSnapshot`, and does not replace the formal product scoring workflow.
+- The formal scoring engine itself still uses the existing rule set; the current V1.6-05 / 06 threads change presentation, guidance, and reference handoff only, not the six-dimension scoring math.
 
 ## Next Recommended Step
 
-- Use the V1.6 direction-sync report, V1.6-00 scope checklist, V1.6-01 entry-expression cleanup, and V1.6-02 inbox main-view rework as the baseline, then open only the next explicitly approved V1.6 execution thread.
+- Use `docs/superpowers/acceptance/2026-06-09-v16-final-acceptance.md` together with the V1.6 direction-sync report as the handoff baseline, and open only `V1.7 Design Gate` planning work next.

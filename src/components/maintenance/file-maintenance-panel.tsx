@@ -260,22 +260,6 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
         <DashboardCardHeader
           title="扫描结果"
           description="只展示相对路径；有效关联文件不会直接进入永久删除流程。"
-          action={
-            <button
-              type="button"
-              onClick={() => {
-                if (movableFilteredItems.length === 0) {
-                  window.alert("当前筛选结果中没有可清理项。已保护的商品主图、素材、竞品截图和灵感图片不能被勾选。");
-                  return;
-                }
-
-                setSelectedFiles(movableFilteredItems.map((item) => item.relativePath));
-              }}
-              className="inline-flex h-10 cursor-pointer items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:bg-blue-50"
-            >
-              选择可清理项
-            </button>
-          }
         />
         <form
           action={moveAction}
@@ -306,7 +290,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
               />
             ) : null;
           })}
-          <div className="flex flex-col gap-3 border-b border-[#EEF2F8] px-5 py-4 xl:flex-row xl:items-end">
+          <div className="flex flex-col gap-3 border-b border-[#EEF2F8] px-5 py-4 xl:flex-row xl:items-center">
             <button
               type="submit"
               disabled={movePending || Boolean(data.readonlyMessage)}
@@ -314,6 +298,20 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
             >
               <MiniIcon name="backup" className="h-4 w-4" />
               {movePending ? "处理中..." : `移入回收站（${effectiveSelectedFiles.length}）`}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (movableFilteredItems.length === 0) {
+                  window.alert("当前筛选结果中没有可清理项。已保护的商品主图、素材、竞品截图和灵感图片不能被勾选。");
+                  return;
+                }
+
+                setSelectedFiles(movableFilteredItems.map((item) => item.relativePath));
+              }}
+              className="inline-flex h-10 cursor-pointer items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:bg-blue-50"
+            >
+              选择可清理项
             </button>
           </div>
           <TableScrollArea>
@@ -401,15 +399,6 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
         <DashboardCardHeader
           title="应用内回收站"
           description="永久删除只允许处理已经位于应用内回收站的文件。"
-          action={
-            <button
-              type="button"
-              onClick={() => setSelectedTrashFiles(data.trashItems.map((item) => item.trashRelativePath))}
-              className="inline-flex h-10 cursor-pointer items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:bg-blue-50"
-            >
-              选择回收站文件
-            </button>
-          }
         />
         <form
           action={deleteAction}
@@ -436,7 +425,7 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
               value={JSON.stringify({ trashRelativePath })}
             />
           ))}
-          <div className="flex flex-col gap-3 border-b border-[#EEF2F8] px-5 py-4 xl:flex-row xl:items-end">
+          <div className="flex flex-col gap-3 border-b border-[#EEF2F8] px-5 py-4 xl:flex-row xl:items-center">
             <button
               type="submit"
               disabled={deletePending || Boolean(data.readonlyMessage)}
@@ -444,6 +433,13 @@ export function FileMaintenancePanel({ initialData }: { initialData: FileMainten
             >
               <MiniIcon name="ban" className="h-4 w-4" />
               {deletePending ? "删除中..." : `永久删除（${effectiveSelectedTrashFiles.length}）`}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedTrashFiles(data.trashItems.map((item) => item.trashRelativePath))}
+              className="inline-flex h-10 cursor-pointer items-center rounded-xl border border-[#DCE5F2] px-3 text-sm font-medium text-[#2563EB] hover:bg-blue-50"
+            >
+              选择回收站文件
             </button>
           </div>
           <TableScrollArea>

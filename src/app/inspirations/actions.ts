@@ -1,6 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  INSPIRATION_CONVERSION_CONFIRM_FIELD,
+  INSPIRATION_CONVERSION_CONFIRM_VALUE,
+} from "@/lib/modules/inspirations/conversion";
 import { getProductErrorMessage } from "@/lib/modules/products";
 import { getRuntimeModeSummary } from "@/lib/services/product-runtime-service";
 import {
@@ -339,6 +343,9 @@ export async function rejectInspirationAction(_prevState: unknown, formData: For
 export async function convertInspirationToProductAction(_prevState: unknown, formData: FormData) {
   void _prevState;
   try {
+    if (String(formData.get(INSPIRATION_CONVERSION_CONFIRM_FIELD) ?? "") !== INSPIRATION_CONVERSION_CONFIRM_VALUE) {
+      throw new Error("请先确认 AI 预填信息后再创建商品。");
+    }
     const inspirationId = parsePositiveId(formData.get("inspirationId"), "灵感记录");
     const result = await convertInspirationToProduct({
       inspirationId,

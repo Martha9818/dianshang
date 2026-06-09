@@ -1,3 +1,9 @@
+import {
+  evaluateInspirationTriage,
+  INSPIRATION_TRIAGE_DISCLAIMER,
+  INSPIRATION_TRIAGE_INSUFFICIENT,
+  type InspirationTriageResult,
+} from "@/lib/modules/inspirations/triage";
 import type { InspirationAISuggestion } from "@/lib/services/inspirations/inspirationTypes";
 
 export type InboxTone = "amber" | "green" | "slate" | "red" | "violet" | "blue";
@@ -57,6 +63,14 @@ function getCandidateName(source: InspirationInboxSource) {
   return cleanText(source.title) || cleanText(source.aiSuggestion?.titleSuggestion) || PLACEHOLDER_PENDING;
 }
 
+export function getInspirationInboxTriage(source: InspirationInboxSource): InspirationTriageResult {
+  return evaluateInspirationTriage({
+    title: source.title,
+    note: source.note,
+    aiSuggestion: source.aiSuggestion,
+  });
+}
+
 function getNextStepSuggestion(source: InspirationInboxSource) {
   if (source.convertedProduct || source.status === "converted") {
     return "已转商品，可继续补充正式商品资料。";
@@ -71,7 +85,7 @@ function getNextStepSuggestion(source: InspirationInboxSource) {
   }
 
   if (source.aiSuggestion) {
-    return "先核对图片和 AI 草稿，再决定保留、放弃或转商品。";
+    return getInspirationInboxTriage(source).nextStep;
   }
 
   if (source.aiDraftJobs.some((job) => job.status === "failed")) {
@@ -101,7 +115,7 @@ export function getInspirationInboxAiStatus(source: InspirationInboxSource): Ins
   if (source.status === "archived") {
     return {
       label: "已归档",
-      description: "这条灵感已从日常处理位移出，保留记录供后续查询。",
+      description: "这条灵感已从日常处理位移出，保留记录供后续查阅。",
       tone: "slate",
     };
   }
@@ -140,6 +154,7 @@ export function getInspirationInboxAiStatus(source: InspirationInboxSource): Ins
 export function buildInspirationInboxPrimaryFields(source: InspirationInboxSource): InspirationInboxField[] {
   const suggestion = source.aiSuggestion;
   const aiStatus = getInspirationInboxAiStatus(source);
+  const triage = getInspirationInboxTriage(source);
   const tags = joinValues(
     [...(suggestion?.styleKeywords ?? []), ...(suggestion?.colors ?? []), ...(suggestion?.materials ?? [])],
     PLACEHOLDER_PENDING,
@@ -188,24 +203,42 @@ export function buildInspirationInboxPrimaryFields(source: InspirationInboxSourc
       value: joinValues(suggestion?.riskNotes ?? [], PLACEHOLDER_INSUFFICIENT),
       isPlaceholder: (suggestion?.riskNotes?.length ?? 0) === 0,
     },
-    { label: "内容表现力", value: PLACEHOLDER_PENDING, isPlaceholder: true },
+    {
+      label: "内容表现力",
+      value: triage.dimensions.find((item) => item.label === "内容表现潜力")?.score?.toString() ?? PLACEHOLDER_PENDING,
+      isPlaceholder: !triage.isReady,
+    },
     { label: "短视频适配", value: PLACEHOLDER_PENDING, isPlaceholder: true },
     { label: "对比展示能力", value: PLACEHOLDER_PENDING, isPlaceholder: true },
     { label: "下一步建议", value: getNextStepSuggestion(source) },
     { label: "识别质量", value: PLACEHOLDER_NOT_GENERATED, isPlaceholder: true },
-    { label: "草稿初筛分", value: PLACEHOLDER_NOT_GENERATED, isPlaceholder: true },
-    { label: "初筛结论", value: PLACEHOLDER_NOT_GENERATED, isPlaceholder: true },
+    {
+      label: "草稿初筛分",
+      value: triage.scoreLabel,
+      isPlaceholder: !triage.isReady,
+    },
+    {
+      label: "初筛结论",
+      value: triage.isReady ? triage.conclusion : INSPIRATION_TRIAGE_INSUFFICIENT,
+      isPlaceholder: !triage.isReady,
+    },
+    {
+      label: "初筛说明",
+      value: triage.isReady ? triage.rationale : INSPIRATION_TRIAGE_DISCLAIMER,
+      isPlaceholder: !triage.isReady,
+    },
   ];
 }
 
 export function buildInspirationInboxCardSummary(source: InspirationInboxSource): InspirationInboxCardSummary {
   const suggestion = source.aiSuggestion;
+  const triage = getInspirationInboxTriage(source);
 
   return {
     title: getCandidateName(source),
     subtitle:
       cleanText(suggestion?.shortDescription) ||
-      cleanText(source.note) ||
+      (triage.isReady ? triage.rationale : cleanText(source.note)) ||
       getInspirationInboxAiStatus(source).description,
     productType: cleanText(suggestion?.possibleProductType) || cleanText(suggestion?.possibleCategory) || PLACEHOLDER_INSUFFICIENT,
     targetAudience: joinValues(suggestion?.targetAudience ?? [], PLACEHOLDER_INSUFFICIENT),

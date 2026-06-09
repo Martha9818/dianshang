@@ -95,13 +95,39 @@ export function CompetitorAnalysisTab({
   const [selectedIds, setSelectedIds] = useState(() => competitors.map((competitor) => competitor.id));
   const selectedCount = selectedIds.length;
   const canAnalyze = !runtimeNotice && selectedCount >= minCompetitorCount;
+  const latestSuccessfulSnapshot = snapshots.find((snapshot) => snapshot.status === "success");
   const selectedCompetitorTitles = useMemo(() => {
     const selected = new Set(selectedIds);
     return competitors.filter((competitor) => selected.has(competitor.id)).map((competitor) => competitor.title);
   }, [competitors, selectedIds]);
+  const analysisOutputSummary = latestSuccessfulSnapshot
+    ? `当前已有 ${snapshots.length} 份分析快照，最近一次成功分析沉淀了竞品共性、价格带、差异化机会和风险提示。`
+    : stats.hasEnoughCompetitors
+      ? "当前竞品数量已达标，可以生成第一份 AI 机会分析快照。"
+      : `当前仅有 ${stats.validCount} 个有效竞品，至少需要 ${minCompetitorCount} 个后才能形成稳定分析。`;
+  const analysisDecisionImpact = latestSuccessfulSnapshot
+    ? "这些分析只负责解释机会与风险，不会自动改写正式评分；你需要结合这里的结论，再去测试结论页做最终判断。"
+    : "这里不会直接给出正式结论，只会为后面的测试结论提供解释和补数据方向。";
 
   return (
     <div className="space-y-5 px-5 py-5">
+      <section className="grid gap-4 xl:grid-cols-3">
+        <DashboardCard className="px-5 py-4">
+          <p className="text-xs font-medium tracking-[0.08em] text-slate-400">这个环节在看什么</p>
+          <p className="mt-2 text-sm leading-7 text-slate-700">
+            用 AI 总结已经确认的竞品资料，帮助我们快速看出主流打法、差异化机会和潜在风险。
+          </p>
+        </DashboardCard>
+        <DashboardCard className="px-5 py-4">
+          <p className="text-xs font-medium tracking-[0.08em] text-slate-400">这个环节会产出什么</p>
+          <p className="mt-2 text-sm leading-7 text-slate-700">{analysisOutputSummary}</p>
+        </DashboardCard>
+        <DashboardCard className="px-5 py-4">
+          <p className="text-xs font-medium tracking-[0.08em] text-slate-400">它怎么影响测试结论</p>
+          <p className="mt-2 text-sm leading-7 text-slate-700">{analysisDecisionImpact}</p>
+        </DashboardCard>
+      </section>
+
       <PageNote>AI 辅助建议，仅供参考。分析结果不会自动修改六维评分、推荐结论、商品状态或竞品事实字段；如需评分更新，请由用户手动触发。</PageNote>
       {runtimeNotice ? <PageNote>{runtimeNotice}</PageNote> : null}
       {analysisError ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{analysisError}</div> : null}

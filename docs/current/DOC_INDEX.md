@@ -34,6 +34,6 @@ Use this file only as the routing table after the required startup read.
 ## Current Baseline
 
 - MVP, V1-Core, V1-Plus, and V1.5 are complete on the current mainline.
-- V1.6 planning is active as a real-use validation line.
+- `V1.6-00` through `V1.6-07` are implemented on the current mainline, and `V1.6-08` is the current final acceptance and closeout state.
 - Vercel remains preview-only and read-only.
 - Windows local runtime remains the writable source of truth.

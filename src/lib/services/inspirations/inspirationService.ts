@@ -2,6 +2,7 @@ import { access } from "node:fs/promises";
 import path from "node:path";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { buildInspirationConversionDefaults } from "@/lib/modules/inspirations/conversion";
 import { buildSpu, BUSINESS_ERROR_CODES, ProductBusinessError } from "@/lib/modules/products";
 import { formatDateTime, stringifyJsonStringArray } from "@/lib/modules/products";
 import { getUploadsAbsolutePath } from "@/lib/services/file-storage-service";
@@ -628,16 +629,5 @@ export function buildConversionDefaults(input: {
   note: string | null;
   aiSuggestion: InspirationAISuggestion | null;
 }) {
-  const aiSuggestion = input.aiSuggestion;
-  return {
-    name: input.title?.trim() || aiSuggestion?.titleSuggestion || "",
-    categoryLevel1: aiSuggestion?.possibleCategory || "",
-    targetUser: aiSuggestion?.targetAudience.join("；") || "",
-    sellingPointsText: aiSuggestion?.sellingPoints.join("\n") || "",
-    usageScenesText: aiSuggestion?.useScenarios.join("\n") || "",
-    tagsText: aiSuggestion?.styleKeywords.join("\n") || "",
-    notes:
-      input.note?.trim() ||
-      [aiSuggestion?.shortDescription, aiSuggestion?.uncertaintyNotes.join("；")].filter(Boolean).join("\n"),
-  };
+  return buildInspirationConversionDefaults(input);
 }

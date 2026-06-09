@@ -14,6 +14,7 @@ Keep only the active patch state here. Detailed V1.5 patch history is archived.
 
 | Patch State | Severity | Summary | Verification |
 | --- | --- | --- | --- |
+| V1.6 final closeout patch | P2 | Corrected outdated current-line wording, recorded the V1.6 final acceptance result, and closed the line on the current local mainline without reopening feature scope. | `thread-v16-02` through `thread-v16-07` verification scripts, `npm run typecheck`, `npm run lint`, `npm run encoding:check`, `npm run build`, `npx prisma validate`, and local browser checks for `/inspirations` and `/products/[id]` passed. |
 | V1.5 Thread 09 closeout patch | P2 | Added the unified final acceptance entry `npm run thread09:verify`, refreshed README/current docs, archived detailed V1.5 history, and marked the baseline frozen for V2 planning. | Encoding check, lint, build, Prisma validate, typecheck, `npm run thread09:verify`, and Electron POC smoke passed; root `npm test` is still unavailable. |
 | V1.5 Thread 01-08 patch history | ARCHIVED | Detailed feature and follow-up patch history moved out of the active current-doc set. | See archive pointer below. |
 

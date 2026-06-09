@@ -136,9 +136,42 @@ export function CompetitorTab({
     [competitors, values.id],
   );
   const formKey = `${formMode}-${initialValues.id ?? "new"}`;
+  const competitorGap = Math.max(0, 3 - stats.validCount);
+  const latestDataLabel = formatDate(stats.latestDataDate);
+  const competitorOutputSummary =
+    stats.validCount > 0
+      ? `当前已整理 ${stats.validCount} 条正式竞品参考，覆盖 ${stats.platformCount} 个平台，最新数据日期为 ${latestDataLabel}。`
+      : "当前还没有正式竞品参考，建议先录入第一条竞品。";
+  const competitorDecisionImpact =
+    stats.validCount >= 3
+      ? "竞品门槛已齐，这里的数据可以继续供 AI 机会分析和测试结论页使用。"
+      : `正式测试结论至少需要 3 个有效竞品；当前还差 ${competitorGap} 个。`;
+  const competitorProgressMessage =
+    stats.validCount >= 3
+      ? `当前有效竞品：${stats.validCount} / 3，已经达到正式测试结论的竞品门槛。`
+      : `当前有效竞品：${stats.validCount} / 3，还差 ${competitorGap} 个竞品，正式评分会偏保守。`;
 
   return (
     <div className="space-y-5 px-5 py-5">
+      <section className="grid gap-4 xl:grid-cols-3">
+        <DashboardCard className="px-5 py-4">
+          <p className="text-xs font-medium tracking-[0.08em] text-slate-400">这个环节在看什么</p>
+          <p className="mt-2 text-sm leading-7 text-slate-700">
+            先把真实竞品补齐，确认别人卖什么、卖多少钱、热度如何，以及卖点和差评集中在哪。
+          </p>
+        </DashboardCard>
+        <DashboardCard className="px-5 py-4">
+          <p className="text-xs font-medium tracking-[0.08em] text-slate-400">这个环节会产出什么</p>
+          <p className="mt-2 text-sm leading-7 text-slate-700">{competitorOutputSummary}</p>
+        </DashboardCard>
+        <DashboardCard className="px-5 py-4">
+          <p className="text-xs font-medium tracking-[0.08em] text-slate-400">它怎么影响测试结论</p>
+          <p className="mt-2 text-sm leading-7 text-slate-700">{competitorDecisionImpact}</p>
+        </DashboardCard>
+      </section>
+
+      <PageNote>{competitorProgressMessage}</PageNote>
+
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <StatCard label="有效竞品数量" value={String(stats.validCount)} delta="Thread 02" tone="blue" compact icon={<span />} />
         <StatCard label="平台数量" value={String(stats.platformCount)} delta="Thread 02" tone="green" compact icon={<span />} />
@@ -179,7 +212,7 @@ export function CompetitorTab({
       <DashboardCard>
         <DashboardCardHeader
           title="竞品列表"
-          description="支持新增、编辑、删除、截图查看。"
+          description="这里沉淀的是正式竞品参考，会作为后续 AI 机会分析和测试结论的市场依据。"
           action={
             <div className="flex flex-wrap gap-2">
               <TableActionLink href="/link-imports?purpose=competitor_reference">链接导入</TableActionLink>

@@ -41,8 +41,16 @@ import {
   buildInspirationInboxCardSummary,
   buildInspirationInboxPrimaryFields,
   getInspirationInboxAiStatus,
+  getInspirationInboxTriage,
   type InspirationInboxSource,
 } from "@/components/inspirations/inspiration-inbox-view";
+import {
+  buildInspirationConversionDefaults,
+  INSPIRATION_CONVERSION_CONFIRM_FIELD,
+  INSPIRATION_CONVERSION_CONFIRM_NOTE,
+  INSPIRATION_CONVERSION_CONFIRM_VALUE,
+} from "@/lib/modules/inspirations/conversion";
+import type { InspirationTriageResult } from "@/lib/modules/inspirations/triage";
 import { DANGEROUS_CONFIRM_TEXT } from "@/lib/modules/batch/rules";
 import type { InspirationAISuggestion } from "@/lib/services/inspirations/inspirationTypes";
 
@@ -244,25 +252,7 @@ function buildConversionDefaults(input: {
   note: string | null;
   aiSuggestion: InspirationAISuggestion | null;
 }) {
-  const aiSuggestion = input.aiSuggestion;
-  return {
-    name: input.title?.trim() || aiSuggestion?.titleSuggestion || "",
-    categoryLevel1: aiSuggestion?.possibleCategory || aiSuggestion?.possibleProductType || "",
-    targetUser: aiSuggestion?.targetAudience.join("；") || "",
-    sellingPointsText: aiSuggestion?.sellingPoints.join("\n") || "",
-    usageScenesText: aiSuggestion?.useScenarios.join("\n") || "",
-    tagsText: [...(aiSuggestion?.styleKeywords ?? []), ...(aiSuggestion?.colors ?? [])].join("\n"),
-    notes:
-      input.note?.trim() ||
-      [
-        aiSuggestion?.draftLabel,
-        aiSuggestion?.shortDescription,
-        aiSuggestion?.riskNotes.join("；"),
-        aiSuggestion?.uncertaintyNotes.join("；"),
-      ]
-        .filter(Boolean)
-        .join("\n"),
-  };
+  return buildInspirationConversionDefaults(input);
 }
 
 function getConversionDefaults(selected: InspirationView | null) {
@@ -294,6 +284,13 @@ function getTaskTone(status: string): Tone {
   if (status === "failed") return "red";
   if (status === "processing") return "blue";
   if (status === "skipped") return "slate";
+  return "amber";
+}
+
+function getTriageTone(band: InspirationTriageResult["conclusionBand"]): Tone {
+  if (band === "keep") return "green";
+  if (band === "review") return "blue";
+  if (band === "reject") return "red";
   return "amber";
 }
 
@@ -360,6 +357,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
   const [archiveState, archiveAction, archivePending] = useActionState(archiveInspirationAction, { success: false, error: "" });
   const [rejectState, rejectAction, rejectPending] = useActionState(rejectInspirationAction, { success: false, error: "" });
   const [convertState, convertAction, convertPending] = useActionState(convertInspirationToProductAction, { success: false, error: "" });
+  const [convertConfirmInspirationId, setConvertConfirmInspirationId] = useState<number | null>(null);
 
   const visibleInspirations = useMemo(() => {
     if (statusFilter === "all") {
@@ -385,18 +383,19 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
 
   const selectedInspiration = getSelectedInspiration(data.inspirations, effectiveSelectedId);
   const conversionDefaults = useMemo(() => getConversionDefaults(selectedInspiration), [selectedInspiration]);
+  const showConvertConfirm = selectedInspiration ? convertConfirmInspirationId === selectedInspiration.id : false;
   const selectedIsConverted = selectedInspiration?.status === "converted" || Boolean(selectedInspiration?.convertedProduct);
   const selectedIsClosed = selectedInspiration?.status === "archived" || selectedInspiration?.status === "rejected";
   const latestFailedAiDraft = selectedInspiration?.aiDraftJobs.find((job) => job.status === "failed") ?? null;
   const selectedInboxSummary = selectedInspiration ? buildInspirationInboxCardSummary(selectedInspiration) : null;
   const selectedInboxFields = selectedInspiration ? buildInspirationInboxPrimaryFields(selectedInspiration) : [];
   const selectedAiStatus = selectedInspiration ? getInspirationInboxAiStatus(selectedInspiration) : null;
+  const selectedTriage = selectedInspiration ? getInspirationInboxTriage(selectedInspiration) : null;
   const selectedCandidatePrice = getInboxFieldValue(selectedInboxFields, "候选价格");
   const selectedProductType = getInboxFieldValue(selectedInboxFields, "商品类型", "信息不足");
   const selectedPlatform = getInboxFieldValue(selectedInboxFields, "建议平台", "信息不足");
   const selectedCategory = getInboxFieldValue(selectedInboxFields, "类目建议");
   const selectedNextStep = getInboxFieldValue(selectedInboxFields, "下一步建议", "先生成 AI 草稿，再决定保留、放弃或转商品。");
-  const selectedRecognitionQuality = getInboxFieldValue(selectedInboxFields, "识别质量", "尚未生成");
   const visibleScanLogs = scanLogExpanded ? data.recentScanLogs : data.recentScanLogs.slice(0, 4);
   const recentScanLogIds = useMemo(() => data.recentScanLogs.map((log) => log.id), [data.recentScanLogs]);
 
@@ -405,6 +404,19 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
       router.push(`/products/${convertState.data.id}`);
     }
   }, [convertState.data, convertState.success, router]);
+
+  function openConvertConfirm() {
+    if (!selectedInspiration || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable) {
+      return;
+    }
+
+    setConvertConfirmInspirationId(selectedInspiration.id);
+    if (typeof document !== "undefined") {
+      window.requestAnimationFrame(() => {
+        document.getElementById("convert-form-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }
 
   function toggleSelection(id: number, checked: boolean) {
     setSelectedIds((current) => (checked ? Array.from(new Set([...current, id])) : current.filter((item) => item !== id)));
@@ -461,7 +473,13 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           <DeskMetric icon="image" tone="red" label="待处理" value={String(data.stats.pending)} delta="需要初筛" />
           <DeskMetric icon="thumb" tone="blue" label="已查看" value={String(data.stats.reviewed)} delta="可继续跟进" />
           <DeskMetric icon="bag" tone="green" label="已转商品" value={String(data.stats.converted)} delta="进入商品池" />
-          <DeskMetric icon="shield" tone="green" label="草稿质量" value={`${selectedRecognitionQuality === "尚未生成" ? "待评" : selectedRecognitionQuality}`} delta="缺失字段不补造" />
+          <DeskMetric
+            icon="shield"
+            tone="green"
+            label="初筛状态"
+            value={selectedTriage?.isReady ? selectedTriage.scoreLabel : "待补线索"}
+            delta={selectedTriage?.isReady ? selectedTriage.conclusion : "字段不足不补造"}
+          />
         </section>
 
         <section className="flex flex-col gap-3 rounded-2xl border border-[#E2E8F0] bg-white px-3 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.025)] xl:flex-row xl:items-center xl:justify-between">
@@ -546,6 +564,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                 visibleInspirations.map((item) => {
                   const summary = buildInspirationInboxCardSummary(item);
                   const fields = buildInspirationInboxPrimaryFields(item);
+                  const triage = getInspirationInboxTriage(item);
                   const price = getInboxFieldValue(fields, "候选价格");
                   const tags = getInboxFieldValue(fields, "标签", "待补充");
                   const quality = getInboxFieldValue(fields, "识别质量", "尚未生成");
@@ -580,6 +599,12 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                           </div>
                           <div className="mt-2 grid gap-1 text-xs">
                             <span className="text-slate-500">草稿质量: <span className="text-emerald-600">{quality}</span></span>
+                            <span className="text-slate-500">
+                              初筛分 <span className={triage.isReady ? "text-slate-700" : "text-slate-400"}>{triage.scoreLabel}</span>
+                            </span>
+                            <span className={triage.conclusionBand === "keep" ? "text-emerald-600" : triage.conclusionBand === "review" ? "text-blue-600" : triage.conclusionBand === "reject" ? "text-rose-600" : "text-amber-600"}>
+                              {triage.conclusion}
+                            </span>
                             <span className="text-amber-600">{summary.nextStep}</span>
                           </div>
                         </div>
@@ -738,7 +763,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           <aside className="flex min-h-0 min-w-0 flex-col gap-4 overflow-y-auto">
             {selectedInspiration ? (
               <>
-                <AiDraftPanel source={selectedInspiration} fields={selectedInboxFields} aiStatus={selectedAiStatus} />
+                <AiDraftPanel source={selectedInspiration} fields={selectedInboxFields} aiStatus={selectedAiStatus} triage={selectedTriage} />
 
                 <section className="rounded-2xl border border-[#E2E8F0] bg-[#FFFEFC] p-4 shadow-[0_12px_30px_rgba(15,23,42,0.035)]">
                   <div className="mb-3 flex items-center justify-between">
@@ -764,33 +789,23 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                         <span className="text-xs">不再处理</span>
                       </button>
                     </form>
-                    <form
-                      action={convertAction}
-                      onSubmit={(event) => {
-                        if (!window.confirm("确认把这条灵感转为正式商品？转商品后不能重复转换。")) {
-                          event.preventDefault();
-                        }
-                      }}
-                    >
-                      <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
-                      <input type="hidden" name="name" value={conversionDefaults.name} />
-                      <input type="hidden" name="categoryLevel1" value={conversionDefaults.categoryLevel1} />
-                      <input type="hidden" name="targetUser" value={conversionDefaults.targetUser} />
-                      <input type="hidden" name="sellingPointsText" value={conversionDefaults.sellingPointsText} />
-                      <input type="hidden" name="usageScenesText" value={conversionDefaults.usageScenesText} />
-                      <input type="hidden" name="tagsText" value={conversionDefaults.tagsText} />
-                      <input type="hidden" name="notes" value={conversionDefaults.notes} />
-                      <button type="submit" className="flex h-[72px] w-full flex-col items-center justify-center rounded-xl bg-[#203149] text-white shadow-[0_14px_26px_rgba(32,49,73,0.22)] transition hover:-translate-y-[1px] hover:bg-[#152236] disabled:opacity-50" disabled={convertPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={openConvertConfirm}
+                        className="flex h-[72px] w-full flex-col items-center justify-center rounded-xl bg-[#203149] text-white shadow-[0_14px_26px_rgba(32,49,73,0.22)] transition hover:-translate-y-[1px] hover:bg-[#152236] disabled:opacity-50"
+                        disabled={convertPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}
+                      >
                         <span className="text-base font-semibold">转商品</span>
-                        <span className="text-xs">创建商品</span>
+                        <span className="text-xs">先进入人工确认</span>
                       </button>
-                    </form>
+                    </div>
                   </div>
                   <p className="mt-3 text-center text-xs text-slate-400">快捷键: 1 保留　2 放弃　3 转商品</p>
                   <ActionMessages messages={[reviewState.error, archiveState.error, rejectState.error, convertState.error]} />
                 </section>
 
-                <details className="rounded-xl border border-[#E2E8F0] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+                <details id="convert-form-panel" className="rounded-xl border border-[#E2E8F0] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
                   <summary className="cursor-pointer list-none px-4 py-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -800,18 +815,48 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                       <span className="text-slate-400">⌄</span>
                     </div>
                   </summary>
-                  <form action={convertAction} key={`${formKey}-convert`} className="space-y-3 border-t border-[#E8EDF5] p-4">
+                  <form action={convertAction} key={`${formKey}-convert`} className="space-y-4 border-t border-[#E8EDF5] p-4">
                     <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
-                    <Field label="商品名称"><input name="name" className={inputClassName} defaultValue={conversionDefaults.name} disabled={!data.runtime.isWritable} /></Field>
-                    <Field label="一级类目"><input name="categoryLevel1" className={inputClassName} defaultValue={conversionDefaults.categoryLevel1} disabled={!data.runtime.isWritable} /></Field>
-                    <Field label="目标用户"><input name="targetUser" className={inputClassName} defaultValue={conversionDefaults.targetUser} disabled={!data.runtime.isWritable} /></Field>
-                    <Field label="卖点草稿"><textarea name="sellingPointsText" className={textareaClassName} defaultValue={conversionDefaults.sellingPointsText} disabled={!data.runtime.isWritable} /></Field>
-                    <Field label="使用场景"><textarea name="usageScenesText" className={textareaClassName} defaultValue={conversionDefaults.usageScenesText} disabled={!data.runtime.isWritable} /></Field>
-                    <Field label="标签"><textarea name="tagsText" className={textareaClassName} defaultValue={conversionDefaults.tagsText} disabled={!data.runtime.isWritable} /></Field>
-                    <Field label="备注"><textarea name="notes" className={textareaClassName} defaultValue={conversionDefaults.notes} disabled={!data.runtime.isWritable} /></Field>
-                    <button type="submit" className={primaryButtonClassName} disabled={convertPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
-                      {convertPending ? "创建中..." : "确认转为商品"}
-                    </button>
+                    {selectedIsConverted ? <PageNote>这条灵感已转为商品，不能重复转商品。</PageNote> : null}
+                    {selectedIsClosed ? <PageNote>已归档或已放弃的灵感不再进入转商品流程。</PageNote> : null}
+                    {!selectedIsConverted && !selectedIsClosed ? (
+                      showConvertConfirm ? (
+                        <>
+                          <input type="hidden" name={INSPIRATION_CONVERSION_CONFIRM_FIELD} value={INSPIRATION_CONVERSION_CONFIRM_VALUE} />
+                          <p className="rounded-xl border border-[#D9E4F2] bg-[#F8FBFF] px-4 py-3 text-sm text-slate-600">
+                            {INSPIRATION_CONVERSION_CONFIRM_NOTE}
+                          </p>
+                          <Field label="商品名称"><input name="name" className={inputClassName} defaultValue={conversionDefaults.name} disabled={!data.runtime.isWritable} /></Field>
+                          <Field label="一级类目"><input name="categoryLevel1" className={inputClassName} defaultValue={conversionDefaults.categoryLevel1} disabled={!data.runtime.isWritable} /></Field>
+                          <Field label="目标用户"><input name="targetUser" className={inputClassName} defaultValue={conversionDefaults.targetUser} disabled={!data.runtime.isWritable} /></Field>
+                          <Field label="卖点草稿"><textarea name="sellingPointsText" className={textareaClassName} defaultValue={conversionDefaults.sellingPointsText} disabled={!data.runtime.isWritable} /></Field>
+                          <Field label="使用场景"><textarea name="usageScenesText" className={textareaClassName} defaultValue={conversionDefaults.usageScenesText} disabled={!data.runtime.isWritable} /></Field>
+                          <Field label="标签"><textarea name="tagsText" className={textareaClassName} defaultValue={conversionDefaults.tagsText} disabled={!data.runtime.isWritable} /></Field>
+                          <Field label="备注"><textarea name="notes" className={textareaClassName} defaultValue={conversionDefaults.notes} disabled={!data.runtime.isWritable} /></Field>
+                          <div className="flex flex-wrap gap-3">
+                            <button type="button" className={secondaryButtonClassName} onClick={() => setConvertConfirmInspirationId(null)} disabled={convertPending}>
+                              取消，不创建商品
+                            </button>
+                            <button type="submit" className={primaryButtonClassName} disabled={convertPending || !data.runtime.isWritable}>
+                              {convertPending ? "创建中..." : "确认并创建商品"}
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="space-y-3 rounded-xl border border-dashed border-[#D5DEE8] bg-[#FBFCFE] px-4 py-4">
+                          <p className="text-sm leading-6 text-slate-600">AI 会先预填商品信息，创建前仍需人工确认；取消不会创建任何商品。</p>
+                          <button
+                            type="button"
+                            className={secondaryButtonClassName}
+                            onClick={openConvertConfirm}
+                            disabled={convertPending || !data.runtime.isWritable}
+                          >
+                            打开人工确认表单
+                          </button>
+                        </div>
+                      )
+                    ) : null}
+                    {convertState.error ? <p className="text-sm text-rose-600">{convertState.error}</p> : null}
                   </form>
                 </details>
 
@@ -1323,7 +1368,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           <div className="space-y-4 xl:h-full xl:overflow-y-auto xl:pr-1">
             {selectedInspiration ? (
               <>
-                <AiDraftPanel source={selectedInspiration} fields={selectedInboxFields} aiStatus={selectedAiStatus} />
+                <AiDraftPanel source={selectedInspiration} fields={selectedInboxFields} aiStatus={selectedAiStatus} triage={selectedTriage} />
 
                 <form className="space-y-4 rounded-[30px] border border-[#E4DDD4] bg-[#FFFDFC] px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1436,59 +1481,63 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                   <form
                     action={convertAction}
                     key={`${formKey}-convert`}
-                    className="space-y-3 px-5 py-5"
-                    onSubmit={(event) => {
-                      if (selectedIsConverted || selectedIsClosed) {
-                        event.preventDefault();
-                        return;
-                      }
-
-                      if (!window.confirm("确认把这条灵感转为正式商品？转商品后不能重复转换。")) {
-                        event.preventDefault();
-                      }
-                    }}
+                    className="space-y-4 px-5 py-5"
                   >
                     <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
                     {selectedIsConverted ? <PageNote>这条灵感已转为商品，不能重复转商品。</PageNote> : null}
                     {selectedIsClosed ? <PageNote>已归档或已放弃的灵感不再进入转商品流程。</PageNote> : null}
-                    <details className="rounded-[22px] border border-[#ECE8E1] bg-[#FBFAF7]" open>
-                      <summary className="cursor-pointer list-none px-4 py-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-semibold text-slate-900">商品确认表单</p>
-                            <p className="mt-1 text-sm text-slate-500">保留 AI 预填，但仍需人工确认后提交。</p>
+                    {!selectedIsConverted && !selectedIsClosed ? (
+                      showConvertConfirm ? (
+                        <div className="space-y-4 rounded-[22px] border border-[#ECE8E1] bg-[#FBFAF7] px-4 py-4">
+                          <input type="hidden" name={INSPIRATION_CONVERSION_CONFIRM_FIELD} value={INSPIRATION_CONVERSION_CONFIRM_VALUE} />
+                          <p className="rounded-[18px] border border-[#D9E4F2] bg-[#F8FBFF] px-4 py-3 text-sm text-slate-600">
+                            {INSPIRATION_CONVERSION_CONFIRM_NOTE}
+                          </p>
+                          <Field label="商品名称">
+                            <input name="name" className={inputClassName} defaultValue={conversionDefaults.name} disabled={!data.runtime.isWritable} />
+                          </Field>
+                          <Field label="一级类目">
+                            <input name="categoryLevel1" className={inputClassName} defaultValue={conversionDefaults.categoryLevel1} disabled={!data.runtime.isWritable} />
+                          </Field>
+                          <Field label="目标用户">
+                            <input name="targetUser" className={inputClassName} defaultValue={conversionDefaults.targetUser} disabled={!data.runtime.isWritable} />
+                          </Field>
+                          <Field label="卖点草稿">
+                            <textarea name="sellingPointsText" className={textareaClassName} defaultValue={conversionDefaults.sellingPointsText} disabled={!data.runtime.isWritable} />
+                          </Field>
+                          <Field label="使用场景">
+                            <textarea name="usageScenesText" className={textareaClassName} defaultValue={conversionDefaults.usageScenesText} disabled={!data.runtime.isWritable} />
+                          </Field>
+                          <Field label="标签">
+                            <textarea name="tagsText" className={textareaClassName} defaultValue={conversionDefaults.tagsText} disabled={!data.runtime.isWritable} />
+                          </Field>
+                          <Field label="备注">
+                            <textarea name="notes" className={textareaClassName} defaultValue={conversionDefaults.notes} disabled={!data.runtime.isWritable} />
+                          </Field>
+                          <div className="flex flex-wrap gap-3">
+                            <button type="button" className={secondaryButtonClassName} onClick={() => setConvertConfirmInspirationId(null)} disabled={convertPending}>
+                              取消，不创建商品
+                            </button>
+                            <button type="submit" className={primaryButtonClassName} disabled={convertPending || !data.runtime.isWritable}>
+                              {convertPending ? "创建中..." : "确认并创建商品"}
+                            </button>
                           </div>
-                          <span className="text-xs font-medium text-[#365B8C]">可展开 / 收起</span>
                         </div>
-                      </summary>
-                      <div className="space-y-3 border-t border-[#E8ECF3] px-4 py-4">
-                        <Field label="商品名称">
-                          <input name="name" className={inputClassName} defaultValue={conversionDefaults.name} disabled={!data.runtime.isWritable} />
-                        </Field>
-                        <Field label="一级类目">
-                          <input name="categoryLevel1" className={inputClassName} defaultValue={conversionDefaults.categoryLevel1} disabled={!data.runtime.isWritable} />
-                        </Field>
-                        <Field label="目标用户">
-                          <input name="targetUser" className={inputClassName} defaultValue={conversionDefaults.targetUser} disabled={!data.runtime.isWritable} />
-                        </Field>
-                        <Field label="卖点草稿">
-                          <textarea name="sellingPointsText" className={textareaClassName} defaultValue={conversionDefaults.sellingPointsText} disabled={!data.runtime.isWritable} />
-                        </Field>
-                        <Field label="使用场景">
-                          <textarea name="usageScenesText" className={textareaClassName} defaultValue={conversionDefaults.usageScenesText} disabled={!data.runtime.isWritable} />
-                        </Field>
-                        <Field label="标签">
-                          <textarea name="tagsText" className={textareaClassName} defaultValue={conversionDefaults.tagsText} disabled={!data.runtime.isWritable} />
-                        </Field>
-                        <Field label="备注">
-                          <textarea name="notes" className={textareaClassName} defaultValue={conversionDefaults.notes} disabled={!data.runtime.isWritable} />
-                        </Field>
-                      </div>
-                    </details>
+                      ) : (
+                        <div className="space-y-3 rounded-[22px] border border-dashed border-[#D5DEE8] bg-[#FBFCFE] px-4 py-4">
+                          <p className="text-sm leading-6 text-slate-600">AI 会先预填商品信息，创建前仍需人工确认；取消不会创建任何商品。</p>
+                          <button
+                            type="button"
+                            className={secondaryButtonClassName}
+                            onClick={openConvertConfirm}
+                            disabled={convertPending || !data.runtime.isWritable}
+                          >
+                            打开人工确认表单
+                          </button>
+                        </div>
+                      )
+                    ) : null}
                     {convertState.error ? <p className="text-sm text-rose-600">{convertState.error}</p> : null}
-                    <button type="submit" className={primaryButtonClassName} disabled={convertPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
-                      {convertPending ? "创建中..." : "确认转为商品"}
-                    </button>
                   </form>
                 ) : (
                   <div className="px-5 py-5">
@@ -1951,10 +2000,12 @@ function AiDraftPanel({
   source,
   fields,
   aiStatus,
+  triage,
 }: {
   source: InspirationInboxSource;
   fields: InboxField[];
   aiStatus: { label: string; description: string; tone: Tone } | null;
+  triage: InspirationTriageResult | null;
 }) {
   const primaryRows = [
     { label: "候选商品名", value: getInboxFieldValue(fields, "候选商品名"), status: "AI 优化", icon: "thumb" as const },
@@ -1970,7 +2021,7 @@ function AiDraftPanel({
     { label: "规格线索", value: getInboxFieldValue(fields, "规格线索", "信息不足"), status: "展开", icon: "doc" as const },
     { label: "风险提示", value: getInboxFieldValue(fields, "风险提示", "信息不足"), status: "", icon: "shield" as const },
     { label: "识别质量", value: getInboxFieldValue(fields, "识别质量", "尚未生成"), status: "", icon: "clock" as const },
-    { label: "草稿初筛分", value: getInboxFieldValue(fields, "草稿初筛分", "尚未生成"), status: "中断止", icon: "thumb" as const },
+    { label: "草稿初筛分", value: getInboxFieldValue(fields, "草稿初筛分", "尚未生成"), status: triage?.isReady ? "已生成" : "信息不足", icon: "thumb" as const },
     { label: "初筛结论", value: getInboxFieldValue(fields, "初筛结论", "尚未生成"), status: "", icon: "spark" as const },
   ];
 
@@ -1998,6 +2049,19 @@ function AiDraftPanel({
           <PageNote>{aiStatus?.description ?? "尚未生成 AI 草稿。"}</PageNote>
         )}
 
+        <div className="rounded-xl border border-[#E8EDF5] bg-[#F8FAFC] p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">Draft Triage</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">{triage?.scoreLabel ?? "信息不足"}</p>
+            </div>
+            <StatusBadge label={triage?.conclusion ?? "信息不足"} tone={getTriageTone(triage?.conclusionBand ?? "watch")} />
+          </div>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{triage?.rationale ?? "当前字段不足，不能给出完整初筛分。"}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{triage?.nextStep ?? "先补充更多线索，再决定是否继续处理。"}</p>
+          <p className="mt-2 text-[11px] leading-5 text-slate-400">{triage?.disclaimer ?? "仅用于线索初筛，不代表正式商品评估。"}</p>
+        </div>
+
         <div className="overflow-hidden rounded-xl border border-[#E8EDF5]">
           {primaryRows.map((row) => (
             <div key={row.label} className="grid min-h-9 grid-cols-[24px_82px_minmax(0,1fr)_auto] items-center gap-2 border-b border-[#EEF2F7] px-3 py-1.5 text-sm last:border-b-0">
@@ -2009,12 +2073,40 @@ function AiDraftPanel({
                 {row.value}
               </span>
               {row.status ? (
-                <span className={row.status === "展开" || row.status === "更多" ? "text-xs font-medium text-blue-600" : row.status === "中断止" ? "rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-600" : "rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-500"}>
+                <span
+                  className={
+                    row.status === "展开" || row.status === "更多" || row.status === "已生成"
+                      ? "text-xs font-medium text-blue-600"
+                      : row.status === "信息不足"
+                        ? "rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-600"
+                        : "rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-500"
+                  }
+                >
                   {row.status}
                 </span>
               ) : null}
             </div>
           ))}
+        </div>
+
+        <div className="rounded-xl border border-[#E8EDF5] bg-white">
+          <div className="border-b border-[#EEF2F7] px-3 py-2">
+            <p className="text-sm font-semibold text-slate-900">初筛维度</p>
+            <p className="mt-1 text-xs text-slate-500">字段不足时不补造完整分数，只展示保守判断。</p>
+          </div>
+          <div className="divide-y divide-[#EEF2F7]">
+            {(triage?.dimensions ?? []).map((dimension) => (
+              <div key={dimension.label} className="grid gap-1 px-3 py-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-slate-700">{dimension.label}</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {typeof dimension.score === "number" ? `${dimension.score} / ${dimension.maxScore}` : "信息不足"}
+                  </span>
+                </div>
+                <p className="text-xs leading-5 text-slate-500">{dimension.summary}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

@@ -67,14 +67,48 @@ export function ProfitTab({
   onSubmit: (prevState: SubmitState, formData: FormData) => Promise<SubmitState>;
 }) {
   const [serverState, formAction, isPending] = useActionState(onSubmit, {});
+  const missingCostFields = [
+    profitView.estimatedPrice === null ? "售价" : null,
+    profitView.estimatedCost === null ? "进货价" : null,
+    profitView.estimatedShipping === null ? "运费" : null,
+  ].filter((item): item is string => item !== null);
+  const profitOutputSummary = profitView.hasCompleteCostData
+    ? `当前已形成正式利润结果：单件净利润 ${profitView.formattedEstimatedNetProfit}，利润率 ${profitView.invalidPrice ? "售价无效" : profitView.formattedProfitRate}。`
+    : "当前还没凑齐正式利润结果，至少需要售价、进货价和运费三个关键字段。";
+  const profitDecisionImpact = profitView.hasCompleteCostData
+    ? "利润结果会直接参与正式测试结论；如果利润率不成立或利润过低，最终建议会更保守。"
+    : "没有完整利润数据时，测试结论只能停留在待补资料或临时判断，不能形成完整正式结论。";
+  const profitAvailabilityMessage =
+    missingCostFields.length > 0
+      ? `当前缺少：${missingCostFields.join(" / ")}。利润结果暂不可用。`
+      : "当前成本关键字段已补齐，可以用这里的利润结果支撑正式测试结论。";
 
   return (
     <div className="space-y-5 px-5 py-5">
       {runtimeNotice ? <PageNote>{runtimeNotice}</PageNote> : null}
+      <section className="grid gap-4 xl:grid-cols-3">
+        <DashboardCard className="px-5 py-4">
+          <p className="text-xs font-medium tracking-[0.08em] text-slate-400">这个环节在看什么</p>
+          <p className="mt-2 text-sm leading-7 text-slate-700">
+            这里不是记账，而是快速判断这个商品在当前预估售价和成本下，还有没有值得测试的利润空间。
+          </p>
+        </DashboardCard>
+        <DashboardCard className="px-5 py-4">
+          <p className="text-xs font-medium tracking-[0.08em] text-slate-400">这个环节会产出什么</p>
+          <p className="mt-2 text-sm leading-7 text-slate-700">{profitOutputSummary}</p>
+        </DashboardCard>
+        <DashboardCard className="px-5 py-4">
+          <p className="text-xs font-medium tracking-[0.08em] text-slate-400">它怎么影响测试结论</p>
+          <p className="mt-2 text-sm leading-7 text-slate-700">{profitDecisionImpact}</p>
+        </DashboardCard>
+      </section>
+
+      <PageNote>{profitAvailabilityMessage}</PageNote>
+
       <div className="grid gap-5 xl:grid-cols-[0.96fr_1.04fr]">
         <form action={formAction}>
           <DashboardCard>
-            <DashboardCardHeader title="成本字段" description="保存后会自动刷新利润结果，并在需要时将状态从待分析推进到分析中。" />
+            <DashboardCardHeader title="成本字段" description="这里补的是正式评估成本信号；保存后会刷新利润结果，并为测试结论提供盈利依据。" />
             <div className="grid gap-4 px-5 py-5 md:grid-cols-2">
               <Field label="预估售价">
                 <input name="estimatedPrice" defaultValue={initialValues.estimatedPrice} className={inputClassName} inputMode="decimal" placeholder="0.00" />
@@ -108,7 +142,7 @@ export function ProfitTab({
         </form>
 
         <DashboardCard>
-          <DashboardCardHeader title="利润结果" description="包装成本为空时按 0 处理；售价、进货价、运费任一缺失时不展示正式利润结果。" />
+          <DashboardCardHeader title="利润结果" description="包装成本为空时按 0 处理；售价、进货价、运费任一缺失时不展示正式利润结果，也不能形成完整测试结论。" />
           <div className="grid gap-4 px-5 py-5 md:grid-cols-2">
             <ResultCard label="预估售价" value={profitView.formattedEstimatedPrice} />
             <ResultCard label="预估进货价" value={profitView.formattedEstimatedCost} />

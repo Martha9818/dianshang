@@ -10,6 +10,7 @@ import {
   type BusinessErrorCode,
   type RuntimeMode,
 } from "@/lib/modules/products";
+import { evaluateInspirationTriage } from "@/lib/modules/inspirations/triage";
 import { getRecommendationDisplayText, getRecommendationFilterValue, shouldNeedsRescore } from "@/lib/modules/scoring";
 import { getBackupDisplayPath } from "@/lib/services/backup-log-service";
 import {
@@ -23,6 +24,7 @@ import { buildProfitView } from "@/lib/services/profit-service";
 import { getHomeMaterialStats, getProductMaterials } from "@/lib/services/material-service";
 import { getHomePromptTaskStats, getProductPromptTasks } from "@/lib/services/prompt-task-service";
 import { formatStatDelta, getTodayStart } from "@/lib/services/stat-delta-service";
+import { normalizeInspirationSuggestion, type InspirationAISuggestion } from "@/lib/services/inspirations/inspirationTypes";
 import {
   buildProductReadUnavailableMessage,
   getRuntimeModeSummary,
@@ -79,6 +81,25 @@ const productBaseSelect = {
 export type ProductRecord = Prisma.ProductGetPayload<{ select: typeof productBaseSelect }>;
 type ProductListRecord = ProductRecord & {
   competitors: Array<{ updatedAt: Date }>;
+};
+
+const sourceInspirationSelect = {
+  id: true,
+  title: true,
+  note: true,
+  aiSuggestionJson: true,
+  importedAt: true,
+  updatedAt: true,
+} satisfies Prisma.InspirationSelect;
+
+type SourceInspirationRecord = Prisma.InspirationGetPayload<{ select: typeof sourceInspirationSelect }>;
+
+export type SourceInspirationReference = {
+  id: number;
+  title: string | null;
+  note: string | null;
+  formattedImportedAt: string;
+  triage: ReturnType<typeof evaluateInspirationTriage>;
 };
 
 export type ProductPageState<T> =
@@ -358,6 +379,34 @@ export async function getProductById(productId: number) {
   }
 }
 
+function parseInspirationSuggestion(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return normalizeInspirationSuggestion(JSON.parse(value) as Partial<InspirationAISuggestion>);
+  } catch {
+    return null;
+  }
+}
+
+function mapSourceInspirationReference(record: SourceInspirationRecord): SourceInspirationReference {
+  const aiSuggestion = parseInspirationSuggestion(record.aiSuggestionJson);
+
+  return {
+    id: record.id,
+    title: record.title,
+    note: record.note,
+    formattedImportedAt: formatDateTime(record.importedAt),
+    triage: evaluateInspirationTriage({
+      title: record.title,
+      note: record.note,
+      aiSuggestion,
+    }),
+  };
+}
+
 export async function getProductForEdit(productId: number) {
   try {
     return await prisma.product.findFirst({
@@ -590,6 +639,8 @@ export async function getProductDetailPageData(
 ): Promise<
   ProductPageState<{
     product: Awaited<ReturnType<typeof getProductById>>;
+    sourceInspirationReference: SourceInspirationReference | null;
+    competitorAnalysisSnapshotCount: number;
     logs: Awaited<ReturnType<typeof getProductOperationLogView>>;
     competitors: Awaited<ReturnType<typeof getCompetitorsByProductId>>;
     competitorStats: ReturnType<typeof computeCompetitorStats>;
@@ -618,6 +669,8 @@ export async function getProductDetailPageData(
         runtimeMode: mode,
         data: {
           product: null,
+          sourceInspirationReference: null,
+          competitorAnalysisSnapshotCount: 0,
           logs: [],
           competitors: [],
           competitorStats: computeCompetitorStats([]),
@@ -637,6 +690,8 @@ export async function getProductDetailPageData(
       logs,
       competitorRecords,
       competitors,
+      sourceInspiration,
+      competitorAnalysisSnapshotCount,
       currentScoreEvaluation,
       latestScoreSnapshot,
       scoreHistory,
@@ -648,6 +703,17 @@ export async function getProductDetailPageData(
         options?.includeLogs ? getProductOperationLogView(product.id) : Promise.resolve([]),
         getCompetitorRecordsByProductIdForStats(product.id),
         getCompetitorsByProductId(product.id),
+        prisma.inspiration.findFirst({
+          where: { convertedProductId: product.id },
+          orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+          select: sourceInspirationSelect,
+        }),
+        prisma.competitorAnalysisSnapshot.count({
+          where: {
+            productId: product.id,
+            archivedAt: null,
+          },
+        }),
         getScorePreview(product.id),
         getLatestScoreSnapshot(product.id),
         getScoreHistory(product.id),
@@ -676,6 +742,8 @@ export async function getProductDetailPageData(
       runtimeMode: mode,
       data: {
         product,
+        sourceInspirationReference: sourceInspiration ? mapSourceInspirationReference(sourceInspiration) : null,
+        competitorAnalysisSnapshotCount,
         logs,
         competitors,
         competitorStats: computeCompetitorStats(competitorRecords),
