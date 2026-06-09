@@ -1,6 +1,6 @@
 import type { AISchema } from "@/lib/services/ai";
 
-export const SCREENSHOT_READONLY_MESSAGE = "预览环境只读，请在 Windows 本地验收截图识别。";
+export const SCREENSHOT_READONLY_MESSAGE = "预览环境只读，请在 Windows 本地验收。";
 
 export const SCREENSHOT_SOURCE_TYPES = {
   INSPIRATION: "inspiration",

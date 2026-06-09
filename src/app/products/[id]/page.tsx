@@ -1,5 +1,6 @@
 import { ActionButton, DashboardCard, PageNote, SectionTabs, StatusBadge } from "@/components/dashboard/primitives";
 import { CompetitorAnalysisTab } from "@/components/products/competitor-analysis-tab";
+import { CompetitorScreenshotConfirmForm } from "@/components/products/competitor-screenshot-confirm-form";
 import { CompetitorScreenshotDraftPanel } from "@/components/products/competitor-screenshot-draft-panel";
 import { CompetitorTab } from "@/components/products/competitor-tab";
 import { CopywritingTab } from "@/components/products/copywriting-tab";
@@ -13,6 +14,7 @@ import { ScoreTab } from "@/components/products/score-tab";
 import { WorkspacePage } from "@/components/ui/workspace-page";
 import {
   archiveCompetitorAnalysisAction,
+  confirmCompetitorScreenshotDraftAction,
   deleteCompetitorAction,
   generateCompetitorAnalysisAction,
   markCompetitorAnalysisReferenceAction,
@@ -22,7 +24,11 @@ import {
 } from "@/app/products/actions";
 import { COMPETITOR_HEAT_METRIC_VALUES, COMPETITOR_PLATFORM_VALUES, formatCurrency } from "@/lib/modules/products";
 import { PRODUCT_STATUS_TONE } from "@/lib/modules/products/constants";
-import { buildCompetitorFormValues, getEmptyCompetitorFormValues } from "@/lib/services/competitor-service";
+import {
+  buildCompetitorFormValues,
+  buildCompetitorFormValuesFromScreenshotDraft,
+  getEmptyCompetitorFormValues,
+} from "@/lib/services/competitor-service";
 import { COMPETITOR_ANALYSIS_READONLY_MESSAGE, getCompetitorAnalysisSnapshots } from "@/lib/services/competitor-analysis";
 import { buildProfitFormValues } from "@/lib/services/profit-service";
 import { getProductDetailPageData } from "@/lib/services/product-service";
@@ -152,6 +158,7 @@ export default async function ProductDetailPage({
   searchParams: Promise<{
     tab?: string;
     editCompetitorId?: string;
+    confirmDraftJobId?: string;
     copyPlatform?: string;
     copyVersion?: string;
     platform?: string;
@@ -161,7 +168,8 @@ export default async function ProductDetailPage({
   }>;
 }) {
   const { id } = await params;
-  const { tab, editCompetitorId, copyPlatform, copyVersion, platform, materialType, status, analysisError } = await searchParams;
+  const { tab, editCompetitorId, confirmDraftJobId, copyPlatform, copyVersion, platform, materialType, status, analysisError } =
+    await searchParams;
   const productId = Number(id);
   const activeTab = normalizeTab(tab);
   const runtime = getRuntimeModeSummary();
@@ -208,7 +216,32 @@ export default async function ProductDetailPage({
     activeTab === "competitors" && editCompetitorId
       ? pageData.data.competitors.find((competitor) => String(competitor.id) === editCompetitorId)
       : null;
+  const requestedScreenshotDraftCandidate =
+    activeTab === "competitors" && confirmDraftJobId
+      ? pageData.data.competitorScreenshotDraftCandidates.find((candidate) => String(candidate.id) === confirmDraftJobId) ?? null
+      : null;
+  const screenshotDraftToConfirm =
+    requestedScreenshotDraftCandidate?.canConfirmDirectly ? requestedScreenshotDraftCandidate : null;
+  const screenshotDraftAlreadyLinked =
+    requestedScreenshotDraftCandidate?.linkedCompetitorId ? requestedScreenshotDraftCandidate : null;
+  const screenshotDraftBlockedForConfirm =
+    requestedScreenshotDraftCandidate &&
+    !requestedScreenshotDraftCandidate.linkedCompetitorId &&
+    !requestedScreenshotDraftCandidate.canConfirmDirectly
+      ? requestedScreenshotDraftCandidate
+      : null;
   const competitorInitialValues = competitorToEdit ? buildCompetitorFormValues(competitorToEdit) : getEmptyCompetitorFormValues();
+  const competitorDraftConfirmValues = screenshotDraftToConfirm
+    ? buildCompetitorFormValuesFromScreenshotDraft({
+        possibleTitle: screenshotDraftToConfirm.possibleTitle,
+        possiblePrice: screenshotDraftToConfirm.possiblePrice,
+        possiblePlatformSource: screenshotDraftToConfirm.possiblePlatformSource,
+        possibleSalesOrHeat: screenshotDraftToConfirm.possibleSalesOrHeat,
+        sellingPoints: screenshotDraftToConfirm.sellingPoints,
+        uncertaintyNotes: screenshotDraftToConfirm.uncertaintyNotes,
+        privacyNotes: screenshotDraftToConfirm.privacyNotes,
+      })
+    : null;
   const runtimeNotice = runtime.isWritable ? null : buildReadonlyRuntimeMessage(runtime.mode);
   const activeTabLabel = tabs.find((item) => item.key === activeTab)?.label ?? tabs[0].label;
   const validCompetitorCount = pageData.data.competitorStats.validCount;
@@ -545,6 +578,38 @@ export default async function ProductDetailPage({
 
         {activeTab === "competitors" ? (
           <div className="space-y-5">
+            {screenshotDraftAlreadyLinked ? (
+              <div className="px-5 pt-5">
+                <PageNote>
+                  {screenshotDraftAlreadyLinked.confirmBlockedReason ??
+                    "这条截图草稿已经确认过正式竞品，请直接查看已确认竞品，避免重复创建。"}
+                </PageNote>
+              </div>
+            ) : null}
+            {screenshotDraftBlockedForConfirm ? (
+              <div className="px-5 pt-5">
+                <PageNote>
+                  {screenshotDraftBlockedForConfirm.confirmBlockedReason ??
+                    "当前截图草稿还不能直接确认转正式竞品，请先回截图识别页补录或重试。"}
+                </PageNote>
+              </div>
+            ) : null}
+            {screenshotDraftToConfirm && competitorDraftConfirmValues ? (
+              <div className="px-5 pt-5">
+                <CompetitorScreenshotConfirmForm
+                  productId={product.id}
+                  jobId={screenshotDraftToConfirm.id}
+                  initialValues={competitorDraftConfirmValues}
+                  runtimeNotice={runtimeNotice}
+                  qualityLevel={screenshotDraftToConfirm.qualityLevel}
+                  privacyNotes={screenshotDraftToConfirm.privacyNotes}
+                  uncertaintyNotes={screenshotDraftToConfirm.uncertaintyNotes}
+                  platformOptions={COMPETITOR_PLATFORM_VALUES}
+                  heatMetricOptions={COMPETITOR_HEAT_METRIC_VALUES}
+                  onSubmit={confirmCompetitorScreenshotDraftAction.bind(null, product.id)}
+                />
+              </div>
+            ) : null}
             <CompetitorTab
               productId={product.id}
               competitors={pageData.data.competitors}

@@ -66,6 +66,16 @@ export type CompetitorMutationInput = {
   notes: string | null;
 };
 
+export type ScreenshotDraftCompetitorPrefillInput = {
+  possibleTitle?: string | null;
+  possiblePrice?: string | null;
+  possiblePlatformSource?: string | null;
+  possibleSalesOrHeat?: string | null;
+  sellingPoints?: string[];
+  uncertaintyNotes?: string[];
+  privacyNotes?: string[];
+};
+
 export type CompetitorStats = {
   validCount: number;
   minPrice: number | null;
@@ -132,6 +142,43 @@ async function markProductAnalyzingIfNeeded(tx: Prisma.TransactionClient, produc
     action: OPERATION_LOG_ACTIONS.CHANGE_STATUS,
     detail: `状态由 ${product.status} 变更为 ${nextStatus}`,
   });
+}
+
+function normalizeDraftPlatform(value: string | null | undefined) {
+  const trimmed = value?.trim() ?? "";
+  return COMPETITOR_PLATFORM_VALUES.includes(trimmed as never) ? trimmed : "";
+}
+
+function extractDraftNumber(value: string | null | undefined) {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) {
+    return "";
+  }
+
+  const match = trimmed.replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
+  return match ? match[0] : "";
+}
+
+function joinDraftLines(values: string[] | null | undefined) {
+  return Array.from(new Set((values ?? []).map((value) => value.trim()).filter(Boolean))).join("\n");
+}
+
+function buildDraftNotes(input: ScreenshotDraftCompetitorPrefillInput) {
+  const sections: string[] = [];
+
+  if (input.possibleSalesOrHeat?.trim()) {
+    sections.push(`截图草稿热度线索：${input.possibleSalesOrHeat.trim()}`);
+  }
+
+  if ((input.uncertaintyNotes?.length ?? 0) > 0) {
+    sections.push(`截图草稿不确定项：\n${joinDraftLines(input.uncertaintyNotes)}`);
+  }
+
+  if ((input.privacyNotes?.length ?? 0) > 0) {
+    sections.push(`截图草稿隐私提醒：\n${joinDraftLines(input.privacyNotes)}`);
+  }
+
+  return sections.join("\n\n");
 }
 
 function normalizeOptionalText(value: string | null | undefined) {
@@ -239,6 +286,26 @@ export function buildCompetitorFormValues(competitor: CompetitorRecord): Competi
     imageStyle: competitor.imageStyle ?? "",
     dataDate: formattedDate === "--" ? "" : formattedDate,
     notes: competitor.notes ?? "",
+  };
+}
+
+export function buildCompetitorFormValuesFromScreenshotDraft(
+  input: ScreenshotDraftCompetitorPrefillInput,
+): CompetitorFormValues {
+  return {
+    id: "",
+    platform: normalizeDraftPlatform(input.possiblePlatformSource),
+    title: input.possibleTitle?.trim() ?? "",
+    price: extractDraftNumber(input.possiblePrice),
+    heatMetricType: "",
+    heatMetricValue: "",
+    sellerName: "",
+    link: "",
+    sellingPoint: joinDraftLines(input.sellingPoints),
+    painPoint: "",
+    imageStyle: "",
+    dataDate: "",
+    notes: buildDraftNotes(input),
   };
 }
 
@@ -382,6 +449,48 @@ export async function getCompetitorStats(productId: number) {
   return computeCompetitorStats(competitors);
 }
 
+export async function createCompetitorRecordInTransaction(
+  tx: Prisma.TransactionClient,
+  input: {
+    productId: number;
+    values: CompetitorMutationInput;
+    screenshotPath?: string | null;
+  },
+) {
+  const product = await tx.product.findFirst({
+    where: {
+      id: input.productId,
+      deletedAt: null,
+    },
+    select: { id: true },
+  });
+
+  if (!product) {
+    throw new ProductBusinessError(BUSINESS_ERROR_CODES.PRODUCT_NOT_FOUND, "商品不存在或已删除。");
+  }
+
+  const competitor = await tx.competitor.create({
+    data: {
+      productId: input.productId,
+      ...input.values,
+      screenshotPath: input.screenshotPath ?? null,
+    },
+    select: competitorSelect,
+  });
+
+  await createOperationLogInTransaction(tx, {
+    productId: input.productId,
+    action: OPERATION_LOG_ACTIONS.CREATE_COMPETITOR,
+    detail: `新增竞品 ${competitor.title}`,
+  });
+
+  if (isValidCompetitor(input.values)) {
+    await markProductAnalyzingIfNeeded(tx, input.productId);
+  }
+
+  return competitor;
+}
+
 export async function createCompetitor(input: {
   productId: number;
   values: CompetitorMutationInput;
@@ -390,39 +499,12 @@ export async function createCompetitor(input: {
   ensureProductWritesAllowed();
 
   try {
-    const created = await prisma.$transaction(async (tx) => {
-      const product = await tx.product.findFirst({
-        where: {
-          id: input.productId,
-          deletedAt: null,
-        },
-        select: { id: true },
-      });
-
-      if (!product) {
-        throw new ProductBusinessError(BUSINESS_ERROR_CODES.PRODUCT_NOT_FOUND, "商品不存在或已删除。");
-      }
-
-      const competitor = await tx.competitor.create({
-        data: {
-          productId: input.productId,
-          ...input.values,
-        },
-        select: competitorSelect,
-      });
-
-      await createOperationLogInTransaction(tx, {
+    const created = await prisma.$transaction((tx) =>
+      createCompetitorRecordInTransaction(tx, {
         productId: input.productId,
-        action: OPERATION_LOG_ACTIONS.CREATE_COMPETITOR,
-        detail: `新增竞品 ${competitor.title}`,
-      });
-
-      if (isValidCompetitor(input.values)) {
-        await markProductAnalyzingIfNeeded(tx, input.productId);
-      }
-
-      return competitor;
-    });
+        values: input.values,
+      }),
+    );
 
     let screenshotPath = created.screenshotPath;
 

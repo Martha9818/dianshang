@@ -3,6 +3,7 @@ import path from "node:path";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS_ERROR_CODES, ProductBusinessError, formatDateTime } from "@/lib/modules/products";
+import { createCompetitorRecordInTransaction, type CompetitorMutationInput } from "@/lib/services/competitor-service";
 import { generateTextJson } from "@/lib/services/ai-client";
 import {
   createAIJob,
@@ -239,6 +240,80 @@ function getStatusTone(status: string) {
   return "amber" as const;
 }
 
+function getStatusLabel(status: string) {
+  if (status === SCREENSHOT_JOB_STATUSES.SUCCESS) return "识别成功";
+  if (status === SCREENSHOT_JOB_STATUSES.FAILED) return "识别失败";
+  if (status === SCREENSHOT_JOB_STATUSES.PROCESSING) return "识别中";
+  if (status === SCREENSHOT_JOB_STATUSES.SKIPPED) return "已跳过";
+  return "待识别";
+}
+
+function getQualityLabel(qualityLevel: string | null) {
+  if (qualityLevel === SCREENSHOT_QUALITY_LEVELS.HIGH) return "high";
+  if (qualityLevel === SCREENSHOT_QUALITY_LEVELS.MEDIUM) return "medium";
+  if (qualityLevel === SCREENSHOT_QUALITY_LEVELS.LOW) return "low";
+  if (qualityLevel === SCREENSHOT_QUALITY_LEVELS.FAILED) return "failed";
+  return "--";
+}
+
+function getConfirmability(input: {
+  status: string;
+  hasDraft: boolean;
+  linkedCompetitorId: number | null;
+}) {
+  if (input.linkedCompetitorId) {
+    return {
+      canConfirmDirectly: false,
+      confirmStateLabel: "已转正式竞品",
+      confirmStateTone: "green" as const,
+      confirmBlockedReason: "这条截图草稿已经转成正式竞品，请直接查看已确认竞品，避免重复创建。",
+    };
+  }
+
+  if (input.status === SCREENSHOT_JOB_STATUSES.FAILED) {
+    return {
+      canConfirmDirectly: false,
+      confirmStateLabel: "识别失败",
+      confirmStateTone: "red" as const,
+      confirmBlockedReason: "当前截图任务识别失败，不能直接确认转正式竞品，请先回截图识别页补录或重试。",
+    };
+  }
+
+  if (input.status === SCREENSHOT_JOB_STATUSES.PROCESSING) {
+    return {
+      canConfirmDirectly: false,
+      confirmStateLabel: "识别中",
+      confirmStateTone: "blue" as const,
+      confirmBlockedReason: "当前截图任务还在识别中，请等待识别结果后再确认转正式竞品。",
+    };
+  }
+
+  if (input.status === SCREENSHOT_JOB_STATUSES.SKIPPED) {
+    return {
+      canConfirmDirectly: false,
+      confirmStateLabel: "已跳过",
+      confirmStateTone: "slate" as const,
+      confirmBlockedReason: "这条截图草稿已经被跳过，不能直接确认转正式竞品，请先回截图识别页重新处理。",
+    };
+  }
+
+  if (!input.hasDraft) {
+    return {
+      canConfirmDirectly: false,
+      confirmStateLabel: "缺少可用草稿",
+      confirmStateTone: "amber" as const,
+      confirmBlockedReason: "当前还没有可确认的识别草稿，请先回截图识别页补录或重试。",
+    };
+  }
+
+  return {
+    canConfirmDirectly: true,
+    confirmStateLabel: "待人工确认",
+    confirmStateTone: "amber" as const,
+    confirmBlockedReason: null,
+  };
+}
+
 function mapScreenshotJob(record: ScreenshotJobRecord) {
   const structuredDraft = parseDraft(record.structuredDraft);
   const confirmedDraft = parseDraft(record.confirmedDraft);
@@ -264,8 +339,10 @@ export type CompetitorScreenshotDraftCandidate = {
   displayPath: string;
   sourceLabel: string;
   status: string;
+  statusLabel: string;
   statusTone: ReturnType<typeof getStatusTone>;
   qualityLevel: string | null;
+  qualityLabel: string;
   qualityTone: ReturnType<typeof getQualityTone>;
   formattedCreatedAt: string;
   formattedUpdatedAt: string;
@@ -278,6 +355,11 @@ export type CompetitorScreenshotDraftCandidate = {
   privacyNotes: string[];
   hasStructuredDraft: boolean;
   hasConfirmedDraft: boolean;
+  linkedCompetitorId: number | null;
+  canConfirmDirectly: boolean;
+  confirmStateLabel: string;
+  confirmStateTone: "blue" | "amber" | "green" | "violet" | "red" | "slate";
+  confirmBlockedReason: string | null;
 };
 
 export async function getCompetitorScreenshotDraftCandidates(productId: number) {
@@ -295,6 +377,12 @@ export async function getCompetitorScreenshotDraftCandidates(productId: number) 
     return jobs.map((job): CompetitorScreenshotDraftCandidate => {
       const mapped = mapScreenshotJob(job);
       const draft = mapped.effectiveDraft;
+      const hasDraft = Boolean(mapped.structuredDraft || mapped.confirmedDraft);
+      const confirmability = getConfirmability({
+        status: mapped.status,
+        hasDraft,
+        linkedCompetitorId: mapped.competitorId ?? null,
+      });
 
       return {
         id: mapped.id,
@@ -302,8 +390,10 @@ export async function getCompetitorScreenshotDraftCandidates(productId: number) 
         displayPath: mapped.displayPath,
         sourceLabel: mapped.sourceLabel,
         status: mapped.status,
+        statusLabel: getStatusLabel(mapped.status),
         statusTone: mapped.statusTone,
         qualityLevel: mapped.qualityLevel,
+        qualityLabel: getQualityLabel(mapped.qualityLevel),
         qualityTone: mapped.qualityTone,
         formattedCreatedAt: mapped.formattedCreatedAt,
         formattedUpdatedAt: mapped.formattedUpdatedAt,
@@ -314,12 +404,96 @@ export async function getCompetitorScreenshotDraftCandidates(productId: number) 
         sellingPoints: draft?.sellingPoints ?? [],
         uncertaintyNotes: draft?.uncertaintyNotes ?? [],
         privacyNotes: draft?.privacyNotes ?? [],
-        hasStructuredDraft: Boolean(mapped.structuredDraft || mapped.confirmedDraft),
+        hasStructuredDraft: hasDraft,
         hasConfirmedDraft: Boolean(mapped.confirmedDraft),
+        linkedCompetitorId: mapped.competitorId ?? null,
+        canConfirmDirectly: confirmability.canConfirmDirectly,
+        confirmStateLabel: confirmability.confirmStateLabel,
+        confirmStateTone: confirmability.confirmStateTone,
+        confirmBlockedReason: confirmability.confirmBlockedReason,
       };
     });
   } catch (error) {
     throw normalizeProductReadError(error);
+  }
+}
+
+export async function confirmScreenshotJobToCompetitor(input: {
+  productId: number;
+  jobId: number;
+  values: CompetitorMutationInput;
+}) {
+  ensureScreenshotWritesAllowed();
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const job = await tx.screenshotRecognitionJob.findUnique({
+        where: { id: input.jobId },
+        select: {
+          id: true,
+          sourceType: true,
+          productId: true,
+          competitorId: true,
+          imagePath: true,
+          status: true,
+          structuredDraft: true,
+          confirmedDraft: true,
+          confirmedAt: true,
+        },
+      });
+
+      if (!job) {
+        throw createValidationError("截图草稿任务不存在。");
+      }
+
+      if (job.sourceType !== SCREENSHOT_SOURCE_TYPES.COMPETITOR) {
+        throw createValidationError("只有竞品截图草稿才能确认转正式竞品。");
+      }
+
+      if (job.productId !== input.productId) {
+        throw createValidationError("当前截图草稿不属于这个商品，不能在此处确认录入。");
+      }
+
+      if (job.competitorId) {
+        throw createValidationError("这条截图草稿已经确认过正式竞品，请勿重复创建。");
+      }
+
+      if (job.status !== SCREENSHOT_JOB_STATUSES.SUCCESS) {
+        throw createValidationError("当前截图草稿还没有可确认的识别结果，请先回截图识别页补录或重试。");
+      }
+
+      if (!(job.confirmedDraft ?? job.structuredDraft)) {
+        throw createValidationError("当前截图草稿还没有可确认的识别内容，请先回截图识别页补录或重试。");
+      }
+
+      const competitor = await createCompetitorRecordInTransaction(tx, {
+        productId: input.productId,
+        values: input.values,
+        screenshotPath: job.imagePath,
+      });
+
+      await tx.screenshotRecognitionJob.update({
+        where: { id: job.id },
+        data: {
+          competitorId: competitor.id,
+          needsUserConfirmation: false,
+          confirmedAt: job.confirmedAt ?? new Date(),
+          confirmedDraft: job.confirmedDraft ?? job.structuredDraft,
+        },
+      });
+
+      await tx.operationLog.create({
+        data: {
+          productId: input.productId,
+          action: "CONFIRM_SCREENSHOT_JOB_TO_COMPETITOR",
+          detail: `确认截图草稿转正式竞品：jobId=${job.id} / competitorId=${competitor.id}`,
+        },
+      });
+
+      return competitor;
+    });
+  } catch (error) {
+    throw normalizeProductWriteError(error);
   }
 }
 

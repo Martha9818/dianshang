@@ -25,6 +25,7 @@ import { type BatchOperationResult } from "@/lib/modules/batch/rules";
 import { runBatchOperation } from "@/lib/services/batchOperationService";
 import { extractProfitFormValues, normalizeProfitMutationInput, updateProductProfit } from "@/lib/services/profit-service";
 import { extractScoreFormValues, normalizeScoreFormValues, saveScoreSnapshot } from "@/lib/services/scoring-service";
+import { confirmScreenshotJobToCompetitor } from "@/lib/services/screenshot";
 
 type SubmitState = {
   error?: string | null;
@@ -221,6 +222,28 @@ export async function deleteCompetitorAction(productId: number, competitorId: nu
       error: getProductErrorMessage(error, "删除竞品失败，请稍后重试。"),
     };
   }
+}
+
+export async function confirmCompetitorScreenshotDraftAction(
+  productId: number,
+  _prevState: SubmitState,
+  formData: FormData,
+): Promise<SubmitState> {
+  try {
+    const values = normalizeCompetitorMutationInput(extractCompetitorFormValues(formData));
+    await confirmScreenshotJobToCompetitor({
+      productId,
+      jobId: parsePositiveActionId(formData.get("jobId"), "截图草稿任务"),
+      values,
+    });
+  } catch (error) {
+    return {
+      error: getProductErrorMessage(error, "确认转正式竞品失败，请稍后重试。"),
+    };
+  }
+
+  revalidateProductScopes(productId);
+  redirect(`/products/${productId}?tab=competitors`);
 }
 
 export async function generateCompetitorAnalysisAction(productId: number, formData: FormData) {

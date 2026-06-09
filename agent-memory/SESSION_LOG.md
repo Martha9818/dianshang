@@ -4,10 +4,62 @@ Only the latest summary stays here. Older detailed history is archived or retain
 
 ## 2026-06-09
 
+### V1.7.1 Phase Closeout Review
+
+- Changed: Re-checked the latest external web proposal skeptically instead of treating it as authority. The repo-fact review concluded that another immediate `V1.7.1` code thread would mostly duplicate synthetic verification rather than address a newly proven local gap.
+- Changed: Updated active memory guidance so the current `V1.7.1` bundle is treated as phase-closeout first: finish clean commit/push, preserve the current acceptance baseline, and wait for real local usage to surface the next narrow issue before opening a new thread.
+- Boundary: No product behavior, schema, migration, dependency, AI-trigger, screenshot-path, cleanup, or V1.8 content-workflow change was introduced during this closeout judgment.
+
+### V1.7.1 Thread 01 Controlled Sample Coverage And Boundary Regression
+
+- Changed: Added `scripts/thread-v17-1-thread01-boundary-verify.mts` as a verification-only thread artifact instead of extending product capability. The script uses temporary `__V171_VERIFY__` SQLite samples to validate confirm-blocking and candidate-state boundaries without adding schema or new feature paths.
+- Changed: Tightened the verification design beyond the external web suggestion by also locking source-level UI boundaries: readonly-copy preservation, low-quality/privacy/uncertainty warning copy, fallback CTA copy, and `confirmDraftJobId` gating in the product page.
+- Verification: The new script now covers success confirmability, already-linked blocking, wrong-source rejection, cross-product isolation, `processing` / `failed` / `skipped` / missing-draft blocking, low-quality/privacy/uncertainty warning data, missing-job rejection, product-mismatch rejection, and duplicate confirm rejection.
+- Verification: The script also prints cleanup counts after execution and this thread confirms zero residual temporary rows remain: `products=0`, `competitors=0`, `jobs=0`.
+- Verification: Re-ran `npx tsx scripts/thread-v17-1-thread01-boundary-verify.mts`, `npx tsx scripts/thread-v17-1-thread00-stabilization-verify.mts`, `npm run encoding:check`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Boundary: No schema, migration, dependency, AI-trigger expansion, screenshot-path migration, cleanup/trash logic change, or V1.8 content-workflow behavior was introduced. This thread intentionally adds verification assets only.
+
+### V1.7.1 Thread 00 Multi-Sample Regression And State-Consistency Stabilization
+
+- Changed: Added explicit competitor screenshot draft candidate confirmability states so the product page can distinguish `已转正式竞品`、`识别失败`、`识别中`、`已跳过`、`缺少可用草稿` and `待人工确认` instead of relying on a single generic CTA.
+- Changed: Hardened `confirmScreenshotJobToCompetitor(...)` so the server now rejects confirm writes unless the screenshot job is still `success`, still belongs to the current product, still has no linked `competitorId`, and still contains a usable draft payload.
+- Changed: Reworked the competitor draft panel and product detail page so blocked or already-linked candidates surface their reason directly and no longer reopen the confirm form through `confirmDraftJobId`.
+- Changed: Added `scripts/thread-v17-1-thread00-stabilization-verify.mts` and `docs/superpowers/acceptance/2026-06-09-v17-1-thread00-acceptance.md` to lock the new state rules and record the local stabilization result.
+- Verification: Ran `npx tsx scripts/thread-v17-1-thread00-stabilization-verify.mts`, `npm run encoding:check`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Verification: Browser-checked local `http://localhost:3000/products/146?tab=competitors` and `http://localhost:3000/products/146?tab=competitors&confirmDraftJobId=14`; confirmed the already-linked sample `jobId=14 -> competitorId=93` now consistently shows `识别成功 / high / 已转正式竞品`, exposes the duplicate-prevention reason, keeps the normal CTA as `查看已确认竞品`, and never re-renders the confirm form.
+- Boundary: No schema, migration, dependency, AI-trigger expansion, screenshot-path migration, cleanup/trash change, or V1.8 content-workflow behavior was introduced.
+
+### V1.7 MVP Thread 02 Confirm-Write Regression And MVP Closeout
+
+- Changed: Tightened the competitor screenshot candidate status wording so the panel now clearly distinguishes `草稿已确认` from `已转正式竞品`, reducing the risk that a pre-formal draft is mistaken for a completed formal write.
+- Changed: Added `docs/superpowers/acceptance/2026-06-09-v17-mvp-thread02-acceptance.md` as the MVP closeout record for the current confirm-write slice.
+- Verification: Re-ran `npm run encoding:check`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Verification: Re-checked local `http://localhost:3000/products/146?tab=competitors&confirmDraftJobId=14` after the real local write and confirmed the page no longer renders the confirm form for an already linked draft and instead shows the duplicate-prevention note plus `查看已确认竞品`.
+- Boundary: No schema, migration, dependency, AI-trigger, screenshot-path migration, cleanup/trash change, or V1.8 content-workflow behavior was introduced.
+
+### V1.7 MVP Thread 01 Confirm-Write Loop
+
+- Changed: Implemented the approved `V1.7 MVP Thread 01` path that turns a competitor screenshot draft candidate into a formal competitor through the existing product detail competitor tab instead of adding a new schema or a new draft table.
+- Changed: Added a dedicated competitor screenshot confirm form, draft-to-form prefill mapping, and a new product server action so users can open `confirmDraftJobId`, review AI-prefilled reference values, manually complete the formal required fields, and submit a formal `Competitor` create from the current product page.
+- Changed: Added `confirmScreenshotJobToCompetitor(...)` in the screenshot service, reusing the existing competitor-service rules inside a transaction to create the formal record, write back `job.competitorId`, clear `needsUserConfirmation`, preserve the confirmed draft payload, and record `CONFIRM_SCREENSHOT_JOB_TO_COMPETITOR`.
+- Changed: Extended the competitor screenshot draft candidate view with `linkedCompetitorId`, updated the draft panel CTA to switch from `确认转正式竞品` to `查看已确认竞品` after confirmation, and added a UI guard so reopening the same `confirmDraftJobId` no longer renders the confirm form after the job is already linked.
+- Changed: Unified the screenshot preview read-only message to the exact required text `预览环境只读，请在 Windows 本地验收。`
+- Verification: Ran `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Verification: Browser-checked local `http://localhost:3000/products/146?tab=competitors`, opened existing draft job `14`, verified the confirm form appears with AI-prefilled selling points, submitted a real local confirm write, confirmed formal competitor `93` was created and shown in the existing competitor list, and confirmed the draft candidate now switches to `查看已确认竞品` while direct `confirmDraftJobId=14` access shows only a duplicate-prevention notice.
+- Boundary: No schema, migration, dependency, AI-trigger, screenshot-path migration, cleanup/trash change, or V1.8 content-workflow behavior was introduced.
+
+### V1.7 Design Gate Confirm-To-Competitor Freeze
+
+- Changed: Added `docs/superpowers/specs/2026-06-09-v17-confirm-to-competitor-design-gate.md` as the formal design-freeze document for the next V1.7 thread after the read-only prep slice.
+- Changed: Froze that V1.7 MVP continues reusing `ScreenshotRecognitionJob` as the competitor screenshot draft container, does not add `CompetitorDraft`, and keeps the current screenshot path reality `uploads/products/{productId}/competitors/...` for this phase.
+- Changed: Froze the candidate eligibility, confirmable conditions, field-mapping rules, manual-completion rules, duplicate-prevention strategy, preview read-only behavior, and the rule that draft candidates must not enter formal competitor analysis or scoring until a formal `Competitor` is explicitly created.
+- Changed: Froze `job.competitorId` as the canonical already-confirmed link for the later MVP write thread and defined the minimum next-thread write loop as `candidate -> user edit/confirm -> create formal Competitor -> write back job.competitorId -> show in existing competitor module`.
+- Boundary: This thread remained design-only. No schema, migration, dependency, AI trigger, formal competitor write action, path migration, or cleanup/trash behavior change was introduced.
+
 ### V1.7 Design Gate Read-Only Competitor Screenshot Draft Prep
 
 - Changed: Continued the already-agreed `V1.7 Design Gate` direction by keeping work strictly inside a low-risk read-only prep layer instead of starting formal `V1.7` implementation.
-- Changed: Added a new product-detail `绔炲搧鎴浘鑽夌鍊欓€?` panel under the `绔炲搧鍙傝€僠` tab so the current product page can surface competitor screenshot draft candidates without mixing them into formal competitor writes.
+- Changed: Added a new read-only competitor screenshot draft panel under the product-detail competitor tab so the current product page can surface competitor screenshot draft candidates without mixing them into formal competitor writes.
 - Changed: Added a read-only `getCompetitorScreenshotDraftCandidates(productId)` query in the screenshot recognition service that reuses existing `ScreenshotRecognitionJob` data for `sourceType=competitor`, maps the current effective draft fields, and keeps the result bounded to recent records only.
 - Changed: Extended `getProductDetailPageData` to assemble `competitorScreenshotDraftCandidates` through the existing service boundary and wired the result into the product detail page without changing schema, migration, dependency, AI execution, or competitor write behavior.
 - Verification: Ran `npm run typecheck`, `npm run lint`, and `npm run build`; browser-checked local `http://localhost:3000/products/6?tab=competitors` and confirmed the new read-only panel renders with the expected title, notice, and screenshot-page entry link.

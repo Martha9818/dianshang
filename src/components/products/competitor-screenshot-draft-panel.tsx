@@ -15,8 +15,10 @@ export type CompetitorScreenshotDraftCandidateView = {
   displayPath: string;
   sourceLabel: string;
   status: string;
+  statusLabel: string;
   statusTone: "blue" | "amber" | "green" | "violet" | "red" | "slate";
   qualityLevel: string | null;
+  qualityLabel: string;
   qualityTone: "blue" | "amber" | "green" | "violet" | "red" | "slate";
   formattedCreatedAt: string;
   formattedUpdatedAt: string;
@@ -29,6 +31,11 @@ export type CompetitorScreenshotDraftCandidateView = {
   privacyNotes: string[];
   hasStructuredDraft: boolean;
   hasConfirmedDraft: boolean;
+  linkedCompetitorId: number | null;
+  canConfirmDirectly: boolean;
+  confirmStateLabel: string;
+  confirmStateTone: "blue" | "amber" | "green" | "violet" | "red" | "slate";
+  confirmBlockedReason: string | null;
 };
 
 export function CompetitorScreenshotDraftPanel({
@@ -54,8 +61,7 @@ export function CompetitorScreenshotDraftPanel({
           <code className="rounded bg-white px-1 py-0.5 font-mono text-xs text-slate-600">
             uploads/products/{productId}/competitors/...
           </code>
-          。
-          这个面板只做只读候选展示，不创建目录，不迁移路径，不触发 AI，也不写入正式{" "}
+          。这个面板只做只读候选展示，不创建目录，不迁移路径，不触发 AI，也不写入正式{" "}
           <code className="rounded bg-white px-1 py-0.5 font-mono text-xs text-slate-600">Competitor</code>
           记录。
         </PageNote>
@@ -63,58 +69,81 @@ export function CompetitorScreenshotDraftPanel({
 
         {candidates.length > 0 ? (
           <div className="space-y-4">
-            {candidates.map((candidate) => (
-              <div key={candidate.id} className="rounded-[24px] border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4">
-                <div className="grid gap-4 lg:grid-cols-[104px_1fr]">
-                  <div className="w-[104px]">
-                    <ProductImage src={candidate.displayPath} alt={candidate.imagePath} label="竞品图" square />
-                  </div>
+            {candidates.map((candidate) => {
+              const showLowQualityWarning = candidate.qualityLevel === "low" || candidate.qualityLevel === "failed";
 
-                  <div className="min-w-0 space-y-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-slate-900">草稿任务 #{candidate.id}</p>
-                      <StatusBadge label={candidate.status} tone={candidate.statusTone} />
-                      <StatusBadge label={candidate.qualityLevel ?? "--"} tone={candidate.qualityTone} />
-                      <StatusBadge
-                        label={candidate.hasConfirmedDraft ? "已确认草稿" : "待人工确认"}
-                        tone={candidate.hasConfirmedDraft ? "green" : "amber"}
-                      />
+              return (
+                <div key={candidate.id} className="rounded-[24px] border border-[#EEF2F8] bg-[#FBFDFF] px-4 py-4">
+                  <div className="grid gap-4 lg:grid-cols-[104px_1fr]">
+                    <div className="w-[104px]">
+                      <ProductImage src={candidate.displayPath} alt={candidate.imagePath} label="竞品图" square />
                     </div>
 
-                    <div className="grid gap-3 text-sm text-slate-600 md:grid-cols-2">
-                      <DetailRow label="来源" value={candidate.sourceLabel} />
-                      <DetailRow label="创建时间" value={candidate.formattedCreatedAt} />
-                      <DetailRow label="最近更新" value={candidate.formattedUpdatedAt} />
-                      <DetailRow label="当前图片" value={candidate.imagePath} mono />
-                    </div>
+                    <div className="min-w-0 space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-slate-900">草稿任务 #{candidate.id}</p>
+                        <StatusBadge label={candidate.statusLabel} tone={candidate.statusTone} />
+                        <StatusBadge label={candidate.qualityLabel} tone={candidate.qualityTone} />
+                        <StatusBadge label={candidate.confirmStateLabel} tone={candidate.confirmStateTone} />
+                      </div>
 
-                    {candidate.hasStructuredDraft ? (
-                      <>
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <ValueCard label="候选标题" value={candidate.possibleTitle ?? "--"} />
-                          <ValueCard label="候选价格" value={candidate.possiblePrice ?? "--"} />
-                          <ValueCard label="候选平台" value={candidate.possiblePlatformSource ?? "--"} />
-                          <ValueCard label="候选销量/热度" value={candidate.possibleSalesOrHeat ?? "--"} />
-                        </div>
+                      <div className="grid gap-3 text-sm text-slate-600 md:grid-cols-2">
+                        <DetailRow label="来源" value={candidate.sourceLabel} />
+                        <DetailRow label="创建时间" value={candidate.formattedCreatedAt} />
+                        <DetailRow label="最近更新" value={candidate.formattedUpdatedAt} />
+                        <DetailRow label="当前图片" value={candidate.imagePath} mono />
+                      </div>
 
-                        <div className="grid gap-3 lg:grid-cols-3">
-                          <ListCard label="候选卖点" values={candidate.sellingPoints} />
-                          <ListCard label="不确定项" values={candidate.uncertaintyNotes} />
-                          <ListCard label="隐私提醒" values={candidate.privacyNotes} />
-                        </div>
-                      </>
-                    ) : (
-                      <PageNote>当前还没有可读的 AI 草稿字段，这里先保留截图任务记录，后续仍需在截图识别页查看或补录。</PageNote>
-                    )}
+                      {candidate.confirmBlockedReason ? <PageNote>{candidate.confirmBlockedReason}</PageNote> : null}
+                      {showLowQualityWarning ? (
+                        <PageNote>当前截图识别质量偏低，请逐项人工核对后再决定是否继续保留或重做草稿。</PageNote>
+                      ) : null}
+                      {candidate.privacyNotes.length > 0 ? (
+                        <PageNote>当前包含隐私提醒，请先人工检查敏感内容是否适合进入正式竞品记录。</PageNote>
+                      ) : null}
+                      {candidate.uncertaintyNotes.length > 0 ? (
+                        <PageNote>当前存在不确定项，请把这些线索当作参考，不要直接当成正式竞品事实。</PageNote>
+                      ) : null}
 
-                    <div className="flex flex-wrap gap-2">
-                      <TableActionLink href={`/screenshots?jobId=${candidate.id}`}>查看草稿详情</TableActionLink>
-                      <TableActionLink href={`/screenshots?sourceType=competitor&productId=${productId}`}>继续补录截图</TableActionLink>
+                      {candidate.hasStructuredDraft ? (
+                        <>
+                          <div className="grid gap-3 md:grid-cols-2">
+                            <ValueCard label="候选标题" value={candidate.possibleTitle ?? "--"} />
+                            <ValueCard label="候选价格" value={candidate.possiblePrice ?? "--"} />
+                            <ValueCard label="候选平台" value={candidate.possiblePlatformSource ?? "--"} />
+                            <ValueCard label="候选销量/热度" value={candidate.possibleSalesOrHeat ?? "--"} />
+                          </div>
+
+                          <div className="grid gap-3 lg:grid-cols-3">
+                            <ListCard label="候选卖点" values={candidate.sellingPoints} />
+                            <ListCard label="不确定项" values={candidate.uncertaintyNotes} />
+                            <ListCard label="隐私提醒" values={candidate.privacyNotes} />
+                          </div>
+                        </>
+                      ) : (
+                        <PageNote>当前还没有可读的 AI 草稿字段，这里先保留截图任务记录，后续仍需在截图识别页查看或补录。</PageNote>
+                      )}
+
+                      <div className="flex flex-wrap gap-2">
+                        <TableActionLink href={`/screenshots?jobId=${candidate.id}`}>查看草稿详情</TableActionLink>
+                        <TableActionLink href={`/screenshots?sourceType=competitor&productId=${productId}`}>继续补录截图</TableActionLink>
+                        {candidate.linkedCompetitorId ? (
+                          <TableActionLink href={`/products/${productId}?tab=competitors&editCompetitorId=${candidate.linkedCompetitorId}`}>
+                            查看已确认竞品
+                          </TableActionLink>
+                        ) : candidate.canConfirmDirectly ? (
+                          <TableActionLink href={`/products/${productId}?tab=competitors&confirmDraftJobId=${candidate.id}`}>
+                            确认转正式竞品
+                          </TableActionLink>
+                        ) : (
+                          <TableActionLink href={`/screenshots?jobId=${candidate.id}`}>先回截图识别页处理</TableActionLink>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <PageNote>
