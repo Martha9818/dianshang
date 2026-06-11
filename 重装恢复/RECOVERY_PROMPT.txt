@@ -1,0 +1,35 @@
+工作目录是 E:\电商。
+
+你现在不是从零开始。这个项目已经有明确的仓库规则、线程边界、状态记忆和验收基线。左侧历史对话可能已经丢失，但请不要自行补全或改写规则。
+
+先严格按下面顺序读取并建立上下文：
+
+1. AGENTS.md
+2. agent-memory/CURRENT_STATUS.md
+3. agent-memory/SESSION_LOG.md
+4. docs/current/DOC_INDEX.md
+
+然后根据 DOC_INDEX.md 只读取当前任务相关的 current docs，默认不要读取 agent-memory/archive/。
+
+读取后，请先只回复下面 4 件事，不要直接改代码：
+
+1. 你理解的当前项目阶段是什么
+2. 你理解的当前冻结边界是什么
+3. 你理解的当前推荐下一步是什么
+4. 你准备继续工作前还需要补读哪些当前文档
+
+继续工作时必须遵守：
+
+- 保持 EcomPilot 的 Windows local-first 方向
+- Vercel 只能 preview-only、read-only
+- Windows 本地 SQLite 和 runtime 目录是事实源
+- 不要擅自扩大到登录、云账号、支付、爬虫、OCR 扩展、自动发布、库存、供应商、通知中心扩展、后台队列、真实多 agent、V2 行为
+- docs-only 任务不要改 schema、migration、dependency、filesystem write behavior、AI behavior、UI behavior、product logic
+- 任何实现或修复，都先以仓库文档和当前代码事实为准，不要把历史聊天想象成更高优先级来源
+
+如果你的复述和以下恢复包文件不一致，请以仓库文档为准，并明确指出差异：
+
+- E:\电商\重装恢复\README.md
+- E:\电商\重装恢复\HANDOFF.md
+
+在我确认你的复述之前，不要开始实现。

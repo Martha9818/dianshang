@@ -3,6 +3,7 @@
 ## Current Progress
 
 - Current stage: `V1.6-08 final acceptance and closeout`
+- Current task state: A reinstall-resume package now exists under `重装恢复/` with `README.md`, `HANDOFF.md`, and `RECOVERY_PROMPT.txt` so a fresh Codex session can resume from repo facts even if sidebar chat history is lost after reinstall.
 - Current task state: `V1.7 Design Gate` now also includes a formal confirm-to-competitor design freeze doc at `docs/superpowers/specs/2026-06-09-v17-confirm-to-competitor-design-gate.md`, and the approved `V1.7 MVP Thread 01` minimum confirm-write loop has now been implemented on the local mainline.
 - Current task state: `V1.7 Design Gate` has now started only as a low-risk read-only prep layer. The product detail competitor tab now includes a read-only competitor screenshot draft panel backed by existing `ScreenshotRecognitionJob` rows for the current product.
 - Current task state: The new competitor screenshot draft panel reuses existing screenshot-recognition draft data only. It shows candidate title / price / platform / sales-or-heat clues, selling points, uncertainty notes, privacy notes, task status, and quality level without triggering AI or writing formal competitor records.

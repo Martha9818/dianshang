@@ -2,6 +2,16 @@
 
 Only the latest summary stays here. Older detailed history is archived or retained in current docs.
 
+## 2026-06-11
+
+### Reinstall Resume Package
+
+- Changed: Added a project-local reinstall resume bundle under `重装恢复/` so a fresh Codex install can recover the current EcomPilot working context without depending on sidebar chat history.
+- Changed: Added `重装恢复/README.md` as the operator-facing recovery guide, `重装恢复/HANDOFF.md` as the compact current-state summary, and `重装恢复/RECOVERY_PROMPT.txt` as the exact startup prompt for a new Codex session.
+- Changed: Anchored the recovery package to the repo-fact startup order `AGENTS.md -> CURRENT_STATUS.md -> SESSION_LOG.md -> DOC_INDEX.md` and explicitly reminded future sessions to preserve the current boundary instead of inferring missing chat history.
+- Verification: Checked current branch and git context with `git rev-parse --abbrev-ref HEAD`, `git status --short`, `git log --oneline -5`, and re-read `docs/current/THREAD_SCOPE_CHECKLIST.md` before writing the bundle.
+- Boundary: Docs-only handoff packaging only. No schema, migration, dependency, runtime write-path, AI behavior, UI behavior, or product logic change was introduced.
+
 ## 2026-06-09
 
 ### V1.7.1 Phase Closeout Review
