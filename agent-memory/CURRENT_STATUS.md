@@ -3,6 +3,8 @@
 ## Current Progress
 
 - Current stage: `V1.6-08 final acceptance and closeout`
+- Current task state: A new long-term encoding baseline is now in place: workspace `.editorconfig` forces UTF-8 for normal text files, `.vscode/settings.json` defaults the editor to UTF-8, and repo-local `core.hooksPath=.githooks` now runs `npm run encoding:check` on every commit.
+- Current task state: This machine now also has a persistent Windows PowerShell UTF-8 startup profile at `C:\Users\HP\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1`, so new PowerShell sessions default to `chcp 65001`, `ConsoleIn=utf-8`, and `ConsoleOut=utf-8` instead of falling back to the earlier CP936 / ASCII mix.
 - Current task state: The repository encoding guard is now confirmed to be valid UTF-8 based for current tracked text files. The recent mojibake confusion was traced mainly to terminal/display-layer encoding mismatch plus git-quoted non-ASCII paths, not to a fresh wave of corrupted source files.
 - Current task state: `scripts/check-encoding.mjs` now reads tracked files through `git -c core.quotepath=false ls-files -z`, so project-local encoding verification no longer breaks on tracked Chinese paths such as `重装恢复/*.md`.
 - Current task state: The inspiration inbox now has a compatibility redirect layer for legacy or mistyped subpaths. Requests like `/inspirations/14` or `/inspirations/legacy-path?status=pending` now canonicalize back to the query-based inbox route instead of falling into a misleading shell-with-404 state.

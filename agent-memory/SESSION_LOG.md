@@ -4,6 +4,17 @@ Only the latest summary stays here. Older detailed history is archived or retain
 
 ## 2026-06-12
 
+### Long-Term UTF-8 Baseline Hardening
+
+- Changed: Added workspace `.editorconfig` with `charset = utf-8` and `.vscode/settings.json` with UTF-8 editor defaults so future edits are biased toward correct UTF-8 text at save time, not only at review time.
+- Changed: Added repo-local `.githooks/pre-commit` and set `core.hooksPath=.githooks`, so every normal local commit now re-runs `npm run encoding:check` before it can land.
+- Changed: Created `C:\Users\HP\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1` to force new Windows PowerShell sessions onto UTF-8 (`chcp 65001`, `InputEncoding=utf-8`, `OutputEncoding=utf-8`) and reduce the repeated false-positive “源码又乱码了” diagnosis caused by terminal display corruption.
+- Verification: Started a fresh PowerShell process and confirmed `Active code page: 65001`, `Output=utf-8`, `ConsoleOut=utf-8`, and `ConsoleIn=utf-8`.
+- Verification: `npm run encoding:check` still passes under the hardened setup, and the next local commit is expected to re-verify the same guard through the new pre-commit hook.
+- Boundary: Tooling, editor-default, git-hook, and local-shell hardening only. No schema, migration, dependency, product logic, or write-path behavior was changed.
+
+## 2026-06-12
+
 ### Encoding Check Non-ASCII Path Fix
 
 - Changed: Re-investigated the repeated “乱码又回来了” symptom and confirmed that at least one recent diagnosis was being distorted by the terminal layer rather than by newly corrupted source files. `src/config/navigation.ts` still decodes correctly as UTF-8 when read explicitly.

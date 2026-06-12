@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "Running encoding guard..."
+npm run encoding:check || exit 1
