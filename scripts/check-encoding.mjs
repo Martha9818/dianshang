@@ -2,8 +2,9 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { TextDecoder } from "node:util";
 
-const trackedFiles = execFileSync("git", ["ls-files"], { encoding: "utf8" })
-  .split(/\r?\n/)
+const trackedFiles = execFileSync("git", ["-c", "core.quotepath=false", "ls-files", "-z"])
+  .toString("utf8")
+  .split("\0")
   .filter(Boolean);
 
 const skippedPath = /(^|[\\/])(?:\.git|\.next|node_modules|exports|backups|uploads|logs)([\\/]|$)/;

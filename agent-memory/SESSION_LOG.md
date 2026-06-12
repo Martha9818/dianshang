@@ -4,6 +4,17 @@ Only the latest summary stays here. Older detailed history is archived or retain
 
 ## 2026-06-12
 
+### Encoding Check Non-ASCII Path Fix
+
+- Changed: Re-investigated the repeated “乱码又回来了” symptom and confirmed that at least one recent diagnosis was being distorted by the terminal layer rather than by newly corrupted source files. `src/config/navigation.ts` still decodes correctly as UTF-8 when read explicitly.
+- Changed: Fixed `scripts/check-encoding.mjs` so it now uses `git -c core.quotepath=false ls-files -z` instead of line-splitting the default quoted git output, which previously broke on tracked Chinese paths under `重装恢复/`.
+- Changed: Set the repository-local git display config `core.quotepath=false`, so git path output in this repo is now human-readable for Chinese file names instead of octal-escaped quoted sequences.
+- Verification: Ran `npm run encoding:check` successfully after the script fix; it now reports `Encoding check passed: tracked text files are valid UTF-8 with no known mojibake markers.`
+- Verification: Confirmed `git ls-files` now shows `重装恢复/HANDOFF.md`, `README.md`, and `RECOVERY_PROMPT.txt` as readable Chinese paths in this repo.
+- Boundary: Tooling and repo-display fix only. No schema, migration, dependency, product logic, UI behavior, or runtime write-path change was introduced.
+
+## 2026-06-12
+
 ### Inspiration Inbox Legacy Route Compatibility Patch
 
 - Changed: Added `src/app/inspirations/[...slug]/page.tsx` as a narrow compatibility redirect so mistyped or legacy subpaths under `/inspirations/*` no longer render the default Next.js 404 inside the shell and instead canonicalize back to the supported query-based inbox route.

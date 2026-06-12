@@ -3,6 +3,8 @@
 ## Current Progress
 
 - Current stage: `V1.6-08 final acceptance and closeout`
+- Current task state: The repository encoding guard is now confirmed to be valid UTF-8 based for current tracked text files. The recent mojibake confusion was traced mainly to terminal/display-layer encoding mismatch plus git-quoted non-ASCII paths, not to a fresh wave of corrupted source files.
+- Current task state: `scripts/check-encoding.mjs` now reads tracked files through `git -c core.quotepath=false ls-files -z`, so project-local encoding verification no longer breaks on tracked Chinese paths such as `重装恢复/*.md`.
 - Current task state: The inspiration inbox now has a compatibility redirect layer for legacy or mistyped subpaths. Requests like `/inspirations/14` or `/inspirations/legacy-path?status=pending` now canonicalize back to the query-based inbox route instead of falling into a misleading shell-with-404 state.
 - Current task state: A shared inspiration route helper now centralizes canonical inbox URL building for selected-record links and filtered inbox links, reducing the chance that future code paths hand-build unsupported `/inspirations/...` detail paths.
 - Current task state: A reinstall-resume package now exists under `重装恢复/` with `README.md`, `HANDOFF.md`, and `RECOVERY_PROMPT.txt` so a fresh Codex session can resume from repo facts even if sidebar chat history is lost after reinstall.
