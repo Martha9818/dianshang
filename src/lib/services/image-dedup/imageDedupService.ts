@@ -2,6 +2,7 @@ import { readFile, stat } from "node:fs/promises";
 import sharp from "sharp";
 import type { ImageFingerprint, ImageReviewLog } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { buildInspirationsHref } from "@/lib/modules/inspirations/routes";
 import { BUSINESS_ERROR_CODES, ProductBusinessError, formatDateTime } from "@/lib/modules/products";
 import { MATERIAL_STATUS } from "@/lib/modules/materials";
 import { INSPIRATION_STATUSES } from "@/lib/services/inspirations/inspirationTypes";
@@ -610,7 +611,7 @@ function getRelationScopeLabel(scope: string) {
 function buildTargetHref(type: string | null, id: number | null) {
   if (!type || !id) return null;
   if (type === IMAGE_DEDUP_TARGET_TYPES.MATERIAL) return `/materials?materialId=${id}`;
-  if (type === IMAGE_DEDUP_TARGET_TYPES.INSPIRATION) return `/inspirations?selectedId=${id}`;
+  if (type === IMAGE_DEDUP_TARGET_TYPES.INSPIRATION) return buildInspirationsHref({ selectedId: id });
   return null;
 }
 

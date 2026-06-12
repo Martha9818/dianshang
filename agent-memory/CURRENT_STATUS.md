@@ -3,6 +3,8 @@
 ## Current Progress
 
 - Current stage: `V1.6-08 final acceptance and closeout`
+- Current task state: The inspiration inbox now has a compatibility redirect layer for legacy or mistyped subpaths. Requests like `/inspirations/14` or `/inspirations/legacy-path?status=pending` now canonicalize back to the query-based inbox route instead of falling into a misleading shell-with-404 state.
+- Current task state: A shared inspiration route helper now centralizes canonical inbox URL building for selected-record links and filtered inbox links, reducing the chance that future code paths hand-build unsupported `/inspirations/...` detail paths.
 - Current task state: A reinstall-resume package now exists under `重装恢复/` with `README.md`, `HANDOFF.md`, and `RECOVERY_PROMPT.txt` so a fresh Codex session can resume from repo facts even if sidebar chat history is lost after reinstall.
 - Current task state: `V1.7 Design Gate` now also includes a formal confirm-to-competitor design freeze doc at `docs/superpowers/specs/2026-06-09-v17-confirm-to-competitor-design-gate.md`, and the approved `V1.7 MVP Thread 01` minimum confirm-write loop has now been implemented on the local mainline.
 - Current task state: `V1.7 Design Gate` has now started only as a low-risk read-only prep layer. The product detail competitor tab now includes a read-only competitor screenshot draft panel backed by existing `ScreenshotRecognitionJob` rows for the current product.
@@ -40,6 +42,7 @@
 - Current task state: The latest V1.6-02B follow-up tightened the buyer-desk layout to more closely match the approved B-version composition: a flatter KPI strip, a clearer queue-first left rail, a cleaner image-stage center column, a compact row-style AI draft panel on the right, and a less repetitive top section.
 - Current thread outcome: The current mainline now has a clean split between inspiration draft triage and product formal scoring, with explicit manual confirmation before product creation, a clearer product-detail evaluation flow, in-tab guidance for each module, and a top action hierarchy that better matches the formal test-decision workflow.
 - Current acceptance state: `scripts/thread-v16-02` through `thread-v16-07` verification all pass, and `npm run typecheck`, `npm run lint`, `npm run encoding:check`, `npm run build`, plus `npx prisma validate` all pass on the current mainline.
+- Current acceptance state: The new route-compat regression check `npx tsx scripts/inspiration-route-compat-verify.mts` now passes together with `npm run typecheck`, `npm run lint`, and `npm run build`, and local HTTP verification confirms `http://localhost:3000/inspirations/14` now returns `308 -> /inspirations?selectedId=14` while `http://localhost:3000/inspirations/legacy-path?status=pending` now returns `308 -> /inspirations?status=pending`.
 - Current acceptance state: Local browser checks confirm `/inspirations` still reads as the AI inbox / buyer desk main entry, and `/products/[id]` still reads as the formal evaluation workflow with `补竞品 -> 看机会 -> 算利润 -> 得结论`.
 - Current acceptance state: `docs/superpowers/acceptance/2026-06-09-v16-final-acceptance.md` records the final closeout judgment for V1.6.
 - Current planning baseline: `docs/superpowers/specs/2026-06-02-v16-direction-sync-report.md`

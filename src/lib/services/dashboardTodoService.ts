@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { buildInspirationsHref } from "@/lib/modules/inspirations/routes";
 import { PRODUCT_STATUS_VALUES } from "@/lib/modules/products/constants";
 import { sanitizeAIErrorSummary } from "@/lib/services/ai";
 import { getBackupSummary } from "@/lib/services/backup-log-service";
@@ -268,7 +269,7 @@ export async function getDashboardTodoSummary(): Promise<DashboardTodoSummary> {
       title: "待处理灵感",
       count: pendingInspirationCount,
       description: "仍在灵感箱待查看或处理，需要人工决定归档、放弃或转商品。",
-      href: "/inspirations?status=pending",
+      href: buildInspirationsHref({ status: "pending" }),
       actionLabel: "处理灵感",
       tone: "amber",
       sourceLabel: "Inspiration",

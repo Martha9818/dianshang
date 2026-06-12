@@ -2,6 +2,18 @@
 
 Only the latest summary stays here. Older detailed history is archived or retained in current docs.
 
+## 2026-06-12
+
+### Inspiration Inbox Legacy Route Compatibility Patch
+
+- Changed: Added `src/app/inspirations/[...slug]/page.tsx` as a narrow compatibility redirect so mistyped or legacy subpaths under `/inspirations/*` no longer render the default Next.js 404 inside the shell and instead canonicalize back to the supported query-based inbox route.
+- Changed: Added `src/lib/modules/inspirations/routes.ts` as the shared canonical URL builder for the inspiration inbox, including `selectedId` support and a raw-search-param passthrough helper for safe client-side query updates.
+- Changed: Switched the inspiration inbox filter push path, dashboard pending-inspiration todo link, and image-dedup inspiration target link to the shared helper so future code paths stop hand-building unsupported `/inspirations/...` detail-style URLs.
+- Changed: Added `scripts/inspiration-route-compat-verify.mts` to lock the canonical URL helper, legacy slug parsing, compatibility route presence, and the removal of raw hand-built `/inspirations?...` pushes from the inspiration manager.
+- Verification: Ran `npx tsx scripts/inspiration-route-compat-verify.mts`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Verification: Real local HTTP checks on the running dev server confirmed `http://localhost:3000/inspirations/14` now returns `308 -> /inspirations?selectedId=14`, and `http://localhost:3000/inspirations/legacy-path?status=pending` now returns `308 -> /inspirations?status=pending`.
+- Boundary: Narrow route-compatibility patch only. No schema, migration, dependency, AI behavior, filesystem write behavior, or product-data logic change was introduced.
+
 ## 2026-06-11
 
 ### Reinstall Resume Package

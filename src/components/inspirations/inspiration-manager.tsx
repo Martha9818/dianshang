@@ -50,6 +50,9 @@ import {
   INSPIRATION_CONVERSION_CONFIRM_NOTE,
   INSPIRATION_CONVERSION_CONFIRM_VALUE,
 } from "@/lib/modules/inspirations/conversion";
+import {
+  buildInspirationsHrefFromSearchParams,
+} from "@/lib/modules/inspirations/routes";
 import type { InspirationTriageResult } from "@/lib/modules/inspirations/triage";
 import { DANGEROUS_CONFIRM_TEXT } from "@/lib/modules/batch/rules";
 import type { InspirationAISuggestion } from "@/lib/services/inspirations/inspirationTypes";
@@ -442,7 +445,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
       params.set("selectedId", String(effectiveSelectedId));
     }
 
-    router.push(`/inspirations?${params.toString()}`);
+    router.push(buildInspirationsHrefFromSearchParams(params));
   }
 
   const formKey = selectedInspiration ? `${selectedInspiration.id}-${selectedInspiration.formattedUpdatedAt}` : "empty";
