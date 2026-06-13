@@ -1,8 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ActionButton,
@@ -27,6 +28,7 @@ import {
   ignoreInspirationImageReviewLogAction,
   markInspirationImageReviewLogArchiveSuggestedAction,
   markInspirationReviewedAction,
+  pickInspirationFolderAction,
   rejectInspirationAction,
   rebuildInspirationFingerprintAction,
   rebuildInspirationLibraryFingerprintsAction,
@@ -194,6 +196,7 @@ type InspirationsPageData = {
   };
   settingView: {
     configured: boolean;
+    folderPath: string | null;
     displayPath: string | null;
     scanEnabled: boolean;
     scanIntervalMinutes: number;
@@ -241,6 +244,12 @@ const secondaryButtonClassName =
   "inline-flex h-12 items-center justify-center rounded-[18px] border border-[#D5DEE8] bg-white px-5 text-sm font-medium text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.04)] disabled:opacity-60";
 const dangerButtonClassName =
   "inline-flex h-12 items-center justify-center rounded-[18px] border border-rose-200 bg-[#FFF8F7] px-5 text-sm font-medium text-rose-600 disabled:opacity-60";
+const modalInputClassName =
+  "h-11 w-full rounded-[16px] border border-[#D8E0EB] bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-[#6B8ECF] focus:ring-4 focus:ring-[#E6EEF9] disabled:bg-[#F6F7F8] disabled:text-slate-400";
+const modalPrimaryButtonClassName =
+  "inline-flex h-11 items-center justify-center gap-2 rounded-[16px] bg-[linear-gradient(135deg,#365B8C,#213B61)] px-5 text-sm font-medium text-white shadow-[0_12px_24px_rgba(33,59,97,0.16)] disabled:opacity-60";
+const modalSecondaryButtonClassName =
+  "inline-flex h-11 items-center justify-center rounded-[16px] border border-[#D5DEE8] bg-white px-4 text-sm font-medium text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.04)] disabled:opacity-60";
 
 function getSelectedInspiration(inspirations: InspirationView[], selectedId: number | null) {
   if (selectedId === null) {
@@ -325,6 +334,14 @@ function getAiTaskSummary(
   return fallback;
 }
 
+function buildUploadsApiSrc(relativePath: string | null | undefined) {
+  if (!relativePath) {
+    return null;
+  }
+
+  return `/api/uploads/${relativePath.replace(/^uploads[\\/]/, "")}`;
+}
+
 export function InspirationManager({ data, readonlyNotice }: { data: InspirationsPageData; readonlyNotice: string | null }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -338,6 +355,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
   const [selectedBatchAction, setSelectedBatchAction] = useState(inspirationBatchOperations[0]?.value ?? "");
   const [batchConfirmText, setBatchConfirmText] = useState("");
   const [imageZoom, setImageZoom] = useState(100);
+  const [isStageImageOpen, setIsStageImageOpen] = useState(false);
 
   const [batchState, batchAction, batchPending] = useActionState<BatchActionState, FormData>(batchInspirationOperationAction, { ok: false, message: "" });
   const [folderState, folderAction, folderPending] = useActionState(saveInspirationFolderAction, { success: false, error: "" });
@@ -361,6 +379,20 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
   const [rejectState, rejectAction, rejectPending] = useActionState(rejectInspirationAction, { success: false, error: "" });
   const [convertState, convertAction, convertPending] = useActionState(convertInspirationToProductAction, { success: false, error: "" });
   const [convertConfirmInspirationId, setConvertConfirmInspirationId] = useState<number | null>(null);
+  const [draftFolderPath, setDraftFolderPath] = useState(data.settingView.folderPath ?? "");
+  const [draftScanEnabled, setDraftScanEnabled] = useState(data.settingView.scanEnabled);
+  const [draftScanIntervalMinutes, setDraftScanIntervalMinutes] = useState(String(data.settingView.scanIntervalMinutes));
+  const [modalPickFeedback, setModalPickFeedback] = useState<{ type: "idle" | "error"; message: string }>({
+    type: "idle",
+    message: "",
+  });
+  const [modalSaveFeedback, setModalSaveFeedback] = useState<{ success: boolean; message: string; error: string }>({
+    success: false,
+    message: "",
+    error: "",
+  });
+  const [isPickingFolder, startPickFolderTransition] = useTransition();
+  const [isSavingSettings, startSaveSettingsTransition] = useTransition();
 
   const visibleInspirations = useMemo(() => {
     if (statusFilter === "all") {
@@ -394,6 +426,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
   const selectedInboxFields = selectedInspiration ? buildInspirationInboxPrimaryFields(selectedInspiration) : [];
   const selectedAiStatus = selectedInspiration ? getInspirationInboxAiStatus(selectedInspiration) : null;
   const selectedTriage = selectedInspiration ? getInspirationInboxTriage(selectedInspiration) : null;
+  const selectedOriginalImageSrc = selectedInspiration ? buildUploadsApiSrc(selectedInspiration.imagePath) : null;
   const selectedCandidatePrice = getInboxFieldValue(selectedInboxFields, "候选价格");
   const selectedProductType = getInboxFieldValue(selectedInboxFields, "商品类型", "信息不足");
   const selectedPlatform = getInboxFieldValue(selectedInboxFields, "建议平台", "信息不足");
@@ -401,12 +434,99 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
   const selectedNextStep = getInboxFieldValue(selectedInboxFields, "下一步建议", "先生成 AI 草稿，再决定保留、放弃或转商品。");
   const visibleScanLogs = scanLogExpanded ? data.recentScanLogs : data.recentScanLogs.slice(0, 4);
   const recentScanLogIds = useMemo(() => data.recentScanLogs.map((log) => log.id), [data.recentScanLogs]);
+  const savedFolderPath = data.settingView.folderPath ?? "";
+  const savedScanEnabled = data.settingView.scanEnabled;
+  const savedScanIntervalMinutes = String(data.settingView.scanIntervalMinutes);
+  const effectiveScanEnabled = draftScanEnabled;
+  const currentFolderPath = draftFolderPath;
+  const statusCardClassName = effectiveScanEnabled
+    ? "rounded-2xl border border-emerald-200 bg-[linear-gradient(180deg,#F4FFF8,#ECFDF3)] px-4 py-4"
+    : "rounded-2xl border border-[#E7ECF4] bg-white px-4 py-4";
+  const statusCardLabelClassName = effectiveScanEnabled
+    ? "text-xs font-medium uppercase tracking-[0.14em] text-emerald-500"
+    : "text-xs font-medium uppercase tracking-[0.14em] text-slate-400";
+  const statusCardTitleClassName = effectiveScanEnabled ? "mt-2 text-sm font-semibold text-emerald-700" : "mt-2 text-sm font-semibold text-slate-900";
+  const statusCardBodyClassName = effectiveScanEnabled ? "mt-2 text-xs leading-5 text-emerald-700/80" : "mt-2 text-xs leading-5 text-slate-500";
 
   useEffect(() => {
     if (convertState.success && convertState.data?.id) {
       router.push(`/products/${convertState.data.id}`);
     }
   }, [convertState.data, convertState.success, router]);
+
+  const resetModalDrafts = useCallback(() => {
+    setDraftFolderPath(savedFolderPath);
+    setDraftScanEnabled(savedScanEnabled);
+    setDraftScanIntervalMinutes(savedScanIntervalMinutes);
+    setModalPickFeedback({ type: "idle", message: "" });
+    setModalSaveFeedback({ success: false, message: "", error: "" });
+  }, [savedFolderPath, savedScanEnabled, savedScanIntervalMinutes]);
+
+  function handlePickFolder() {
+    if (!data.runtime.isWritable || isPickingFolder) {
+      return;
+    }
+
+    setModalPickFeedback({ type: "idle", message: "" });
+    setModalSaveFeedback({ success: false, message: "", error: "" });
+
+    startPickFolderTransition(async () => {
+      const result = await pickInspirationFolderAction(undefined, new FormData());
+
+      if (!result.success) {
+        setModalPickFeedback({ type: "error", message: result.error ?? "打开目录选择器失败，请稍后重试。" });
+        return;
+      }
+
+      if (result.cancelled || !result.data?.folderPath) {
+        setModalPickFeedback({ type: "idle", message: "" });
+        return;
+      }
+
+      setDraftFolderPath(result.data.folderPath);
+      setModalPickFeedback({ type: "idle", message: "" });
+    });
+  }
+
+  function handleSaveModalSettings(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!data.runtime.isWritable || isSavingSettings) {
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    formData.set("folderPath", draftFolderPath);
+
+    startSaveSettingsTransition(async () => {
+      const result = await saveInspirationScanConfigAction(undefined, formData);
+
+      if (!result.success) {
+        setModalSaveFeedback({ success: false, message: "", error: result.error ?? "保存灵感定时扫描配置失败，请稍后重试。" });
+        return;
+      }
+
+      const nextFolderPath =
+        result.data && "folderPath" in result.data && typeof result.data.folderPath === "string"
+          ? result.data.folderPath
+          : draftFolderPath;
+      const nextEnabled = result.data && "enabled" in result.data && typeof result.data.enabled === "boolean" ? result.data.enabled : draftScanEnabled;
+      const nextInterval =
+        result.data && "intervalMinutes" in result.data && result.data.intervalMinutes != null
+          ? String(result.data.intervalMinutes)
+          : draftScanIntervalMinutes;
+
+      setDraftFolderPath(nextFolderPath);
+      setDraftScanEnabled(nextEnabled);
+      setDraftScanIntervalMinutes(nextInterval);
+      setModalPickFeedback({ type: "idle", message: "" });
+      setModalSaveFeedback({
+        success: true,
+        message: `设置已保存：${nextEnabled ? `已启用，每 ${nextInterval} 分钟执行一次。` : "当前已停用。"}`,
+        error: "",
+      });
+    });
+  }
 
   function openConvertConfirm() {
     if (!selectedInspiration || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable) {
@@ -448,6 +568,42 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
     router.push(buildInspirationsHrefFromSearchParams(params));
   }
 
+  const settingsOpen = searchParams.get("panel") === "settings";
+
+  const closeSettingsPanel = useCallback(() => {
+    resetModalDrafts();
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("panel");
+    if (effectiveSelectedId) {
+      params.set("selectedId", String(effectiveSelectedId));
+    }
+    router.push(buildInspirationsHrefFromSearchParams(params));
+  }, [effectiveSelectedId, resetModalDrafts, router, searchParams]);
+
+  const settingsPanelHref = useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("panel", "settings");
+    if (effectiveSelectedId) {
+      params.set("selectedId", String(effectiveSelectedId));
+    }
+    return buildInspirationsHrefFromSearchParams(params);
+  }, [effectiveSelectedId, searchParams]);
+
+  useEffect(() => {
+    if (!settingsOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeSettingsPanel();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [settingsOpen, closeSettingsPanel]);
+
   const formKey = selectedInspiration ? `${selectedInspiration.id}-${selectedInspiration.formattedUpdatedAt}` : "empty";
   const renderBuyerDeskLayout = Boolean(data.runtime);
 
@@ -463,13 +619,13 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
               <span className="text-sm text-slate-400">AI 帮你看图、写草稿、给建议，快速决策是否值得转商品。</span>
             </div>
           </div>
-          <a
-            href="#scan-settings"
+          <Link
+            href={settingsPanelHref}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[#DDE6F2] bg-white px-4 text-sm font-medium text-slate-700 shadow-[0_6px_18px_rgba(15,23,42,0.04)] transition hover:border-[#B9C9DD] hover:bg-[#F8FAFC]"
           >
             <MiniIcon name="gear" className="h-4 w-4" />
             收件箱设置
-          </a>
+          </Link>
         </header>
 
         <section className="grid overflow-hidden rounded-2xl border border-[#E2E8F0] bg-[#FFFEFC] shadow-[0_10px_28px_rgba(15,23,42,0.035)] xl:grid-cols-4">
@@ -691,8 +847,31 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
                   <div className="flex min-h-[min(58dvh,640px)] items-center justify-center overflow-hidden rounded-2xl border border-[#EFE8DE] bg-[radial-gradient(circle_at_50%_15%,#FFFDF8_0,#F7F0E6_48%,#EFE7DA_100%)] p-7">
-                    <div style={{ transform: `scale(${imageZoom / 100})` }} className="w-full max-w-[620px] origin-center transition-transform">
-                      <ProductImage src={selectedInspiration.displayPath} alt={selectedInspiration.imagePath} label="IMG" large missing={!selectedInspiration.fileExists} />
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        if (selectedOriginalImageSrc && selectedInspiration.fileExists) {
+                          setIsStageImageOpen(true);
+                        }
+                      }}
+                      onKeyDown={(event) => {
+                        if ((event.key === "Enter" || event.key === " ") && selectedOriginalImageSrc && selectedInspiration.fileExists) {
+                          event.preventDefault();
+                          setIsStageImageOpen(true);
+                        }
+                      }}
+                      style={{ transform: `scale(${imageZoom / 100})` }}
+                      className="w-full max-w-[620px] origin-center cursor-zoom-in transition-transform"
+                    >
+                      <ProductImage
+                        src={selectedInspiration.imagePath}
+                        alt={selectedInspiration.imagePath}
+                        label="IMG"
+                        large
+                        fit="contain"
+                        missing={!selectedInspiration.fileExists}
+                      />
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-3">
@@ -713,6 +892,45 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                       <StatusBadge label={selectedPlatform} tone="green" />
                     </div>
                     <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{selectedNextStep}</p>
+                  </section>
+                  <section className="rounded-2xl border border-[#E2E8F0] bg-[#FFFEFC] p-4 shadow-[0_12px_30px_rgba(15,23,42,0.035)]">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base font-semibold tracking-[-0.02em] text-slate-950">初筛决策</h3>
+                        <p className="mt-1 text-xs text-slate-500">看完原图和 AI 草稿后，直接决定下一步。</p>
+                      </div>
+                      <span className="rounded-full bg-[#F4F7FA] px-3 py-1 text-xs font-medium text-slate-500">人工确认</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <form action={reviewAction}>
+                        <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
+                        <button type="submit" className="flex h-[72px] w-full flex-col items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:-translate-y-[1px] hover:bg-emerald-100 disabled:opacity-50" disabled={reviewPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
+                          <span className="text-base font-semibold">保留</span>
+                          <span className="text-xs">继续跟进</span>
+                        </button>
+                      </form>
+                      <form action={rejectAction}>
+                        <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
+                        <input type="hidden" name="rejectedReason" value="快速初筛放弃" />
+                        <button type="submit" className="flex h-[72px] w-full flex-col items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:-translate-y-[1px] hover:bg-amber-100 disabled:opacity-50" disabled={rejectPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
+                          <span className="text-base font-semibold">放弃</span>
+                          <span className="text-xs">不再处理</span>
+                        </button>
+                      </form>
+                      <div>
+                        <button
+                          type="button"
+                          onClick={openConvertConfirm}
+                          className="flex h-[72px] w-full flex-col items-center justify-center rounded-xl bg-[#203149] text-white shadow-[0_14px_26px_rgba(32,49,73,0.22)] transition hover:-translate-y-[1px] hover:bg-[#152236] disabled:opacity-50"
+                          disabled={convertPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}
+                        >
+                          <span className="text-base font-semibold">转商品</span>
+                          <span className="text-xs">先进入人工确认</span>
+                        </button>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-center text-xs text-slate-400">快捷键: 1 保留　2 放弃　3 转商品</p>
+                    <ActionMessages messages={[reviewState.error, archiveState.error, rejectState.error, convertState.error]} />
                   </section>
                   <details className="mt-4 rounded-2xl border border-[#E7EBF0] bg-white">
                     <summary className="cursor-pointer list-none px-4 py-3">
@@ -767,46 +985,6 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
             {selectedInspiration ? (
               <>
                 <AiDraftPanel source={selectedInspiration} fields={selectedInboxFields} aiStatus={selectedAiStatus} triage={selectedTriage} />
-
-                <section className="rounded-2xl border border-[#E2E8F0] bg-[#FFFEFC] p-4 shadow-[0_12px_30px_rgba(15,23,42,0.035)]">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-semibold tracking-[-0.02em] text-slate-950">初筛决策</h3>
-                      <p className="mt-1 text-xs text-slate-500">看完原图和 AI 草稿后，直接决定下一步。</p>
-                    </div>
-                    <span className="rounded-full bg-[#F4F7FA] px-3 py-1 text-xs font-medium text-slate-500">人工确认</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <form action={reviewAction}>
-                      <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
-                      <button type="submit" className="flex h-[72px] w-full flex-col items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:-translate-y-[1px] hover:bg-emerald-100 disabled:opacity-50" disabled={reviewPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
-                        <span className="text-base font-semibold">保留</span>
-                        <span className="text-xs">继续跟进</span>
-                      </button>
-                    </form>
-                    <form action={rejectAction}>
-                      <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
-                      <input type="hidden" name="rejectedReason" value="快速初筛放弃" />
-                      <button type="submit" className="flex h-[72px] w-full flex-col items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:-translate-y-[1px] hover:bg-amber-100 disabled:opacity-50" disabled={rejectPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
-                        <span className="text-base font-semibold">放弃</span>
-                        <span className="text-xs">不再处理</span>
-                      </button>
-                    </form>
-                    <div>
-                      <button
-                        type="button"
-                        onClick={openConvertConfirm}
-                        className="flex h-[72px] w-full flex-col items-center justify-center rounded-xl bg-[#203149] text-white shadow-[0_14px_26px_rgba(32,49,73,0.22)] transition hover:-translate-y-[1px] hover:bg-[#152236] disabled:opacity-50"
-                        disabled={convertPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}
-                      >
-                        <span className="text-base font-semibold">转商品</span>
-                        <span className="text-xs">先进入人工确认</span>
-                      </button>
-                    </div>
-                  </div>
-                  <p className="mt-3 text-center text-xs text-slate-400">快捷键: 1 保留　2 放弃　3 转商品</p>
-                  <ActionMessages messages={[reviewState.error, archiveState.error, rejectState.error, convertState.error]} />
-                </section>
 
                 <details id="convert-form-panel" className="rounded-xl border border-[#E2E8F0] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
                   <summary className="cursor-pointer list-none px-4 py-4">
@@ -891,21 +1069,6 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                     </form>
                     <ImageDedupPanel summary={selectedInspiration.imageDedup} ignoreAction={dedupIgnoreAction} archiveSuggestAction={dedupArchiveAction} actionPending={dedupIgnorePending || dedupArchivePending || !data.runtime.isWritable} />
                     <OperationLogList logs={selectedInspiration.operationLogs} />
-                    <TaskTable
-                      title="最近 AI 草稿任务"
-                      empty="暂无 AI 草稿任务。"
-                      tasks={data.recentTasks.aiDraftJobs}
-                      retryAction={retryAiAction}
-                      retryPending={retryAiPending}
-                      retryFieldName="aiDraftJobId"
-                      deleteAction={deleteAiDraftJobsAction}
-                      deletePending={deleteAiDraftJobsPending}
-                      deleteFieldName="aiDraftJobIds"
-                      actionMessage={deleteAiDraftJobsState.message}
-                      actionError={deleteAiDraftJobsState.error}
-                      redactAiFailureDetails
-                      disabled={!data.runtime.isWritable}
-                    />
                   </div>
                 </details>
               </>
@@ -915,70 +1078,194 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           </aside>
         </section>
 
-        <details id="scan-settings" className="mb-12 rounded-xl border border-[#E2E8F0] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
-          <summary className="cursor-pointer list-none px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-slate-900">收件箱设置与扫描记录</h3>
-                <p className="mt-1 text-xs text-slate-500">扫描入口、定时配置、ScanLog 和任务历史仍在同页可达。</p>
+        {settingsOpen ? (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(15,23,42,0.26)] p-4 backdrop-blur-[3px] md:p-8"
+            onClick={closeSettingsPanel}
+            role="presentation"
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="收件箱设置"
+              className="w-full max-w-[840px] rounded-[26px] border border-[#DDE6F2] bg-[#FCFDFE] shadow-[0_24px_72px_rgba(15,23,42,0.14)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-4 border-b border-[#E8EDF5] px-6 py-5">
+                <div>
+                  <h3 className="text-[1.7rem] font-semibold tracking-[-0.05em] text-slate-950">收件箱设置</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeSettingsPanel}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-[18px] border border-[#DDE6F2] bg-white text-[1.4rem] leading-none text-slate-500 transition hover:border-[#B9C9DD] hover:text-slate-700"
+                  aria-label="关闭收件箱设置"
+                >
+                  ×
+                </button>
               </div>
-              <span className="text-slate-400">⌄</span>
-            </div>
-          </summary>
-          <div className="grid gap-4 border-t border-[#E8EDF5] p-4 xl:grid-cols-[1fr_1fr]">
-            <form action={folderAction} className="space-y-3 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-              <Field label="灵感箱文件夹">
-                <input name="folderPath" className={inputClassName} placeholder="输入 Windows 本地灵感文件夹完整路径" defaultValue="" disabled={folderPending || !data.runtime.isWritable} />
-              </Field>
-              <div className="flex flex-wrap gap-2">
-                <button formAction={scanAction} type="submit" className={primaryButtonClassName} disabled={scanPending || !data.runtime.isWritable}>
-                  {scanPending ? "扫描中..." : "立即扫描"}
-                </button>
-                <ActionButton type="submit" variant="secondary">{folderPending ? "保存中..." : "保存目录"}</ActionButton>
-                <button formAction={dedupLibraryAction} type="submit" className={secondaryButtonClassName} disabled={dedupLibraryPending || !data.runtime.isWritable}>
-                  {dedupLibraryPending ? "检查中..." : "检查灵感相似度"}
-                </button>
+
+              <div className="px-6 py-5">
+                <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
+                  <div className="flex h-full flex-col rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                    <div className="border-b border-[#EEF2F7] px-5 py-4">
+                      <p className="text-sm font-semibold text-slate-900">灵感箱文件夹</p>
+                    </div>
+                    <div className="flex flex-1 flex-col gap-4 px-5 py-4">
+                      <Field label="当前目录">
+                        <input
+                          className={modalInputClassName}
+                          value={currentFolderPath}
+                          placeholder="未设置"
+                          readOnly
+                          disabled={!data.runtime.isWritable}
+                        />
+                      </Field>
+                      <div className="flex justify-end">
+                        <button type="button" onClick={handlePickFolder} className={modalSecondaryButtonClassName} disabled={isPickingFolder || !data.runtime.isWritable}>
+                          {isPickingFolder ? "打开中..." : "更改目录"}
+                        </button>
+                      </div>
+                      {modalPickFeedback.type === "error" ? <p className="text-sm text-rose-600">{modalPickFeedback.message}</p> : null}
+                    </div>
+                  </div>
+
+                  <form
+                    id="inspiration-settings-config-form"
+                    onSubmit={handleSaveModalSettings}
+                    className="flex h-full flex-col rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_10px_24px_rgba(15,23,42,0.04)]"
+                  >
+                    <input type="hidden" name="folderPath" value={draftFolderPath} />
+                    <div className="border-b border-[#EEF2F7] px-5 py-4">
+                      <p className="text-sm font-semibold text-slate-900">定时扫描</p>
+                    </div>
+                    <div className="flex flex-1 flex-col gap-4 px-5 py-4">
+                      <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-slate-700">
+                        <input
+                          name="scanEnabled"
+                          type="checkbox"
+                          checked={draftScanEnabled}
+                          onChange={(event) => setDraftScanEnabled(event.target.checked)}
+                          disabled={!data.runtime.isWritable || isSavingSettings}
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                        />
+                        启用应用内定时扫描
+                      </label>
+                      <Field label="扫描间隔">
+                        <select
+                          name="scanIntervalMinutes"
+                          value={draftScanIntervalMinutes}
+                          onChange={(event) => setDraftScanIntervalMinutes(event.target.value)}
+                          className={modalInputClassName}
+                          disabled={!data.runtime.isWritable || isSavingSettings}
+                        >
+                          <option value="5">5 分钟</option>
+                          <option value="10">10 分钟</option>
+                          <option value="15">15 分钟</option>
+                          <option value="30">30 分钟</option>
+                          <option value="60">1 小时</option>
+                          <option value="120">2 小时</option>
+                          <option value="240">4 小时</option>
+                          <option value="1440">每天</option>
+                        </select>
+                      </Field>
+                    </div>
+                  </form>
+                </div>
+
+                <section className="mt-4 rounded-[20px] border border-[#E2E8F0] bg-[linear-gradient(180deg,#FCFEFF,#F8FBFE)] px-5 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div className={statusCardClassName}>
+                      <p className={statusCardLabelClassName}>当前状态</p>
+                      <p className={statusCardTitleClassName}>{effectiveScanEnabled ? "监听中，运行正常" : "定时扫描未启用"}</p>
+                      <p className={statusCardBodyClassName}>
+                        {scanState.success
+                          ? `本次扫描：新增 ${scanState.data?.newFiles ?? 0}，重复 ${scanState.data?.skippedDuplicates ?? 0}，失败 ${scanState.data?.failedFiles ?? 0}`
+                          : data.latestScan
+                            ? `最近一次扫描：新增 ${data.latestScan.newFiles}，重复 ${data.latestScan.skippedDuplicates}，失败 ${data.latestScan.failedFiles}`
+                            : "暂无扫描记录"}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-[#E7ECF4] bg-white px-4 py-4">
+                      <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">上次扫描</p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">{data.latestScan ? data.latestScan.formattedStartedAt : "暂无"}</p>
+                      <p className="mt-2 text-xs leading-5 text-slate-500">{data.latestScan ? data.latestScan.status : "未执行"}</p>
+                    </div>
+                  </div>
+
+                  {modalSaveFeedback.success ? <p className="mt-4 text-sm text-emerald-600">{modalSaveFeedback.message}</p> : null}
+                  {modalSaveFeedback.error ? <p className="mt-4 text-sm text-rose-600">{modalSaveFeedback.error}</p> : null}
+                  {scanState.error ? <p className="mt-4 text-sm text-rose-600">{scanState.error}</p> : null}
+                  {dedupLibraryState.error ? <p className="mt-4 text-sm text-rose-600">{dedupLibraryState.error}</p> : null}
+                  {dedupLibraryState.success ? (
+                    <p className="mt-4 text-sm text-emerald-600">
+                      {(dedupLibraryState.data?.total ?? 0) === 0
+                        ? "当前没有灵感图片可检查。"
+                        : `已检查 ${dedupLibraryState.data?.total ?? 0} 张灵感图片，疑似重复 ${dedupLibraryState.data?.exactCount ?? 0}，高相似 ${dedupLibraryState.data?.similarCount ?? 0}，失败 ${dedupLibraryState.data?.failedCount ?? 0}。`}
+                    </p>
+                  ) : null}
+                </section>
+
+                <div className="mt-4 flex flex-col gap-3 border-t border-[#E8EDF5] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap gap-3">
+                    <form action={scanAction}>
+                      <button type="submit" className={modalSecondaryButtonClassName} disabled={scanPending || !data.runtime.isWritable}>
+                        {scanPending ? "扫描中..." : "立即扫描"}
+                      </button>
+                    </form>
+                    <form action={dedupLibraryAction}>
+                      <button type="submit" className={modalSecondaryButtonClassName} disabled={dedupLibraryPending || !data.runtime.isWritable}>
+                        {dedupLibraryPending ? "检查中..." : "检查灵感相似度"}
+                      </button>
+                    </form>
+                  </div>
+                  <button
+                    type="submit"
+                    form="inspiration-settings-config-form"
+                    className={modalPrimaryButtonClassName}
+                    disabled={!data.runtime.isWritable || isSavingSettings || !draftFolderPath.trim()}
+                  >
+                    {isSavingSettings ? "保存中..." : "保存设置"}
+                  </button>
+                </div>
               </div>
-            </form>
-            <div className="space-y-4">
-              <form action={scanConfigAction} className="grid gap-3 rounded-lg border border-[#E2E8F0] bg-white p-4 md:grid-cols-[1fr_160px_auto] md:items-end">
-                <label className="flex min-h-12 items-center gap-3 text-sm font-medium text-slate-700">
-                  <input name="scanEnabled" type="checkbox" defaultChecked={data.settingView.scanEnabled} disabled={!data.runtime.isWritable || scanConfigPending} className="h-4 w-4 rounded border-slate-300 text-blue-600" />
-                  启用应用内定时扫描
-                </label>
-                <Field label="扫描间隔">
-                  <select name="scanIntervalMinutes" defaultValue={String(data.settingView.scanIntervalMinutes)} className={inputClassName} disabled={!data.runtime.isWritable || scanConfigPending}>
-                    <option value="5">5 分钟</option>
-                    <option value="10">10 分钟</option>
-                    <option value="15">15 分钟</option>
-                    <option value="30">30 分钟</option>
-                    <option value="60">1 小时</option>
-                    <option value="120">2 小时</option>
-                    <option value="240">4 小时</option>
-                    <option value="1440">每天</option>
-                  </select>
-                </Field>
-                <button type="submit" className={secondaryButtonClassName} disabled={!data.runtime.isWritable || scanConfigPending}>
-                  {scanConfigPending ? "保存中..." : "保存"}
-                </button>
-              </form>
-              <TaskTable
-                title="最近扫描任务"
-                empty="暂无扫描任务。"
-                tasks={data.recentTasks.scanJobs}
-                retryAction={retryScanAction}
-                retryPending={retryScanPending}
-                retryFieldName="scanJobId"
-                deleteAction={deleteScanJobsAction}
-                deletePending={deleteScanJobsPending}
-                deleteFieldName="scanJobIds"
-                actionMessage={deleteScanJobsState.message}
-                actionError={deleteScanJobsState.error}
-                disabled={!data.runtime.isWritable}
-              />
             </div>
           </div>
-        </details>
+        ) : null}
+
+        {isStageImageOpen && selectedInspiration && selectedOriginalImageSrc ? (
+          <div
+            className="fixed inset-0 z-40 flex items-center justify-center bg-[rgba(15,23,42,0.78)] p-4 backdrop-blur-[2px] md:p-8"
+            onClick={() => setIsStageImageOpen(false)}
+            role="presentation"
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="原图预览"
+              className="relative flex h-[min(88vh,980px)] w-full max-w-[1400px] items-center justify-center overflow-hidden rounded-[28px] border border-white/15 bg-[#0F172A]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setIsStageImageOpen(false)}
+                className="absolute right-4 top-4 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-xl leading-none text-white transition hover:bg-white/20"
+                aria-label="关闭原图预览"
+              >
+                ×
+              </button>
+              <div className="relative h-full w-full">
+                <Image
+                  src={selectedOriginalImageSrc}
+                  alt={selectedInspiration.imagePath}
+                  fill
+                  sizes="100vw"
+                  className="object-contain"
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }

@@ -41,7 +41,7 @@ export default async function InspirationsPage({
   const readonlyNotice = runtime.isWritable ? null : "预览环境只读，请在 Windows 本地验收。";
   const pageResult = await getInspirationPageData(query).catch((error) => ({
     runtime: { isWritable: false },
-    settingView: { configured: false, displayPath: null, scanEnabled: false, scanIntervalMinutes: 30 },
+    settingView: { configured: false, folderPath: null, displayPath: null, scanEnabled: false, scanIntervalMinutes: 30 },
     inspirations: [],
     recentScanLogs: [],
     latestScan: null,

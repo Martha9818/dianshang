@@ -8,6 +8,7 @@ export function ProductImage({
   square = false,
   missing = false,
   large = false,
+  fit = "cover",
 }: {
   src?: string | null;
   alt: string;
@@ -15,6 +16,7 @@ export function ProductImage({
   square?: boolean;
   missing?: boolean;
   large?: boolean;
+  fit?: "cover" | "contain";
 }) {
   const imagePath = src?.replace(/^uploads[\\/]/, "");
 
@@ -43,7 +45,7 @@ export function ProductImage({
         alt={alt}
         fill
         sizes={large ? "(min-width: 1280px) 360px, 100vw" : square ? "64px" : "48px"}
-        className="object-cover"
+        className={fit === "contain" ? "object-contain" : "object-cover"}
       />
     </div>
   );

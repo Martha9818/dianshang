@@ -24,6 +24,7 @@ import {
   ignoreInspirationAiDraft,
   ignoreInspiration,
   markReviewed,
+  pickInspirationFolderPath,
   rejectInspiration,
   retryFailedInspirationScanJob,
   retryInspirationAiDraftJob,
@@ -31,6 +32,7 @@ import {
   runScheduledInspirationScanIfDue,
   saveInspirationDraft,
   saveInspirationFolderPath,
+  saveInspirationSettings,
   saveInspirationScanConfig,
 } from "@/lib/services/inspirations";
 import { type BatchOperationResult } from "@/lib/modules/batch/rules";
@@ -86,6 +88,21 @@ export async function saveInspirationFolderAction(_prevState: unknown, formData:
   }
 }
 
+export async function pickInspirationFolderAction(_prevState: unknown, _formData: FormData) {
+  void _prevState;
+  void _formData;
+  try {
+    const result = await pickInspirationFolderPath();
+    return { success: true as const, data: result, cancelled: result.cancelled };
+  } catch (error) {
+    return {
+      success: false as const,
+      cancelled: false as const,
+      error: getProductErrorMessage(error, "打开目录选择器失败，请稍后重试。"),
+    };
+  }
+}
+
 export async function runInspirationScanAction(_prevState: unknown, _formData: FormData) {
   void _prevState;
   void _formData;
@@ -105,10 +122,17 @@ export async function runInspirationScanAction(_prevState: unknown, _formData: F
 export async function saveInspirationScanConfigAction(_prevState: unknown, formData: FormData) {
   void _prevState;
   try {
-    const result = await saveInspirationScanConfig({
-      enabled: formData.get("scanEnabled") === "on",
-      intervalMinutes: String(formData.get("scanIntervalMinutes") ?? "30"),
-    });
+    const folderPath = String(formData.get("folderPath") ?? "").trim();
+    const result = folderPath
+      ? await saveInspirationSettings({
+          folderPath,
+          enabled: formData.get("scanEnabled") === "on",
+          intervalMinutes: String(formData.get("scanIntervalMinutes") ?? "30"),
+        })
+      : await saveInspirationScanConfig({
+          enabled: formData.get("scanEnabled") === "on",
+          intervalMinutes: String(formData.get("scanIntervalMinutes") ?? "30"),
+        });
     revalidateInspirations();
     return { success: true as const, data: result };
   } catch (error) {

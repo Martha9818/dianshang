@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { execFile } from "node:child_process";
 import { access, constants, stat } from "node:fs/promises";
 import { prisma } from "@/lib/prisma";
 import { BUSINESS_ERROR_CODES, ProductBusinessError } from "@/lib/modules/products";
@@ -18,6 +19,13 @@ export const INSPIRATION_SCAN_INTERVAL_OPTIONS = [5, 10, 15, 30, 60, 120, 240, 1
 
 function createValidationError(message: string) {
   return new ProductBusinessError(BUSINESS_ERROR_CODES.VALIDATION_ERROR, message);
+}
+
+function createFolderPickerUnavailableError() {
+  return new ProductBusinessError(
+    BUSINESS_ERROR_CODES.VALIDATION_ERROR,
+    "Windows 目录选择器打开失败，请确认当前在本机桌面会话中操作后重试。",
+  );
 }
 
 export function maskInspirationFolderPath(folderPath: string | null | undefined) {
@@ -70,10 +78,55 @@ export async function getInspirationFolderSettingView() {
   const scanConfig = await getInspirationScanConfig();
   return {
     configured: Boolean(folderPath),
+    folderPath,
     displayPath: maskInspirationFolderPath(folderPath),
     scanEnabled: scanConfig.enabled,
     scanIntervalMinutes: scanConfig.intervalMinutes,
   };
+}
+
+async function openWindowsFolderPicker(initialPath: string | null) {
+  const serializedInitialPath = initialPath ? JSON.stringify(initialPath) : "null";
+  const pickerScript = `
+Add-Type -AssemblyName System.Windows.Forms
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$initialPath = ${serializedInitialPath}
+$dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+$dialog.Description = '请选择灵感箱目录'
+$dialog.ShowNewFolderButton = $true
+if ($initialPath -and [System.IO.Directory]::Exists($initialPath)) {
+  $dialog.SelectedPath = $initialPath
+}
+if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.SelectedPath) {
+  Write-Output $dialog.SelectedPath
+}
+`;
+
+  const encodedCommand = Buffer.from(pickerScript, "utf16le").toString("base64");
+
+  return await new Promise<string | null>((resolve, reject) => {
+    execFile(
+      "powershell.exe",
+      [
+        "-NoProfile",
+        "-STA",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-EncodedCommand",
+        encodedCommand,
+      ],
+      { encoding: "utf8", windowsHide: false },
+      (error, stdout) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        const selectedPath = stdout.trim();
+        resolve(selectedPath ? selectedPath : null);
+      },
+    );
+  });
 }
 
 function normalizeScanEnabled(value: string | null | undefined) {
@@ -151,6 +204,61 @@ export async function saveInspirationScanConfig(input: {
   }
 }
 
+export async function saveInspirationSettings(input: {
+  folderPath: string;
+  enabled: boolean;
+  intervalMinutes: string | number;
+}) {
+  ensureProductWritesAllowed();
+
+  try {
+    const normalizedFolderPath = await validateInspirationFolderPath(input.folderPath);
+    const intervalMinutes = normalizeScanInterval(input.intervalMinutes);
+
+    await prisma.$transaction([
+      prisma.appSetting.upsert({
+        where: { key: INSPIRATION_FOLDER_SETTING_KEY },
+        update: { value: normalizedFolderPath },
+        create: {
+          key: INSPIRATION_FOLDER_SETTING_KEY,
+          value: normalizedFolderPath,
+        },
+      }),
+      prisma.appSetting.upsert({
+        where: { key: INSPIRATION_SCAN_ENABLED_SETTING_KEY },
+        update: { value: input.enabled ? "true" : "false" },
+        create: {
+          key: INSPIRATION_SCAN_ENABLED_SETTING_KEY,
+          value: input.enabled ? "true" : "false",
+        },
+      }),
+      prisma.appSetting.upsert({
+        where: { key: INSPIRATION_SCAN_INTERVAL_SETTING_KEY },
+        update: { value: String(intervalMinutes) },
+        create: {
+          key: INSPIRATION_SCAN_INTERVAL_SETTING_KEY,
+          value: String(intervalMinutes),
+        },
+      }),
+    ]);
+
+    await tryCreateSettingsOperationLog({
+      action: "UPDATE_INSPIRATION_SETTINGS",
+      detail: `更新灵感设置：${maskInspirationFolderPath(normalizedFolderPath) ?? "未设置"} / ${input.enabled ? "启用" : "停用"} / ${intervalMinutes} 分钟`,
+    });
+
+    return {
+      configured: true,
+      folderPath: normalizedFolderPath,
+      displayPath: maskInspirationFolderPath(normalizedFolderPath),
+      enabled: input.enabled,
+      intervalMinutes,
+    };
+  } catch (error) {
+    throw normalizeProductWriteError(error);
+  }
+}
+
 export async function saveInspirationFolderPath(folderPath: string) {
   ensureProductWritesAllowed();
 
@@ -172,9 +280,39 @@ export async function saveInspirationFolderPath(folderPath: string) {
 
     return {
       configured: true,
+      folderPath: saved.value,
       displayPath: maskInspirationFolderPath(saved.value),
     };
   } catch (error) {
     throw normalizeProductWriteError(error);
   }
+}
+
+export async function pickInspirationFolderPath() {
+  ensureProductWritesAllowed();
+
+  const currentFolderPath = await getInspirationFolderPath();
+
+  let selectedPath: string | null;
+  try {
+    selectedPath = await openWindowsFolderPicker(currentFolderPath);
+  } catch {
+    throw createFolderPickerUnavailableError();
+  }
+
+  if (!selectedPath) {
+    return {
+      cancelled: true as const,
+      configured: Boolean(currentFolderPath),
+      folderPath: currentFolderPath,
+      displayPath: maskInspirationFolderPath(currentFolderPath),
+    };
+  }
+
+  return {
+    cancelled: false as const,
+    configured: true as const,
+    folderPath: selectedPath,
+    displayPath: maskInspirationFolderPath(selectedPath),
+  };
 }

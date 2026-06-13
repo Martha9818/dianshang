@@ -2,6 +2,82 @@
 
 Only the latest summary stays here. Older detailed history is archived or retained in current docs.
 
+## 2026-06-13
+
+### Inspiration Original Stage Blank Regression Fix
+
+- Changed: Investigated the new `/inspirations` symptom where the center original-image stage appeared blank and the practical entry to large-image preview seemed gone even though the queue thumbnail still rendered.
+- Changed: Confirmed the regression root cause in `src/components/inspirations/inspiration-manager.tsx`: the recent switch from `ProductImage` to raw `next/image` with `fill` placed the original image inside a container that no longer had a dependable intrinsic height, so the image rendered into an effectively collapsed area.
+- Changed: Fixed the stage by reusing the proven `ProductImage` aspect-ratio container for the center original image and extending `src/components/products/product-image.tsx` with a narrow `fit="contain"` option so the original image stays fully visible without cropping.
+- Changed: Kept the dedicated fullscreen original preview modal path in place; the center stage remains clickable and still opens the full-screen preview when the original file exists.
+- Added: `scripts/inspiration-original-stage-verify.mts` as a narrow regression check to lock the `fit="contain"` stage rendering path and the presence of the original-preview dialog hook.
+- Verification: Ran `npx.cmd tsx scripts/inspiration-original-stage-verify.mts`, `npx.cmd tsc --noEmit --incremental false`, `npm.cmd run lint`, and `npm.cmd run build`.
+- Verification: Started a local production server on `http://127.0.0.1:3003` long enough to fetch `/inspirations`, and confirmed the returned page HTML contains the `Original Image Stage` marker after the fix.
+- Note: In-app Browser plugin verification was attempted but blocked by the local Codex config error `model_providers contains reserved built-in provider IDs: openai`, so browser-plugin acceptance could not be completed from this session.
+- Boundary: Narrow UI regression fix only. No schema, migration, dependency, service-layer business rule, AI behavior, or product conversion logic was changed.
+
+### Inspirations Modal Error Clarification And Status Card Cleanup
+
+- Changed: Re-checked the red `当前环境无法写入本地 SQLite 商品库...` message shown in the `/inspirations` settings modal and confirmed it was misleading for this interaction path. Direct local Prisma writes and the service-layer save flows both still succeed on the current Windows local runtime.
+- Changed: Identified the concrete folder-picker root cause. The previous PowerShell launch incorrectly placed the initial folder path after `-EncodedCommand`, which PowerShell rejects as an invalid extra command argument before the picker script runs. The initial folder path is now embedded directly inside the encoded script instead.
+- Changed: Kept the dedicated picker-open error message for this path so future failures no longer masquerade as SQLite write problems.
+- Changed: Removed the duplicate bottom-right `当前目录` summary card from the centered settings modal so the directory appears only once in the upper folder block where users actually edit it.
+- Changed: Refined the modal `当前状态` card to react to the effective timed-scan state immediately after saving. When `启用应用内定时扫描` is on, the card now switches to a green active style and shows the active interval instead of looking identical to the disabled state.
+- Changed: Added a positive save confirmation line for timed-scan updates so the modal now explicitly confirms whether timed scanning is enabled or disabled after `保存设置`.
+- Changed: Tightened the modal visual density by reducing width, padding, and button sizes, and removed the extra helper copy under the modal title, folder card, timed-scan card, and status card.
+- Changed: Corrected the modal interaction contract. `更改目录` no longer saves immediately; it now only stages the chosen folder inside client-side modal draft state. The single `保存设置` action now persists both folder path and timed-scan configuration together, while closing the modal without saving resets the draft back to the last persisted values.
+- Changed: Removed the staged-folder reminder line under `更改目录` per the latest UI request.
+- Changed: Fixed the remaining unsaved-folder reopen bug. The top-right close button previously still used a plain `Link` query transition, so it skipped the draft-reset logic and left the unsaved folder name in component state. The close control now uses the same reset-and-close path as overlay click and `Esc`.
+- Changed: Moved the active buyer-desk `初筛决策` button block back into the center column directly under the image-stage content, and removed the duplicate right-rail decision card for the active layout path.
+- Changed: Removed the active buyer-desk `最近 AI 草稿任务` panel from the advanced-record area.
+- Changed: Confirmed the big-image blur root cause and fixed it by switching the center stage from `displayPath` to the original `imagePath` instead of the thumbnail-preferred path. Added a click-to-open fullscreen original-image preview modal for the center stage.
+- Verification: Ran `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Verification: Confirmed the new PowerShell encoded-script pattern accepts the embedded initial path without the earlier extra-argument error, and fetched local `http://127.0.0.1:3000/inspirations?panel=settings` HTML to confirm the modal still renders `收件箱设置`, keeps the upper `当前目录` field, and no longer renders the removed helper-copy strings or the duplicate bottom-right directory status card.
+- Boundary: Narrow settings-modal behavior and error-message correction only. No schema, migration, dependency, scan business rule, AI behavior, or product conversion logic was changed.
+
+## 2026-06-12
+
+### Inspirations Modal No-Scroll And Local Folder Picker Update
+
+- Changed: Reworked the `/inspirations` centered settings modal again so the dialog no longer depends on an internal scroll area. The folder card and timed-scan card now render as aligned same-row panels inside the modal.
+- Changed: Replaced the modal-side manual folder entry path with a real local Windows folder-picker action behind `更改目录`, and saved the selected path immediately through the existing inspiration settings service boundary.
+- Changed: Kept the same top-right `收件箱设置` entry and same-route `?panel=settings` interaction, but removed the old bottom `scan-settings` fold from the main buyer desk so settings now stay fully in the centered modal flow.
+- Verification: Ran `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Verification: Verified local `http://127.0.0.1:3000/inspirations?panel=settings` returns the updated modal copy in HTML, includes `收件箱设置` / `更改目录` / `保存设置`, and no longer includes `最近扫描任务` or `保存目录` in that modal surface.
+- Boundary: Narrow interaction and local-folder-selection refinement only. No schema, migration, dependency, scan business rule, AI behavior, or product conversion logic was changed.
+
+### Inspirations Centered Settings Modal Refinement
+
+- Changed: Reworked the `/inspirations` settings surface from a right-side drawer into a centered modal that opens in-place from top-right `收件箱设置`, matching the approved interaction direction more closely.
+- Changed: Removed the duplicate `保存目录` action from the modal and kept the directory change as a localized `更改目录` action plus a single primary `保存设置` action for the timed-scan configuration block.
+- Changed: Removed the `最近扫描任务` list from the modal entirely so the settings surface stays focused on folder path, timed scanning, current state, and primary actions instead of maintenance history.
+- Changed: Surfaced the current inbox folder path directly inside the modal as an explicit `当前目录` field with editable path display, instead of burying it in a secondary summary area.
+- Verification: Ran `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Verification: Browser-checked local `http://127.0.0.1:3000/inspirations`; opening `收件箱设置` now lands on `?panel=settings&selectedId=101`, and the DOM check confirms `当前目录` / `更改目录` / `保存设置` are present while `保存目录` and `最近扫描任务` are absent, with no local browser `warn/error` logs.
+- Boundary: Narrow settings-surface and interaction refinement only. No schema, migration, dependency, scan business rule, AI behavior, or product conversion logic was changed.
+
+### Inspirations Settings Drawer Interaction Fix
+
+- Changed: Reworked the `/inspirations` top-right `收件箱设置` interaction so it no longer anchors to a bottom page section and instead opens a same-page settings drawer.
+- Changed: Switched the settings open state to a query-driven same-route panel (`?panel=settings`) so the drawer can open reliably from the buyer desk without a bottom jump and can be refreshed or revisited in-place.
+- Changed: Moved the existing folder path, immediate scan, similarity check, timed scan, and recent scan task controls into the drawer so the user can edit inbox settings directly from the current screen.
+- Verification: Ran `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Verification: Browser-checked local `http://127.0.0.1:3000/inspirations`; clicking `收件箱设置` now navigates to `http://127.0.0.1:3000/inspirations?panel=settings&selectedId=101`, renders the drawer copy plus `立即扫描`, and shows no local browser `warn/error` logs.
+- Boundary: Interaction and layout-surface refinement only. No schema, migration, dependency, AI behavior, scan write-path rule, or product-conversion logic was changed.
+
+## 2026-06-12
+
+### Inspirations Buyer Desk Mockup Fidelity Refinement
+
+- Changed: Reworked the active `/inspirations` buyer-desk branch in `src/components/inspirations/inspiration-manager.tsx` so it matches the newly approved mockup direction more closely without changing the global app sidebar.
+- Changed: Kept only one top-right `收件箱设置` entry, preserved the KPI strip plus top filter/quick-group controls, and retained the existing buyer-desk functionality instead of replacing it with a static visual shell.
+- Changed: Locked the center-column flow so the original image stage remains the main visual focus and `初筛决策` stays directly below it, while convert-confirm and notes/auxiliary actions remain available in the same workflow.
+- Changed: Rebuilt the right rail into a structured `灵感信息 / AI 评估` panel that surfaces candidate fields, AI triage summary, conclusion, next-step guidance, and update time in a compact row layout instead of stacked backend-style cards.
+- Changed: Cleaned up the active buyer-desk refinement branch enough to pass current compile checks, and patched leftover inactive-branch TypeScript friction so the file no longer fails validation while the old fallback code remains in place.
+- Verification: Ran `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Verification: Reloaded the local dev page at `http://127.0.0.1:3000/inspirations` in the in-app browser, confirmed the expected layout hierarchy via DOM snapshot, and verified console logs are empty at `warn/error` level.
+- Boundary: Narrow inbox-layout and interaction-surface refinement only. No schema, migration, dependency, AI write-path, scan mechanism, or product conversion rule was changed.
+
 ## 2026-06-12
 
 ### Long-Term UTF-8 Baseline Hardening
@@ -9,7 +85,9 @@ Only the latest summary stays here. Older detailed history is archived or retain
 - Changed: Added workspace `.editorconfig` with `charset = utf-8` and `.vscode/settings.json` with UTF-8 editor defaults so future edits are biased toward correct UTF-8 text at save time, not only at review time.
 - Changed: Added repo-local `.githooks/pre-commit` and set `core.hooksPath=.githooks`, so every normal local commit now re-runs `npm run encoding:check` before it can land.
 - Changed: Created `C:\Users\HP\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1` to force new Windows PowerShell sessions onto UTF-8 (`chcp 65001`, `InputEncoding=utf-8`, `OutputEncoding=utf-8`) and reduce the repeated false-positive “源码又乱码了” diagnosis caused by terminal display corruption.
+- Changed: Extended the same PowerShell profile so Windows PowerShell 5.1 text cmdlets now default to UTF-8 as well: `Get-Content`, `Set-Content`, `Add-Content`, `Out-File`, `Select-String`, `Export-Csv`, and `Import-Csv`. This fixes the remaining no-BOM UTF-8 pit where repo files could still look garbled in routine terminal reads even after the console code page itself was already UTF-8.
 - Verification: Started a fresh PowerShell process and confirmed `Active code page: 65001`, `Output=utf-8`, `ConsoleOut=utf-8`, and `ConsoleIn=utf-8`.
+- Verification: Re-ran plain `Get-Content` and plain `Select-String` against `src/components/inspirations/inspiration-manager.tsx` without explicitly passing `-Encoding utf8`, and Chinese strings such as `批量标记已查看`, `收件箱设置`, and `灵感箱文件夹` now display correctly.
 - Verification: `npm run encoding:check` still passes under the hardened setup, and the next local commit is expected to re-verify the same guard through the new pre-commit hook.
 - Boundary: Tooling, editor-default, git-hook, and local-shell hardening only. No schema, migration, dependency, product logic, or write-path behavior was changed.
 
