@@ -609,10 +609,10 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
 
   if (renderBuyerDeskLayout) {
     return (
-      <div className="flex w-full flex-col gap-3 text-slate-900">
+      <div className="flex w-full min-h-0 flex-col gap-3 text-slate-900 xl:h-[calc(100dvh-7.5rem)] xl:overflow-hidden">
         {readonlyNotice ? <PageNote>{readonlyNotice}</PageNote> : null}
 
-        <header className="flex flex-col gap-2 border-b border-[#E8EDF5] pb-3 xl:flex-row xl:items-center xl:justify-between">
+        <header className="flex flex-col gap-2 border-b border-[#E8EDF5] pb-2 xl:flex-row xl:items-center xl:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-[2.1rem] font-semibold leading-tight tracking-[-0.06em] text-slate-950">AI 收件箱</h1>
@@ -641,7 +641,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           />
         </section>
 
-        <section className="flex flex-col gap-3 rounded-2xl border border-[#E2E8F0] bg-white px-3 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.025)] xl:flex-row xl:items-center xl:justify-between">
+        <section className="flex flex-col gap-2 rounded-2xl border border-[#E2E8F0] bg-white px-3 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.025)] xl:flex-row xl:items-center xl:justify-between">
           <AutoFilterForm action="/inspirations" className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center">
             <button type="submit" className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[#DDE6F2] bg-white px-3 text-sm font-medium text-slate-700">
               <MiniIcon name="list" className="h-4 w-4" />
@@ -680,9 +680,9 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
             {[
               ["all", `全部 ${data.stats.total}`],
               ["pending", `待处理 ${data.stats.pending}`],
-              ["reviewed", `高质量 ${data.stats.reviewed}`],
-              ["rejected", `低质量 ${data.stats.rejected}`],
-              ["archived", `需补充信息 ${data.stats.archived}`],
+              ["reviewed", `已查看 ${data.stats.reviewed}`],
+              ["rejected", `已放弃 ${data.stats.rejected}`],
+              ["archived", `已归档 ${data.stats.archived}`],
             ].map(([value, label]) => (
               <button
                 key={value}
@@ -702,7 +702,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           </div>
         </section>
 
-        <section className="grid min-h-[calc(100dvh-250px)] gap-4 xl:grid-cols-[27fr_43fr_30fr]">
+        <section className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[26fr_42fr_32fr] xl:overflow-hidden">
           <aside className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.035)]">
             <div className="flex items-center justify-between border-b border-[#E8EDF5] px-4 py-3">
               <div>
@@ -845,8 +845,8 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                     <button type="button" onClick={() => setImageZoom((value) => Math.min(160, value + 10))} className="h-8 w-8 rounded-lg border border-[#DDE6F2] text-slate-600">+</button>
                   </div>
                 </div>
-                <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-                  <div className="flex min-h-[min(58dvh,640px)] items-center justify-center overflow-hidden rounded-2xl border border-[#EFE8DE] bg-[radial-gradient(circle_at_50%_15%,#FFFDF8_0,#F7F0E6_48%,#EFE7DA_100%)] p-7">
+                <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+                  <div className="flex min-h-[min(46dvh,480px)] items-center justify-center overflow-hidden rounded-2xl border border-[#EFE8DE] bg-[radial-gradient(circle_at_50%_15%,#FFFDF8_0,#F7F0E6_48%,#EFE7DA_100%)] p-5">
                     <div
                       role="button"
                       tabIndex={0}
@@ -862,7 +862,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                         }
                       }}
                       style={{ transform: `scale(${imageZoom / 100})` }}
-                      className="w-full max-w-[620px] origin-center cursor-zoom-in transition-transform"
+                      className="w-full max-w-[560px] origin-center cursor-zoom-in transition-transform"
                     >
                       <ProductImage
                         src={selectedInspiration.imagePath}
@@ -874,7 +874,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                       />
                     </div>
                   </div>
-                  <div className="mt-3 flex items-center justify-between gap-3">
+                  <div className="mt-2 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                     <button type="button" className="h-8 w-8 text-xl text-slate-400">‹</button>
                     <div className="h-16 w-16 overflow-hidden rounded-lg border-2 border-rose-400 bg-white p-1">
@@ -884,27 +884,27 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                     </div>
                     <p className="text-xs text-slate-400">中间展示原始灵感图，不生成新商品图。</p>
                   </div>
-                  <section className="mt-4 rounded-2xl border border-[#E7EBF0] bg-[#FBFCF8] p-4">
+                  <section className="mt-3 rounded-2xl border border-[#E7EBF0] bg-[#FBFCF8] p-3">
                     <div className="flex flex-wrap gap-2">
                       <StatusBadge label={selectedAiStatus?.label ?? "AI 草稿状态未知"} tone={selectedAiStatus?.tone ?? "slate"} />
                       <StatusBadge label={selectedProductType} tone="blue" />
                       <StatusBadge label={selectedCategory} tone="slate" />
                       <StatusBadge label={selectedPlatform} tone="green" />
                     </div>
-                    <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{selectedNextStep}</p>
+                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">{selectedNextStep}</p>
                   </section>
-                  <section className="rounded-2xl border border-[#E2E8F0] bg-[#FFFEFC] p-4 shadow-[0_12px_30px_rgba(15,23,42,0.035)]">
-                    <div className="mb-3 flex items-center justify-between">
+                  <section className="rounded-2xl border border-[#E2E8F0] bg-[#FFFEFC] p-3 shadow-[0_12px_30px_rgba(15,23,42,0.035)]">
+                    <div className="mb-2 flex items-center justify-between">
                       <div>
                         <h3 className="text-base font-semibold tracking-[-0.02em] text-slate-950">初筛决策</h3>
                         <p className="mt-1 text-xs text-slate-500">看完原图和 AI 草稿后，直接决定下一步。</p>
                       </div>
                       <span className="rounded-full bg-[#F4F7FA] px-3 py-1 text-xs font-medium text-slate-500">人工确认</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2.5">
                       <form action={reviewAction}>
                         <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
-                        <button type="submit" className="flex h-[72px] w-full flex-col items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:-translate-y-[1px] hover:bg-emerald-100 disabled:opacity-50" disabled={reviewPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
+                        <button type="submit" className="flex h-[66px] w-full flex-col items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:-translate-y-[1px] hover:bg-emerald-100 disabled:opacity-50" disabled={reviewPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
                           <span className="text-base font-semibold">保留</span>
                           <span className="text-xs">继续跟进</span>
                         </button>
@@ -912,7 +912,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                       <form action={rejectAction}>
                         <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
                         <input type="hidden" name="rejectedReason" value="快速初筛放弃" />
-                        <button type="submit" className="flex h-[72px] w-full flex-col items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:-translate-y-[1px] hover:bg-amber-100 disabled:opacity-50" disabled={rejectPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
+                        <button type="submit" className="flex h-[66px] w-full flex-col items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:-translate-y-[1px] hover:bg-amber-100 disabled:opacity-50" disabled={rejectPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}>
                           <span className="text-base font-semibold">放弃</span>
                           <span className="text-xs">不再处理</span>
                         </button>
@@ -921,7 +921,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                         <button
                           type="button"
                           onClick={openConvertConfirm}
-                          className="flex h-[72px] w-full flex-col items-center justify-center rounded-xl bg-[#203149] text-white shadow-[0_14px_26px_rgba(32,49,73,0.22)] transition hover:-translate-y-[1px] hover:bg-[#152236] disabled:opacity-50"
+                          className="flex h-[66px] w-full flex-col items-center justify-center rounded-xl bg-[#203149] text-white shadow-[0_14px_26px_rgba(32,49,73,0.22)] transition hover:-translate-y-[1px] hover:bg-[#152236] disabled:opacity-50"
                           disabled={convertPending || selectedIsConverted || selectedIsClosed || !data.runtime.isWritable}
                         >
                           <span className="text-base font-semibold">转商品</span>
@@ -929,10 +929,10 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                         </button>
                       </div>
                     </div>
-                    <p className="mt-3 text-center text-xs text-slate-400">快捷键: 1 保留　2 放弃　3 转商品</p>
+                    <p className="mt-2 text-center text-xs text-slate-400">快捷键: 1 保留　2 放弃　3 转商品</p>
                     <ActionMessages messages={[reviewState.error, archiveState.error, rejectState.error, convertState.error]} />
                   </section>
-                  <details className="mt-4 rounded-2xl border border-[#E7EBF0] bg-white">
+                  <details className="mt-3 rounded-2xl border border-[#E7EBF0] bg-white">
                     <summary className="cursor-pointer list-none px-4 py-3">
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -981,13 +981,13 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
             )}
           </main>
 
-          <aside className="flex min-h-0 min-w-0 flex-col gap-4 overflow-y-auto">
+          <aside className="flex min-h-0 min-w-0 flex-col gap-3 overflow-y-auto">
             {selectedInspiration ? (
               <>
                 <AiDraftPanel source={selectedInspiration} fields={selectedInboxFields} aiStatus={selectedAiStatus} triage={selectedTriage} />
 
                 <details id="convert-form-panel" className="rounded-xl border border-[#E2E8F0] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
-                  <summary className="cursor-pointer list-none px-4 py-4">
+                  <summary className="cursor-pointer list-none px-4 py-3">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-sm font-semibold text-slate-900">转商品完整表单</h3>
@@ -1042,7 +1042,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                 </details>
 
                 <details className="rounded-xl border border-[#E2E8F0] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
-                  <summary className="cursor-pointer list-none px-4 py-4">
+                  <summary className="cursor-pointer list-none px-4 py-3">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-sm font-semibold text-slate-900">高级记录</h3>
@@ -1271,14 +1271,14 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 xl:grid xl:h-[calc(100dvh-7.75rem)] xl:grid-rows-[auto_auto_minmax(0,1fr)] xl:gap-4 xl:space-y-0 xl:overflow-hidden">
       {readonlyNotice ? <PageNote>{readonlyNotice}</PageNote> : null}
 
-      <section className="rounded-[28px] border border-[#E6DDD1] bg-[linear-gradient(180deg,#FDFBF7_0%,#FAF7F1_100%)] px-5 py-5 shadow-[0_18px_44px_rgba(15,23,42,0.04)]">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+      <section className="rounded-[28px] border border-[#E6DDD1] bg-[linear-gradient(180deg,#FDFBF7_0%,#FAF7F1_100%)] px-5 py-4 shadow-[0_18px_44px_rgba(15,23,42,0.04)]">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-[720px]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#7A8CA7]">Desk Snapshot</p>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
+            <p className="mt-1.5 text-sm leading-6 text-slate-500">
               第一屏只保留队列状态和审核进度，让左侧候选、中栏图片、右侧 AI 草稿自然成为主流程。
             </p>
           </div>
@@ -1298,7 +1298,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2 xl:grid-cols-5">
+        <div className="mt-3 grid gap-2 xl:grid-cols-5">
           <StatCard label="灵感总数" value={String(data.stats.total)} delta="队列规模" tone="blue" />
           <StatCard label="待处理" value={String(data.stats.pending)} delta="优先初筛" tone="amber" />
           <StatCard label="已查看" value={String(data.stats.reviewed)} delta="待继续判断" tone="violet" />
@@ -1307,8 +1307,8 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         </div>
       </section>
 
-      <DashboardCard className="border-[#E6DED4] bg-[#F8F5EF] px-4 py-4 shadow-none">
-        <AutoFilterForm action="/inspirations" className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(280px,1.2fr)_160px_160px_160px_150px] xl:items-end">
+      <DashboardCard className="border-[#E6DED4] bg-[#F8F5EF] px-4 py-3 shadow-none">
+        <AutoFilterForm action="/inspirations" className="grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(280px,1.2fr)_160px_160px_160px_150px] xl:items-end">
           <FilterField label="关键词">
             <input name="q" defaultValue={data.filters.keyword ?? ""} placeholder="标题 / 备注 / 文件名" className={inputClassName} />
           </FilterField>
@@ -1349,8 +1349,8 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
         </AutoFilterForm>
       </DashboardCard>
 
-      <section className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)_430px] xl:items-start">
-        <DashboardCard className="overflow-hidden border-[#E4DDD4] bg-[#FFFEFC] shadow-[0_18px_40px_rgba(15,23,42,0.04)] xl:sticky xl:top-6 xl:flex xl:h-[calc(100vh-10.5rem)] xl:flex-col">
+      <section className="grid min-h-0 gap-4 xl:grid-cols-[340px_minmax(0,1fr)_400px] xl:items-stretch xl:overflow-hidden">
+        <DashboardCard className="overflow-hidden border-[#E4DDD4] bg-[#FFFEFC] shadow-[0_18px_40px_rgba(15,23,42,0.04)] xl:flex xl:min-h-0 xl:h-full xl:flex-col">
           <form
             id={INSPIRATION_BATCH_FORM_ID}
             action={batchAction}
@@ -1554,16 +1554,16 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           </form>
         </DashboardCard>
 
-        <DashboardCard className="overflow-hidden border-[#E4DDD4] bg-[#FFFEFC] shadow-[0_18px_40px_rgba(15,23,42,0.05)] xl:sticky xl:top-6 xl:flex xl:h-[calc(100vh-10.5rem)] xl:flex-col">
+        <DashboardCard className="overflow-hidden border-[#E4DDD4] bg-[#FFFEFC] shadow-[0_18px_40px_rgba(15,23,42,0.05)] xl:flex xl:min-h-0 xl:h-full xl:flex-col">
           {selectedInspiration ? (
-            <div className="flex min-h-0 flex-1 flex-col px-5 pb-5">
-              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#EEF2F8] py-4">
+            <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 xl:overflow-y-auto">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#EEF2F8] py-3">
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Stage</p>
-                  <h2 className="mt-2 line-clamp-2 text-[1.38rem] font-semibold tracking-[-0.03em] text-slate-900">
+                  <h2 className="mt-1.5 line-clamp-2 text-[1.22rem] font-semibold tracking-[-0.03em] text-slate-900">
                     {selectedInboxSummary?.title ?? selectedInspiration.title ?? "待补充标题"}
                   </h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                  <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-slate-500">
                     {selectedInboxSummary?.subtitle ?? "先通过图片和已有线索做快速理解，右侧再看完整 AI 初筛草稿。"}
                   </p>
                 </div>
@@ -1575,44 +1575,44 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                 </div>
               </div>
 
-              <div className="mt-4 flex min-h-0 flex-1 flex-col">
-                <div className="flex-1 rounded-[34px] border border-[#E6DDD1] bg-[radial-gradient(circle_at_top,#F7F0E4_0%,#F5F7FB_44%,#FBFAF7_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
-                  <div className="flex h-full min-h-[340px] items-center justify-center overflow-hidden rounded-[28px] border border-white/70 bg-white/70">
+              <div className="mt-3 flex min-h-0 flex-1 flex-col gap-3">
+                <div className="flex-1 rounded-[30px] border border-[#E6DDD1] bg-[radial-gradient(circle_at_top,#F7F0E4_0%,#F5F7FB_44%,#FBFAF7_100%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
+                  <div className="flex h-full min-h-[280px] items-center justify-center overflow-hidden rounded-[24px] border border-white/70 bg-white/70 xl:min-h-[260px]">
                     <ProductImage src={selectedInspiration.displayPath} alt={selectedInspiration.imagePath} label="IMG" large missing={!selectedInspiration.fileExists} />
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-4">
+                <div className="grid gap-3">
                   <div className="flex flex-wrap gap-2">
-                    <div className="inline-flex items-center gap-3 rounded-[18px] border border-[#E6EAF0] bg-white px-3 py-2 shadow-[0_8px_20px_rgba(15,23,42,0.03)]">
-                      <div className="h-10 w-10 overflow-hidden rounded-[12px] border border-[#E8E2D8] bg-[#F4F6F8]">
+                    <div className="inline-flex items-center gap-3 rounded-[16px] border border-[#E6EAF0] bg-white px-3 py-2 shadow-[0_8px_20px_rgba(15,23,42,0.03)]">
+                      <div className="h-9 w-9 overflow-hidden rounded-[12px] border border-[#E8E2D8] bg-[#F4F6F8]">
                         <ProductImage src={selectedInspiration.displayPath} alt={selectedInspiration.imagePath} label="1" square missing={!selectedInspiration.fileExists} />
                       </div>
                       <div className="text-left">
-                        <p className="text-xs font-medium text-slate-700">当前主图</p>
+                        <p className="text-[11px] font-medium text-slate-700">当前主图</p>
                         <p className="text-[11px] text-slate-400">{selectedInspiration.fileName}</p>
                       </div>
                     </div>
-                    <div className="inline-flex items-center rounded-[18px] border border-[#E6EAF0] bg-white px-3 py-2 text-xs text-slate-500 shadow-[0_8px_20px_rgba(15,23,42,0.03)]">
+                    <div className="inline-flex items-center rounded-[16px] border border-[#E6EAF0] bg-white px-3 py-2 text-[11px] text-slate-500 shadow-[0_8px_20px_rgba(15,23,42,0.03)]">
                       {selectedInspiration.sourceTypeLabel} · {selectedInspiration.formattedImportedAt}
                     </div>
                     {selectedInspiration.imageDedup?.warningLabel ? (
-                      <div className="inline-flex items-center rounded-[18px] border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                      <div className="inline-flex items-center rounded-[16px] border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-700">
                         {selectedInspiration.imageDedup.warningLabel}
                       </div>
                     ) : null}
                   </div>
 
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(260px,0.85fr)]">
-                    <div className="rounded-[28px] border border-[#ECE4D8] bg-[#FBF7F1] px-4 py-4">
+                  <div className="grid gap-3 lg:grid-cols-[minmax(0,0.95fr)_minmax(240px,0.85fr)]">
+                    <div className="rounded-[24px] border border-[#ECE4D8] bg-[#FBF7F1] px-4 py-3">
                       <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">AI 草稿速览</p>
-                      <p className="mt-3 text-sm leading-7 text-slate-600">{selectedInboxSummary?.subtitle ?? "尚未生成 AI 草稿。"}</p>
-                      <p className="mt-4 text-xs leading-6 text-slate-500">{selectedAiStatus?.description ?? "先生成 AI 草稿，再决定保留、放弃或转商品。"}</p>
+                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">{selectedInboxSummary?.subtitle ?? "尚未生成 AI 草稿。"}</p>
+                      <p className="mt-2 text-xs leading-5 text-slate-500">{selectedAiStatus?.description ?? "先生成 AI 草稿，再决定保留、放弃或转商品。"}</p>
                     </div>
 
-                    <div className="rounded-[28px] border border-[#E8ECEF] bg-white px-4 py-4">
+                    <div className="rounded-[24px] border border-[#E8ECEF] bg-white px-4 py-3">
                       <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">买手速看</p>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <div className="mt-2 grid gap-2 text-[13px] sm:grid-cols-2">
                         <MiniFact label="候选价格" value={selectedCandidatePrice} />
                         <MiniFact label="商品类型" value={selectedInboxSummary?.productType ?? "信息不足"} />
                         <MiniFact label="建议平台" value={selectedPlatform} />
@@ -1623,18 +1623,15 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                     </div>
                   </div>
 
-                  <form action={draftAction} key={formKey} className="rounded-[28px] border border-[#E6EAF0] bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.03)]">
-                    <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Notes</p>
-                        <h3 className="mt-2 text-sm font-semibold text-slate-900">人工备注与草稿标题</h3>
+                  <CollapsibleSection title="人工备注与草稿标题" description="保留原入口，但默认折叠，不再占住首屏。">
+                    <form action={draftAction} key={formKey} className="space-y-3">
+                      <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-sm text-slate-500">需要补人工判断时再展开编辑。</p>
+                        <ActionButton type="submit" variant="secondary" disabled={!data.runtime.isWritable}>
+                          {draftPending ? "保存中..." : "保存备注"}
+                        </ActionButton>
                       </div>
-                      <ActionButton type="submit" variant="secondary" disabled={!data.runtime.isWritable}>
-                        {draftPending ? "保存中..." : "保存备注"}
-                      </ActionButton>
-                    </div>
-                    <div className="mt-4 grid gap-3">
                       <Field label="草稿标题">
                         <input name="title" className={inputClassName} defaultValue={selectedInspiration.title ?? ""} disabled={!data.runtime.isWritable} />
                       </Field>
@@ -1642,8 +1639,8 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                         <textarea name="note" className="min-h-[138px] w-full rounded-[22px] border border-[#D8DEE8] bg-white px-4 py-3 text-sm leading-6 text-slate-700 outline-none transition focus:border-[#89A7C9] focus:ring-2 focus:ring-[#D7E4F4]" defaultValue={selectedInspiration.note ?? ""} disabled={!data.runtime.isWritable} />
                       </Field>
                       <ActionMessages messages={[draftState.error]} />
-                    </div>
-                  </form>
+                    </form>
+                  </CollapsibleSection>
                 </div>
               </div>
             </div>
@@ -1654,22 +1651,19 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
           )}
         </DashboardCard>
 
-        <div id="inspiration-convert-panel" className="xl:sticky xl:top-6 xl:h-[calc(100vh-10.5rem)] xl:overflow-hidden">
-          <div className="space-y-4 xl:h-full xl:overflow-y-auto xl:pr-1">
+        <div id="inspiration-convert-panel" className="xl:min-h-0 xl:h-full">
+          <div className="space-y-3 xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-y-auto xl:pr-1">
             {selectedInspiration ? (
               <>
                 <AiDraftPanel source={selectedInspiration} fields={selectedInboxFields} aiStatus={selectedAiStatus} triage={selectedTriage} />
 
-                <form className="space-y-4 rounded-[30px] border border-[#E4DDD4] bg-[#FFFDFC] px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+                <form className="space-y-4 rounded-[28px] border border-[#E4DDD4] bg-[#FFFDFC] px-4 py-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Decision Desk</p>
-                      <h3 className="mt-2 text-[1.12rem] font-semibold tracking-[-0.02em] text-slate-900">保留 / 放弃 / 转商品</h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-500">右栏只承载决策，避免再把首屏拉回后台表单状态。</p>
+                      <h3 className="mt-1.5 text-[1.02rem] font-semibold tracking-[-0.02em] text-slate-900">保留 / 放弃 / 转商品</h3>
+                      <p className="mt-1.5 text-sm leading-6 text-slate-500">首屏只保留关键动作，长表单和调试信息默认收起。</p>
                     </div>
-                    <a href="#convert-form-panel" className={secondaryButtonClassName}>
-                      查看转商品表单
-                    </a>
                   </div>
 
                   <div className="grid gap-3">
@@ -1765,13 +1759,12 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
             )}
 
             <div id="convert-form-panel">
-              <DashboardCard className="overflow-hidden border-[#E4DDD4] bg-[#FFFEFC]">
-                <DashboardCardHeader title="转商品入口" description="这里继续保留完整表单，但退到决策区下方，不打断首屏审核节奏。" />
+              <CollapsibleSection title="转商品入口" description="完整确认表单继续保留，但默认收起，不需要再往下找。">
                 {selectedInspiration ? (
                   <form
                     action={convertAction}
                     key={`${formKey}-convert`}
-                    className="space-y-4 px-5 py-5"
+                    className="space-y-4"
                   >
                     <input type="hidden" name="inspirationId" value={selectedInspiration.id} />
                     {selectedIsConverted ? <PageNote>这条灵感已转为商品，不能重复转商品。</PageNote> : null}
@@ -1830,19 +1823,13 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                     {convertState.error ? <p className="text-sm text-rose-600">{convertState.error}</p> : null}
                   </form>
                 ) : (
-                  <div className="px-5 py-5">
-                    <PageNote>先选择一条灵感记录，再填写确认表单。</PageNote>
-                  </div>
+                  <PageNote>先选择一条灵感记录，再填写确认表单。</PageNote>
                 )}
-              </DashboardCard>
+              </CollapsibleSection>
             </div>
 
-            <DashboardCard className="overflow-hidden border-[#E4DDD4] bg-[#FFFEFC]">
-              <DashboardCardHeader
-                title="高级记录 / 调试信息"
-                description="把文件信息、AI 任务和扫描历史收进右侧尾部，不干扰主舞台和决策卡。"
-              />
-              <div className="space-y-4 px-5 py-5">
+            <CollapsibleSection title="高级记录 / 调试信息" description="文件信息、AI 任务和扫描历史都保留，但首屏默认收起。">
+              <div className="space-y-4">
                 <CollapsibleSection
                   title="高级记录：文件信息与相似度"
                   description="文件信息、相似度和调试提示都保留，但默认折叠，不压住主流程。"
@@ -2057,7 +2044,7 @@ export function InspirationManager({ data, readonlyNotice }: { data: Inspiration
                   </div>
                 </CollapsibleSection>
               </div>
-            </DashboardCard>
+            </CollapsibleSection>
           </div>
         </div>
       </section>
@@ -2304,42 +2291,42 @@ function AiDraftPanel({
     { label: "目标人群", value: getInboxFieldValue(fields, "目标人群", "信息不足"), status: "待补充", icon: "list" as const },
     { label: "用户痛点", value: getInboxFieldValue(fields, "用户痛点", "信息不足"), status: "待补充", icon: "shield" as const },
     { label: "使用场景", value: getInboxFieldValue(fields, "使用场景", "信息不足"), status: "待补充", icon: "image" as const },
-    { label: "核心卖点", value: getInboxFieldValue(fields, "核心卖点", "信息不足"), status: "展开", icon: "spark" as const },
-    { label: "建议平台", value: getInboxFieldValue(fields, "建议平台", "信息不足"), status: "更多", icon: "grid" as const },
+    { label: "核心卖点", value: getInboxFieldValue(fields, "核心卖点", "信息不足"), status: "", icon: "spark" as const },
+    { label: "建议平台", value: getInboxFieldValue(fields, "建议平台", "信息不足"), status: "", icon: "grid" as const },
     { label: "标签", value: getInboxFieldValue(fields, "标签", "待补充"), status: "", icon: "prompt" as const },
     { label: "类目建议", value: getInboxFieldValue(fields, "类目建议", "待补充"), status: "", icon: "database" as const },
-    { label: "规格线索", value: getInboxFieldValue(fields, "规格线索", "信息不足"), status: "展开", icon: "doc" as const },
+    { label: "规格线索", value: getInboxFieldValue(fields, "规格线索", "信息不足"), status: "", icon: "doc" as const },
     { label: "风险提示", value: getInboxFieldValue(fields, "风险提示", "信息不足"), status: "", icon: "shield" as const },
     { label: "识别质量", value: getInboxFieldValue(fields, "识别质量", "尚未生成"), status: "", icon: "clock" as const },
-    { label: "草稿初筛分", value: getInboxFieldValue(fields, "草稿初筛分", "尚未生成"), status: triage?.isReady ? "已生成" : "信息不足", icon: "thumb" as const },
+    { label: "草稿初筛分", value: getInboxFieldValue(fields, "草稿初筛分", "尚未生成"), status: triage?.isReady ? "已生成" : "待补充", icon: "thumb" as const },
     { label: "初筛结论", value: getInboxFieldValue(fields, "初筛结论", "尚未生成"), status: "", icon: "spark" as const },
   ];
 
   return (
-    <section className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
-      <div className="flex items-start justify-between border-b border-[#E8EDF5] px-4 py-4">
+    <section className="overflow-hidden rounded-[24px] border border-[#E2E8F0] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+      <div className="flex items-start justify-between gap-3 border-b border-[#E8EDF5] px-4 py-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-rose-500">✧</span>
-            <h3 className="text-base font-semibold text-slate-950">AI 初筛草稿</h3>
+            <h3 className="text-[15px] font-semibold text-slate-950">AI 初筛草稿</h3>
           </div>
         </div>
-        <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
+        <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-600">
           识别质量: {getInboxFieldValue(fields, "识别质量", "尚未生成")}
         </span>
       </div>
-      <div className="space-y-3 p-3">
+      <div className="space-y-2.5 p-3">
         {aiStatus ? <StatusBadge label={aiStatus.label} tone={aiStatus.tone} /> : null}
 
         {source.aiSuggestion?.shortDescription ? (
-          <div className="rounded-xl border border-[#EFE5D8] bg-[#FCF8F2] px-4 py-3 text-sm leading-6 text-slate-600">
+          <div className="line-clamp-3 rounded-[18px] border border-[#EFE5D8] bg-[#FCF8F2] px-3 py-2.5 text-[13px] leading-6 text-slate-600">
             {source.aiSuggestion.shortDescription}
           </div>
         ) : (
           <PageNote>{aiStatus?.description ?? "尚未生成 AI 草稿。"}</PageNote>
         )}
 
-        <div className="rounded-xl border border-[#E8EDF5] bg-[#F8FAFC] p-3">
+        <div className="rounded-[18px] border border-[#E8EDF5] bg-[#F8FAFC] p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">Draft Triage</p>
@@ -2347,16 +2334,15 @@ function AiDraftPanel({
             </div>
             <StatusBadge label={triage?.conclusion ?? "信息不足"} tone={getTriageTone(triage?.conclusionBand ?? "watch")} />
           </div>
-          <p className="mt-2 text-sm leading-6 text-slate-600">{triage?.rationale ?? "当前字段不足，不能给出完整初筛分。"}</p>
+          <p className="mt-2 text-[13px] leading-6 text-slate-600">{triage?.rationale ?? "当前字段不足，不能给出完整初筛分。"}</p>
           <p className="mt-1 text-xs leading-5 text-slate-500">{triage?.nextStep ?? "先补充更多线索，再决定是否继续处理。"}</p>
-          <p className="mt-2 text-[11px] leading-5 text-slate-400">{triage?.disclaimer ?? "仅用于线索初筛，不代表正式商品评估。"}</p>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-[#E8EDF5]">
+        <div className="overflow-hidden rounded-[18px] border border-[#E8EDF5]">
           {primaryRows.map((row) => (
-            <div key={row.label} className="grid min-h-9 grid-cols-[24px_82px_minmax(0,1fr)_auto] items-center gap-2 border-b border-[#EEF2F7] px-3 py-1.5 text-sm last:border-b-0">
+            <div key={row.label} className="grid min-h-8 grid-cols-[20px_76px_minmax(0,1fr)_auto] items-center gap-2 border-b border-[#EEF2F7] px-3 py-1.5 text-[13px] last:border-b-0">
               <span className="text-slate-400">
-                <MiniIcon name={row.icon} className="h-4 w-4" />
+                <MiniIcon name={row.icon} className="h-[14px] w-[14px]" />
               </span>
               <span className="text-slate-500">{row.label}</span>
               <span className={["待补充", "信息不足", "尚未生成"].includes(row.value) ? "truncate text-slate-400" : "truncate text-slate-700"}>
@@ -2365,10 +2351,10 @@ function AiDraftPanel({
               {row.status ? (
                 <span
                   className={
-                    row.status === "展开" || row.status === "更多" || row.status === "已生成"
-                      ? "text-xs font-medium text-blue-600"
-                      : row.status === "信息不足"
-                        ? "rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-600"
+                    row.status === "已生成"
+                      ? "rounded-md bg-blue-50 px-2 py-1 text-[11px] font-medium text-blue-600"
+                      : row.status === "待补充"
+                        ? "rounded-md bg-amber-50 px-2 py-1 text-[11px] text-amber-600"
                         : "rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-500"
                   }
                 >
@@ -2379,12 +2365,17 @@ function AiDraftPanel({
           ))}
         </div>
 
-        <div className="rounded-xl border border-[#E8EDF5] bg-white">
-          <div className="border-b border-[#EEF2F7] px-3 py-2">
-            <p className="text-sm font-semibold text-slate-900">初筛维度</p>
-            <p className="mt-1 text-xs text-slate-500">字段不足时不补造完整分数，只展示保守判断。</p>
-          </div>
-          <div className="divide-y divide-[#EEF2F7]">
+        <details className="rounded-[18px] border border-[#E8EDF5] bg-white">
+          <summary className="cursor-pointer list-none px-3 py-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">初筛维度</p>
+                <p className="mt-1 text-xs text-slate-500">默认收起，不占首屏高度。</p>
+              </div>
+              <span className="text-xs font-medium text-[#365B8C]">展开查看</span>
+            </div>
+          </summary>
+          <div className="divide-y divide-[#EEF2F7] border-t border-[#EEF2F7]">
             {(triage?.dimensions ?? []).map((dimension) => (
               <div key={dimension.label} className="grid gap-1 px-3 py-2">
                 <div className="flex items-center justify-between gap-3">
@@ -2396,8 +2387,11 @@ function AiDraftPanel({
                 <p className="text-xs leading-5 text-slate-500">{dimension.summary}</p>
               </div>
             ))}
+            <p className="px-3 py-2 text-[11px] leading-5 text-slate-400">
+              {triage?.disclaimer ?? "仅用于线索初筛，不代表正式商品评估。"}
+            </p>
           </div>
-        </div>
+        </details>
       </div>
     </section>
   );
@@ -2571,14 +2565,16 @@ function ActionMessages({ messages }: { messages: Array<string | undefined> }) {
 function CollapsibleSection({
   title,
   description,
+  defaultOpen = false,
   children,
 }: {
   title: string;
   description: string;
+  defaultOpen?: boolean;
   children: ReactNode;
 }) {
   return (
-    <details className="rounded-[24px] border border-[#ECE8E1] bg-[#FFFEFC]" open={false}>
+    <details className="rounded-[24px] border border-[#ECE8E1] bg-[#FFFEFC]" {...(defaultOpen ? { open: true } : {})}>
       <summary className="cursor-pointer list-none px-4 py-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>

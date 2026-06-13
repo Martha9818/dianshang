@@ -4,6 +4,19 @@ Only the latest summary stays here. Older detailed history is archived or retain
 
 ## 2026-06-13
 
+### Inspirations No-Scroll First-Screen Compaction
+
+- Changed: Re-checked the currently live `/inspirations` buyer-desk branch and confirmed the active UI path was not the older fallback layout branch. The approved “keep the current structure, but make it denser and avoid full-page downward scroll” request was therefore applied directly to the live AI inbox workbench branch.
+- Changed: Tightened the first-screen desktop shell by reducing top-section padding, shrinking the three-column desktop split slightly, and locking the active buyer-desk container to a viewport-height desktop workbench so the page itself no longer needs a long outer vertical scroll on common desktop sizes.
+- Changed: Compressed the center original-image stage, reduced the stage-card spacing, and tightened the `初筛决策` block so the main image plus key keep/reject/convert actions stay visible in the first screen.
+- Changed: Kept the right-side structured AI draft table that the user explicitly wanted to preserve, but compacted the shared `AiDraftPanel`, removed fake `展开 / 更多` row affordances, and collapsed the `初筛维度` block by default so the table reads cleaner and fits better above the fold.
+- Changed: Kept `转商品完整表单` and `高级记录` fully available, but left them collapsed by default in the active live layout so secondary actions no longer push the main decision workflow below the first screen.
+- Changed: Corrected the active quick-group wording from pseudo-quality labels (`高质量 / 低质量 / 需补充信息`) to actual workflow states (`已查看 / 已放弃 / 已归档`) to better match the current inbox semantics without changing any data or business logic.
+- Verification: Ran `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Verification: Started a local dev server on `http://127.0.0.1:3001/inspirations` and captured a headless Chrome screenshot at desktop size. The resulting first-screen check confirms the queue, original image stage, right-side AI draft table, and collapsed secondary panels are all visible in one desktop screen.
+- Note: A stale generated `.next/dev/types/routes.d.ts` file was found corrupted during the first validation pass. Removing the disposable `.next` build output and re-running the checks restored normal validation. No source-code TypeScript issue was involved in that transient failure.
+- Boundary: Narrow frontend density and wording refinement only. No schema, migration, dependency, service-layer write path, AI behavior, or product-conversion business rule was changed.
+
 ### Inspiration Original Stage Blank Regression Fix
 
 - Changed: Investigated the new `/inspirations` symptom where the center original-image stage appeared blank and the practical entry to large-image preview seemed gone even though the queue thumbnail still rendered.
