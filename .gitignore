@@ -40,6 +40,9 @@ vercel-recovery-codes.txt
 
 # local code intelligence
 .codegraph/
+.impeccable/
+.superpowers/
+/tmp/
 
 # typescript
 *.tsbuildinfo

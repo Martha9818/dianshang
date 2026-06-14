@@ -4,6 +4,15 @@ Only the latest summary stays here. Older detailed history is archived or retain
 
 ## 2026-06-14
 
+### V1.7.1 Phase Closeout Status Sync
+
+- Changed: Re-checked the active current docs and confirmed the top-level line was still stranded on `V1.6-08` even though the accepted V1.7 MVP and V1.7.1 stabilization bundle was already recorded deeper in current memory.
+- Changed: Updated `AGENTS.md`, `docs/current/DOC_INDEX.md`, `docs/current/CHANGELOG_DEV.md`, `docs/current/PATCH_LOG.md`, `docs/current/THREAD_SCOPE_CHECKLIST.md`, and `agent-memory/CURRENT_STATUS.md` so the active line now consistently reads as `V1.7.1 phase closeout` and points future work toward real local-usage observation instead of another synthetic implementation thread.
+- Changed: Added repo-level ignore entries for local `.impeccable/`, `.superpowers/`, and `tmp/` helper artifacts so closeout preservation can rely on clean tracked git status without misclassifying those directories as product work.
+- Verification: Ran `npx tsx scripts/thread-v17-1-thread00-stabilization-verify.mts`, `npx tsx scripts/thread-v17-1-thread01-boundary-verify.mts`, `npm run encoding:check`, `npm run typecheck`, `npm run lint`, `npm run build`, and `npx prisma validate`.
+- Verification: Confirmed the controlled-sample boundary script still cleans its temporary records to zero residual `Product` / `Competitor` / `ScreenshotRecognitionJob` rows after execution, and confirmed the tracked workspace now reduces to the expected closeout-doc updates only.
+- Boundary: Current-doc sync and local-workspace hygiene only. No schema, migration, dependency, filesystem write behavior, AI behavior, UI behavior, or product logic was changed.
+
 ### Inspirations Reference-Aligned Desk Refresh
 
 - Changed: Reworked the active live `/inspirations` buyer-desk branch again after the previous no-scroll compaction overshot the approved look-and-feel. The latest pass explicitly follows the new approved reference image while keeping the existing structure and runtime behavior.

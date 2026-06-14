@@ -2,7 +2,10 @@
 
 ## Current Progress
 
-- Current stage: `V1.6-08 final acceptance and closeout`
+- Current stage: `V1.7.1 phase closeout`
+- Current task state: The active current-doc set is now aligned to the accepted `V1.7.1` closeout state instead of leaving the top-level stage wording stranded on `V1.6-08` while later sections already describe the accepted V1.7 and V1.7.1 bundle.
+- Current task state: Local agent helper directories `.impeccable/`, `.superpowers/`, and `tmp/` are now ignored at the repo level so closeout preservation can use a clean tracked `git status` without treating those local artifacts as product work.
+- Current acceptance state: `npx tsx scripts/thread-v17-1-thread00-stabilization-verify.mts`, `npx tsx scripts/thread-v17-1-thread01-boundary-verify.mts`, `npm run encoding:check`, `npm run typecheck`, `npm run lint`, `npm run build`, and `npx prisma validate` all pass on the current Windows local runtime after the phase-closeout status sync.
 - Current task state: The active `/inspirations` buyer-desk branch has now been pulled back toward the approved reference workbench instead of the earlier ultra-compressed first-screen variant. The current live layout keeps the same three-column structure and right-side structured AI draft table, but the header, filter bar, queue cards, center image stage, and decision surface now read calmer, warmer, and closer to the approved visual direction.
 - Current task state: The latest live quick-group wording is back to the reference-facing labels (`高质量 / 低质量 / 需补充信息`), the left queue cards use the warmer outlined selected state, the center stage keeps the restored fullscreen original-image preview entry, and the right-side `灵感信息 / AI 评估` panel plus collapsed secondary cards remain intact without changing data or service behavior.
 - Current acceptance state: `npm run typecheck`, `npm run lint`, and `npm run build` all pass after the latest reference-aligned `/inspirations` refresh. Local visual verification via headless Chrome against `http://127.0.0.1:3000/inspirations` confirms the updated three-column composition, calmer reference-style queue/stage/right-rail treatment, and the reintroduced center-column `初筛决策` section under the stage flow.
@@ -78,8 +81,9 @@
 - Current acceptance state: The new route-compat regression check `npx tsx scripts/inspiration-route-compat-verify.mts` now passes together with `npm run typecheck`, `npm run lint`, and `npm run build`, and local HTTP verification confirms `http://localhost:3000/inspirations/14` now returns `308 -> /inspirations?selectedId=14` while `http://localhost:3000/inspirations/legacy-path?status=pending` now returns `308 -> /inspirations?status=pending`.
 - Current acceptance state: Local browser checks confirm `/inspirations` still reads as the AI inbox / buyer desk main entry, and `/products/[id]` still reads as the formal evaluation workflow with `补竞品 -> 看机会 -> 算利润 -> 得结论`.
 - Current acceptance state: `docs/superpowers/acceptance/2026-06-09-v16-final-acceptance.md` records the final closeout judgment for V1.6.
+- Current acceptance state: The current tracked workspace now reduces to the expected closeout-doc updates only; local `.impeccable/`, `.superpowers/`, and `tmp/` artifacts no longer pollute milestone preservation status.
 - Current planning baseline: `docs/superpowers/specs/2026-06-02-v16-direction-sync-report.md`
-- Next stage: Treat the current `V1.7.1` line as phase-closeout first. Use `docs/superpowers/acceptance/2026-06-09-v17-mvp-thread02-acceptance.md`, `docs/superpowers/acceptance/2026-06-09-v17-1-thread00-acceptance.md`, and `docs/superpowers/acceptance/2026-06-09-v17-1-thread01-acceptance.md` as the acceptance baseline, commit and push this bundle cleanly, then wait for real local usage to reveal any next narrow thread instead of opening a synthetic follow-up immediately.
+- Next stage: Treat the current `V1.7.1` line as phase-closeout first. Use `docs/superpowers/acceptance/2026-06-09-v17-mvp-thread02-acceptance.md`, `docs/superpowers/acceptance/2026-06-09-v17-1-thread00-acceptance.md`, and `docs/superpowers/acceptance/2026-06-09-v17-1-thread01-acceptance.md` as the acceptance baseline, keep the current docs and milestone verification aligned, preserve the result with a clean local commit and approved push, then wait for real local usage to reveal any next narrow thread instead of opening a synthetic follow-up immediately.
 
 ## Product Direction
 
@@ -127,4 +131,4 @@
 
 ## Next Recommended Step
 
-- Use `docs/superpowers/acceptance/2026-06-09-v16-final-acceptance.md`, `docs/superpowers/specs/2026-06-09-v17-confirm-to-competitor-design-gate.md`, `docs/superpowers/acceptance/2026-06-09-v17-mvp-thread02-acceptance.md`, `docs/superpowers/acceptance/2026-06-09-v17-1-thread00-acceptance.md`, and `docs/superpowers/acceptance/2026-06-09-v17-1-thread01-acceptance.md` as the handoff baseline, but do not open a new `V1.7.1` implementation thread until real local usage exposes a concrete gap that survives repo-fact review.
+- Use `docs/superpowers/acceptance/2026-06-09-v16-final-acceptance.md`, `docs/superpowers/specs/2026-06-09-v17-confirm-to-competitor-design-gate.md`, `docs/superpowers/acceptance/2026-06-09-v17-mvp-thread02-acceptance.md`, `docs/superpowers/acceptance/2026-06-09-v17-1-thread00-acceptance.md`, and `docs/superpowers/acceptance/2026-06-09-v17-1-thread01-acceptance.md` as the handoff baseline, keep closeout verification green, and do not open a new `V1.7.1` implementation thread until real local usage exposes a concrete gap that survives repo-fact review.

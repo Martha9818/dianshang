@@ -50,6 +50,13 @@ This file keeps version-level summaries only. Detailed thread-by-thread history 
 - The V1.6 closeout record lives at `docs/superpowers/acceptance/2026-06-09-v16-final-acceptance.md`.
 - The next approved step after V1.6 is `V1.7 Design Gate`, not direct `V1.7` implementation.
 
+## V1.7 And V1.7.1 Baseline
+
+- `V1.7 Design Gate` froze the confirm-to-competitor direction around existing `ScreenshotRecognitionJob` reuse and explicit manual confirmation.
+- `V1.7 MVP Thread 01-02` implemented the minimum confirm-write loop, duplicate-confirm blocking, and accepted local write verification for the current competitor screenshot path.
+- `V1.7.1 Thread 00-01` hardened candidate state consistency and added controlled-sample boundary verification without adding schema, migration, dependency, or new production capability.
+- The current line is `V1.7.1 phase closeout`: preserve the accepted baseline, keep current docs aligned, keep milestone verification passing, and wait for a real local-usage gap before opening another narrow thread.
+
 ## V2 Entry
 
 V2 may discuss only planning for:

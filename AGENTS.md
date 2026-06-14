@@ -6,7 +6,7 @@ EcomPilot is a Windows local-first ecommerce operations assistant. The local app
 
 ## Current Stage
 
-- Current line: V1.6-08 final acceptance and closeout after V1.6-00 through V1.6-07 implementation.
+- Current line: V1.7.1 phase closeout after V1.6 closeout, V1.7 MVP Thread 01-02, and V1.7.1 Thread 00-01 stabilization acceptance.
 - Work must stay inside the approved thread scope.
 - Historical V1 / V1-Core issues are fixed only on the latest mainline through a Patch Thread.
 
@@ -23,9 +23,9 @@ Use `DOC_INDEX.md` to choose only the task-relevant current docs. Do not read `a
 
 ## Forbidden Scope
 
-Do not add login, cloud accounts, payments, crawlers, OCR, link parsing, automated publishing, inventory, supplier management, notification-center expansion, background queues, real multi-agent systems, or V2 behavior unless the user explicitly opens that thread.
+Do not add login, cloud accounts, payments, crawlers, OCR expansion, link parsing, automated publishing, inventory, supplier management, notification-center expansion, background queues, real multi-agent systems, or V2 behavior unless the user explicitly opens that thread.
 
-V1.6 is a real-use validation and closeout stage only. Follow the frozen V1.6 route in `THREAD_SCOPE_CHECKLIST.md`; do not mix the completed V1.6 inspiration and product-evaluation flow threads with future V1.7 competitor screenshot inbox work or V1.8 content-workflow work. File cleanup and app trash are existing V1-Plus Thread 06 capabilities, not a V1.6 rebuild. V1.6 does not include a formal Electron desktop release, platform crawlers, automatic collection, automatic publishing, automatic private messages, automatic comments, SKU, supplier, inventory, trial-sale review, PDF reports, or real multi-agent orchestration.
+V1.6 closeout is complete, and the accepted V1.7 / V1.7.1 competitor screenshot bundle is now in phase-closeout only. Follow the active `THREAD_SCOPE_CHECKLIST.md`; preserve the accepted confirm-to-competitor baseline plus the completed V1.7.1 stabilization and boundary-verification results, and do not reopen schema, migration, dependency, AI, path, or workflow-expansion work unless a real local-usage gap explicitly opens a new thread. File cleanup and app trash are existing V1-Plus Thread 06 capabilities, not a V1.7.1 rebuild. The current closeout line still does not include a formal Electron desktop release, platform crawlers, automatic collection, automatic publishing, automatic private messages, automatic comments, SKU, supplier, inventory, trial-sale review, PDF reports, or real multi-agent orchestration.
 
 Do not change database schema, migrations, dependencies, filesystem write behavior, AI behavior, UI behavior, or product logic during docs-only tasks.
 

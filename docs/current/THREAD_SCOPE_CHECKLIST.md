@@ -4,12 +4,12 @@ Use this file as the active scope boundary and acceptance checklist for the curr
 
 ## Thread
 
-- Name: `V1.6-08 Final Acceptance And Closeout`
-- Date: `2026-06-09`
+- Name: `V1.7.1 Phase Closeout And Status Sync`
+- Date: `2026-06-14`
 - Status: `COMPLETE`
-- Type: acceptance / closeout / status-sync
-- Approved scope: verify the completed V1.6 mainline, correct outdated current-line wording, record the final acceptance result, and decide whether V1.6 can close and move to `V1.7 Design Gate`
-- Existing working-tree changes belong to: completed V1.6-02 through V1.6-07 implementation and verification work already present on the current mainline; `tmp/` remains outside product scope
+- Type: closeout / status-sync / acceptance-preservation
+- Approved scope: sync active current-line wording to the accepted `V1.7.1` closeout state, preserve the accepted V1.7 and V1.7.1 baseline, ignore local agent-artifact directories that are outside product scope, rerun the closeout verification set, and preserve the result with a clean local commit plus milestone push when approved
+- Existing working-tree changes belong to: accepted V1.7 MVP and V1.7.1 stabilization work already present on the current mainline; local `.impeccable/`, `.superpowers/`, and `tmp/` helper artifacts remain outside product scope
 
 ## Safety
 
@@ -19,41 +19,40 @@ Use this file as the active scope boundary and acceptance checklist for the curr
 - Vercel remains preview-only and read-only: yes
 - Windows local runtime remains the writable source of truth: yes
 
-## V1.6 Frozen Boundary
+## Current Closeout Boundary
 
-### V1.6 Is
+### This Closeout Is
 
-- a real-use validation line
-- a docs-first and scope-freeze-first line
-- a main-flow repositioning line
+- a closeout and acceptance-preservation line
+- a current-doc sync line
+- a local verification and milestone-hygiene line
 
-### V1.6 Is Not
+### This Closeout Is Not
 
-- a large new-system delivery line
-- a competitor screenshot inbox delivery line
-- an automatic content workflow delivery line
-- an API image generation expansion line
+- a new feature-delivery line
+- a schema, migration, or dependency thread
+- a new V1.7.1 implementation thread
+- a V1.8 content-workflow thread
 
-## Explicit V1.6 Baseline
+## Accepted Baseline
 
-V1.6 must clearly state:
+The active mainline must preserve:
 
-1. `灵感箱` is the future main entry direction and is positioned as an AI inspiration inbox.
-2. `链接导入` is downgraded to an auxiliary source record.
-3. inspiration draft triage and formal product scoring are two separate systems.
-4. product detail is re-expressed around “whether the product deserves small-batch testing”.
-5. V1.7 is the first planning target for the competitor screenshot inbox.
-6. V1.8 is the first planning target for post-confirmation content automation.
-7. API image generation is not a V1.6 thread target and is not default-planned for V1.8.
-8. Vercel stays read-only and does not perform real acceptance.
+1. the accepted V1.6 inbox and product-evaluation flow baseline
+2. the accepted V1.7 confirm-to-competitor MVP loop
+3. the accepted V1.7.1 candidate-state hardening and boundary-verification baseline
+4. the split between inspiration draft triage and formal product scoring
+5. Vercel read-only behavior with the exact preview-write warning `预览环境只读，请在 Windows 本地验收。`
+6. Windows local runtime as the only writable acceptance source of truth
+7. no reopening of schema, migration, dependency, screenshot-path migration, AI expansion, or workflow-expansion work inside this closeout thread
 
 ## Deferred Versions
 
 | Version | Position | Not In Current Thread |
 | --- | --- | --- |
-| `V1.6` | Real-use validation, flow correction, docs baseline | No competitor screenshot inbox, no automation workflow, no API image generation expansion |
-| `V1.7` | Competitor screenshot inbox planning target | Not implemented in V1.6-00 |
-| `V1.8` | Post-confirmation content workflow planning target | Not implemented in V1.6-00 |
+| `V1.7.1 closeout` | Acceptance preservation and current-doc sync | No new feature delivery inside the closeout thread |
+| `V1.8` | Post-confirmation content workflow planning target | Not opened here |
+| `V2` | Desktop/runtime and larger system planning only | Not opened here |
 
 ## Vercel Boundary
 
@@ -85,14 +84,15 @@ Available project-level verification commands from `package.json`:
 - `npx prisma validate`
 - `npm run thread09:verify`
 
-Thread V1.6-08 required:
+Thread V1.7.1 phase closeout required:
 
-- run the completed V1.6 verification scripts
+- run `npx tsx scripts/thread-v17-1-thread00-stabilization-verify.mts`
+- run `npx tsx scripts/thread-v17-1-thread01-boundary-verify.mts`
 - run project-level checks using the existing commands
-- confirm no schema / migration / dependency changes were introduced by closeout
-- confirm the next step is `V1.7 Design Gate`, not direct feature implementation
+- confirm no schema / migration / dependency / product-behavior changes were introduced by closeout sync
+- confirm the next step is real local usage observation, not another synthetic `V1.7.1` implementation thread
 
 ## Archive Pointer
 
 - Detailed V1.5 implementation and stabilization history remains in the current docs plus archive pointers.
-- `docs/superpowers/acceptance/2026-06-09-v16-final-acceptance.md` is now the active V1.6 closeout record; later planning should reference it together with the V1.6 direction-sync report.
+- `docs/superpowers/acceptance/2026-06-09-v16-final-acceptance.md`, `docs/superpowers/acceptance/2026-06-09-v17-mvp-thread02-acceptance.md`, `docs/superpowers/acceptance/2026-06-09-v17-1-thread00-acceptance.md`, and `docs/superpowers/acceptance/2026-06-09-v17-1-thread01-acceptance.md` now form the active acceptance baseline for this closeout.

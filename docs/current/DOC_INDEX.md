@@ -24,6 +24,7 @@ Use this file only as the routing table after the required startup read.
 | `ELECTRON_POC_REPORT.md` | Thread 07 desktop feasibility report. | Electron POC, desktop feasibility, path/runtime risk, or V2 desktop preparation. |
 | `V1_CORE_UNDERSTANDING_CHECK.md` | Short V1-Core capability index. | Recalling the V1-Core baseline before future planning. |
 | `../superpowers/specs/2026-06-02-v16-direction-sync-report.md` | V1.6 scope, deferrals, and product direction freeze. | Before V1.6 planning or implementation work. |
+| `../superpowers/specs/2026-06-09-v17-confirm-to-competitor-design-gate.md` | V1.7 confirm-to-competitor freeze and MVP rules. | Before V1.7 competitor screenshot draft, confirm, or closeout work. |
 
 ## Archive Rule
 
@@ -34,6 +35,7 @@ Use this file only as the routing table after the required startup read.
 ## Current Baseline
 
 - MVP, V1-Core, V1-Plus, and V1.5 are complete on the current mainline.
-- `V1.6-00` through `V1.6-07` are implemented on the current mainline, and `V1.6-08` is the current final acceptance and closeout state.
+- `V1.6-00` through `V1.6-08`, `V1.7 MVP Thread 01-02`, and `V1.7.1 Thread 00-01` are implemented on the current mainline.
+- The current line is `V1.7.1 phase closeout`.
 - Vercel remains preview-only and read-only.
 - Windows local runtime remains the writable source of truth.
