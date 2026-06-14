@@ -2,6 +2,19 @@
 
 Only the latest summary stays here. Older detailed history is archived or retained in current docs.
 
+## 2026-06-14
+
+### Inspirations Reference-Aligned Desk Refresh
+
+- Changed: Reworked the active live `/inspirations` buyer-desk branch again after the previous no-scroll compaction overshot the approved look-and-feel. The latest pass explicitly follows the new approved reference image while keeping the existing structure and runtime behavior.
+- Changed: Softened the page header and filter strip, removed the heavy KPI strip from the active branch, restored the reference-facing quick-group labels (`高质量 / 低质量 / 需补充信息`), and kept the existing top-right `收件箱设置` entry.
+- Changed: Rebuilt the left queue into warmer rounded cards with a thin orange-selected state, preserved the existing queue data, and added calmer bottom summary / batch-action treatment without changing inbox logic.
+- Changed: Restyled the center original-image stage into a lighter framed canvas, kept the large-image preview entry available, and rebalanced the decision section so it stays directly below the stage in the same center-column flow.
+- Changed: Preserved the user-requested right-side information block, but refined `AiDraftPanel` into a more polished `灵感信息 / AI 评估` card and visually aligned the collapsed `转商品完整表单` and `高级记录` cards with the same surface language.
+- Verification: Ran `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Verification: Captured local headless Chrome screenshots against `http://127.0.0.1:3000/inspirations` during the refinement loop to confirm the page returned to the approved reference direction instead of the earlier over-compressed variant.
+- Boundary: Narrow frontend layout and styling refinement only. No schema, migration, dependency, service write path, AI behavior, or product conversion business logic was changed.
+
 ## 2026-06-13
 
 ### Inspirations No-Scroll First-Screen Compaction
